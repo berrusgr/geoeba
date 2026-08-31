@@ -118,6 +118,14 @@ export interface Activity {
     | 'probability_spinner'
     | 'data_barchart'
     | 'prime_factor_tree'
+    | 'eratosthenes_sieve'
+    | 'divisibility_rules'
+    | 'venn_divisors'
+    | 'rhythmic_multiples'
+    | 'area_rectangles'
+    | 'division_ladder'
+    | 'ebob_ekok_tiles'
+    | 'span_measurement'
     | 'ratio_proportion'
     | 'transformation_symmetry'
     | 'square_roots'
@@ -136,7 +144,8 @@ export interface Activity {
     | 'clock_face'
     | 'addition_subtraction_visual'
     | 'triangle_explorer'
-    | 'angle_explorer';
+    | 'angle_explorer'
+    | (string & {});
   initialObjects: MathObject[];
   initialViewport?: Partial<ViewportTransform>;
   steps: ActivityStep[];
