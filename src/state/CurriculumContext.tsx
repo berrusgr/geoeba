@@ -34,6 +34,8 @@ interface CurriculumContextType {
   selectGrade: (gradeNumber: GradeId) => void;
   selectTopic: (topicId: string) => void;
   selectActivity: (activity: Activity, openAsMission?: boolean) => void;
+  activeModalTopic: Topic | null;
+  setActiveModalTopic: (topic: Topic | null) => void;
   setSelectedCategory: (category: MathCategory) => void;
   setSearchQuery: (query: string) => void;
   startFreeSandbox: () => void;
@@ -53,14 +55,32 @@ function findActivityById(activityId: string): Activity | null {
   for (const levelKey of Object.keys(curriculumData.levels) as LevelId[]) {
     const level = curriculumData.levels[levelKey];
     for (const grade of level.grades) {
-      for (const topic of grade.topics) {
+      for (const topic of grade.topics || []) {
         const found = topic.activities.find((a) => a.id === activityId);
         if (found) return found;
       }
-      for (const theme of grade.themes) {
-        for (const topic of theme.topics) {
+      for (const theme of grade.themes || []) {
+        for (const topic of theme.topics || []) {
           const found = topic.activities.find((a) => a.id === activityId);
           if (found) return found;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Yardımcı: Etkinlik ID'sine göre ait olduğu konuyu bulma
+function findTopicByActivityId(activityId: string): Topic | null {
+  for (const levelKey of Object.keys(curriculumData.levels) as LevelId[]) {
+    const level = curriculumData.levels[levelKey];
+    for (const grade of level.grades) {
+      for (const topic of grade.topics || []) {
+        if (topic.activities.some((a) => a.id === activityId)) return topic;
+      }
+      for (const theme of grade.themes || []) {
+        for (const topic of theme.topics || []) {
+          if (topic.activities.some((a) => a.id === activityId)) return topic;
         }
       }
     }
@@ -74,6 +94,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   const [selectedGradeNumber, setSelectedGradeNumber] = useState<GradeId | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [activeModalTopic, setActiveModalTopic] = useState<Topic | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<MathCategory>('hepsi');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isFreeSandbox, setIsFreeSandbox] = useState<boolean>(false);
@@ -191,12 +212,22 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
     });
   };
 
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+  };
+
   const selectLevel = (levelId: LevelId) => {
-    const defaultGrade = (levelId === 'ilkokul' ? 1 : levelId === 'lise' ? 0 : 5) as GradeId;
+    stopSpeech();
+    const defaultGrade = (levelId === 'ilkokul' ? 1 : levelId === 'lise' ? 9 : 5) as GradeId;
     setSelectedLevelId(levelId);
     setSelectedGradeNumber(defaultGrade);
     setSelectedTopicId(null);
     setSelectedActivity(null);
+    setActiveModalTopic(null);
     setIsFreeSandbox(false);
     setCurrentScreen('grades');
 
@@ -211,15 +242,28 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   };
 
   const selectGrade = (gradeNumber: GradeId) => {
+    stopSpeech();
+    // Kademeyi de otomatik eşle
+    if (gradeNumber <= 4) {
+      setSelectedLevelId('ilkokul');
+    } else if (gradeNumber >= 9) {
+      setSelectedLevelId('lise');
+    } else {
+      setSelectedLevelId('ortaokul');
+    }
+
     setSelectedGradeNumber(gradeNumber);
     setSelectedTopicId(null);
     setSelectedActivity(null);
+    setActiveModalTopic(null);
     setIsFreeSandbox(false);
     setCurrentScreen('portal');
 
+    const mappedLevelId = gradeNumber <= 4 ? 'ilkokul' : gradeNumber >= 9 ? 'lise' : 'ortaokul';
+
     pushBrowserHistory({
       screen: 'portal',
-      levelId: selectedLevelId,
+      levelId: mappedLevelId,
       gradeNumber,
       topicId: null,
       activityId: null,
@@ -228,6 +272,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   };
 
   const selectTopic = (topicId: string) => {
+    stopSpeech();
     setSelectedTopicId(topicId);
     const foundTopic =
       selectedGrade?.themes.flatMap((th) => th.topics).find((t) => t.id === topicId) ||
@@ -249,8 +294,16 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   };
 
   const selectActivity = (activity: Activity, openAsMission: boolean = true) => {
+    stopSpeech();
     setSelectedActivity(activity);
     setIsFreeSandbox(false);
+
+    // Eğer modal konusu hafızada yoksa ait olduğu konuyu otomatik bağla
+    if (!activeModalTopic) {
+      const parentTopic = findTopicByActivityId(activity.id);
+      if (parentTopic) setActiveModalTopic(parentTopic);
+    }
+
     const targetScreen: AppScreen = openAsMission ? 'mission' : 'workspace';
     setCurrentScreen(targetScreen);
 
@@ -265,6 +318,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   };
 
   const startFreeSandbox = () => {
+    stopSpeech();
     setIsFreeSandbox(true);
     setSelectedActivity(null);
     setCurrentScreen('workspace');
@@ -284,6 +338,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   };
 
   const openStudioMode = () => {
+    stopSpeech();
     setCurrentScreen('workspace');
     pushBrowserHistory({
       screen: 'workspace',
@@ -296,32 +351,63 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   };
 
   const goBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      window.history.back();
-    } else {
-      // Fallback
-      if (currentScreen === 'workspace') {
-        if (selectedActivity) {
-          selectActivity(selectedActivity, true);
-        } else {
-          setCurrentScreen('portal');
-        }
-      } else if (currentScreen === 'mission') {
-        setCurrentScreen('portal');
-      } else if (currentScreen === 'portal') {
-        setCurrentScreen('grades');
-      } else if (currentScreen === 'grades') {
-        setCurrentScreen('home');
+    stopSpeech();
+    if (currentScreen === 'workspace') {
+      if (selectedActivity) {
+        selectActivity(selectedActivity, true);
       } else {
-        setCurrentScreen('home');
+        setCurrentScreen('portal');
       }
+    } else if (currentScreen === 'mission') {
+      // Görevden çıkıldığında doğrudan ait olduğu konunun Görevler Modalı'na dön
+      if (!activeModalTopic && selectedActivity) {
+        const parentTopic = findTopicByActivityId(selectedActivity.id);
+        if (parentTopic) setActiveModalTopic(parentTopic);
+      }
+      setCurrentScreen('portal');
+      pushBrowserHistory({
+        screen: 'portal',
+        levelId: selectedLevelId,
+        gradeNumber: selectedGradeNumber,
+        topicId: selectedTopicId,
+        activityId: null,
+        isFreeSandbox: false,
+      });
+    } else if (currentScreen === 'portal') {
+      if (activeModalTopic) {
+        setActiveModalTopic(null);
+      } else {
+        setCurrentScreen('grades');
+        pushBrowserHistory({
+          screen: 'grades',
+          levelId: selectedLevelId,
+          gradeNumber: selectedGradeNumber,
+          topicId: null,
+          activityId: null,
+          isFreeSandbox: false,
+        });
+      }
+    } else if (currentScreen === 'grades') {
+      setCurrentScreen('home');
+      pushBrowserHistory({
+        screen: 'home',
+        levelId: null,
+        gradeNumber: null,
+        topicId: null,
+        activityId: null,
+        isFreeSandbox: false,
+      });
+    } else {
+      setCurrentScreen('home');
     }
   };
 
   const goHome = () => {
+    stopSpeech();
     setCurrentScreen('home');
     setSelectedTopicId(null);
     setSelectedActivity(null);
+    setActiveModalTopic(null);
     setIsFreeSandbox(false);
 
     pushBrowserHistory({
@@ -354,6 +440,8 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
         selectedGrade,
         selectedTopic,
         selectedActivity,
+        activeModalTopic,
+        setActiveModalTopic,
         selectedCategory,
         isFreeSandbox,
         searchQuery,

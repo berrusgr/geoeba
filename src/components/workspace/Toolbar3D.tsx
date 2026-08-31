@@ -29,7 +29,7 @@ interface Toolbar3DProps {
   setActiveTool: (tool: Tool3DMode) => void;
   onAddSolid: (type: Solid3DType) => void;
   onAutoArrange: () => void;
-  onSetCameraPreset: (preset: 'isometric' | 'front' | 'top' | 'side') => void;
+  onSetCameraPreset: (preset: 'isometric' | 'front' | 'back' | 'top' | 'bottom' | 'right' | 'left' | 'side') => void;
   toggleShowVertices: () => void;
   toggleShowEdges: () => void;
   toggleShowFaces: () => void;
@@ -61,6 +61,17 @@ export function Toolbar3D({
     'Cisim oluştur': true,
     'Özellikleri keşfet': true,
   });
+
+  const [presetIdx, setPresetIdx] = useState(0);
+  const presets: { id: 'isometric' | 'front' | 'back' | 'top' | 'bottom' | 'right' | 'left'; label: string }[] = [
+    { id: 'front', label: 'Önden bak' },
+    { id: 'top', label: 'Üstten bak' },
+    { id: 'right', label: 'Sağdan bak' },
+    { id: 'back', label: 'Arkadan bak' },
+    { id: 'left', label: 'Soldan bak' },
+    { id: 'bottom', label: 'Alttan bak' },
+    { id: 'isometric', label: 'İzometrik bak' },
+  ];
 
   const toggleGroup = (groupName: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupName]: !prev[groupName] }));
@@ -231,7 +242,7 @@ export function Toolbar3D({
                 }`}
               >
                 <MousePointer className={`w-4 h-4 shrink-0 ${activeTool === 'select_move' ? 'text-white' : 'text-rose-500'}`} />
-                <span className="text-xs font-extrabold truncate">Cismi seç / taşı</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Cismi seç / taşı</span>
               </button>
 
               <button
@@ -243,7 +254,7 @@ export function Toolbar3D({
                 }`}
               >
                 <RotateCw className={`w-4 h-4 shrink-0 ${activeTool === 'orbit' ? 'text-white' : 'text-rose-500'}`} />
-                <span className="text-xs font-extrabold truncate">Görünümü döndür</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Görünümü döndür</span>
               </button>
 
               <button
@@ -255,23 +266,39 @@ export function Toolbar3D({
                 }`}
               >
                 <Hand className={`w-4 h-4 shrink-0 ${activeTool === 'pan' ? 'text-white' : 'text-rose-500'}`} />
-                <span className="text-xs font-extrabold truncate">Görünümü kaydır</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Görünümü kaydır</span>
               </button>
 
               <button
-                onClick={() => onSetCameraPreset('front')}
+                onClick={() => {
+                  const nextIdx = (presetIdx + 1) % presets.length;
+                  setPresetIdx(nextIdx);
+                  onSetCameraPreset(presets[nextIdx].id);
+                }}
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border bg-card hover:bg-background text-foreground border-border/80 hover:border-rose-400 shadow-2xs hover:-translate-y-0.5"
+                title="Bakış Açısını Değiştir (Önden / Üstten / Sağdan / Arkadan / Soldan / Alttan / İzometrik)"
               >
                 <Eye className="w-4 h-4 shrink-0 text-rose-500" />
-                <span className="text-xs font-extrabold truncate">Önden bak</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">
+                  {presets[presetIdx].label}
+                </span>
               </button>
 
               <button
-                onClick={onDeleteSelected}
-                className="flex items-center gap-2 p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border bg-card hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 border-border/80 hover:border-red-400 shadow-2xs hover:-translate-y-0.5 col-span-2"
+                onClick={() => {
+                  onDeleteSelected();
+                  setActiveTool('delete');
+                }}
+                className={`flex items-center gap-2 p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border col-span-2 ${
+                  activeTool === 'delete'
+                    ? 'bg-red-600 text-white border-transparent shadow-sm ring-2 ring-red-500/30'
+                    : 'bg-card hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 border-border/80 hover:border-red-400 shadow-2xs hover:-translate-y-0.5'
+                }`}
               >
-                <Trash2 className="w-4 h-4 shrink-0 text-red-500" />
-                <span className="text-xs font-extrabold truncate">Sil</span>
+                <Trash2 className={`w-4 h-4 shrink-0 ${activeTool === 'delete' ? 'text-white' : 'text-red-500'}`} />
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">
+                  {activeTool === 'delete' ? 'Silme Modu Aktif (Cisme Tıkla)' : 'Sil'}
+                </span>
               </button>
             </div>
           )}
@@ -308,7 +335,7 @@ export function Toolbar3D({
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-foreground border border-border/80 hover:border-emerald-400 shadow-2xs transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
               >
                 <Box className="w-4 h-4 shrink-0 text-emerald-600" />
-                <span className="text-xs font-extrabold truncate">Küp</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Küp</span>
               </button>
 
               <button
@@ -316,7 +343,7 @@ export function Toolbar3D({
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-foreground border border-border/80 hover:border-emerald-400 shadow-2xs transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
               >
                 <CircleIcon className="w-4 h-4 shrink-0 text-emerald-600" />
-                <span className="text-xs font-extrabold truncate">Küre</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Küre</span>
               </button>
 
               <button
@@ -324,7 +351,7 @@ export function Toolbar3D({
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-foreground border border-border/80 hover:border-emerald-400 shadow-2xs transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
               >
                 <Cylinder className="w-4 h-4 shrink-0 text-emerald-600" />
-                <span className="text-xs font-extrabold truncate">Silindir</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Silindir</span>
               </button>
 
               <button
@@ -332,7 +359,7 @@ export function Toolbar3D({
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-foreground border border-border/80 hover:border-emerald-400 shadow-2xs transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
               >
                 <Layers className="w-4 h-4 shrink-0 text-emerald-600" />
-                <span className="text-xs font-extrabold truncate">Prizma oluştur</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Prizma oluştur</span>
               </button>
             </div>
           )}
@@ -373,7 +400,7 @@ export function Toolbar3D({
                 }`}
               >
                 <Crosshair className={`w-4 h-4 shrink-0 ${showVertices ? 'text-white' : 'text-emerald-600'}`} />
-                <span className="text-xs font-extrabold truncate">Köşeleri göster</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Köşeleri göster</span>
               </button>
 
               <button
@@ -385,7 +412,7 @@ export function Toolbar3D({
                 }`}
               >
                 <MoveRight className={`w-4 h-4 shrink-0 ${showEdges ? 'text-white' : 'text-emerald-600'}`} />
-                <span className="text-xs font-extrabold truncate">Ayrıtları göster</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Ayrıtları göster</span>
               </button>
 
               <button
@@ -397,7 +424,7 @@ export function Toolbar3D({
                 }`}
               >
                 <Square className={`w-4 h-4 shrink-0 ${showFaces ? 'text-white' : 'text-emerald-600'}`} />
-                <span className="text-xs font-extrabold truncate">Yüzleri göster</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Yüzleri göster</span>
               </button>
 
               <button
@@ -405,7 +432,7 @@ export function Toolbar3D({
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left bg-card hover:bg-background text-foreground border border-border/80 hover:border-emerald-400 shadow-2xs transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
               >
                 <Compass className="w-4 h-4 shrink-0 text-teal-600" />
-                <span className="text-xs font-extrabold truncate">Yüz, ayrıt veya köşe seç</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Yüz, ayrıt veya köşe seç</span>
               </button>
 
               <button
@@ -413,7 +440,7 @@ export function Toolbar3D({
                 className="flex items-center gap-2 p-2.5 rounded-xl text-left bg-card hover:bg-background text-foreground border border-border/80 hover:border-emerald-400 shadow-2xs transition-all duration-200 cursor-pointer hover:-translate-y-0.5 col-span-2"
               >
                 <Palette className="w-4 h-4 shrink-0 text-teal-600" />
-                <span className="text-xs font-extrabold truncate">Yüzü renklendir</span>
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">Yüzü renklendir</span>
               </button>
             </div>
           )}

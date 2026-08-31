@@ -16,6 +16,7 @@ import {
   Eye,
   Sparkles,
 } from 'lucide-react';
+import { ViewCube3D } from './ViewCube3D';
 
 interface Canvas3DProps {
   solids: Solid3DObject[];
@@ -28,6 +29,7 @@ interface Canvas3DProps {
   setCamera: React.Dispatch<React.SetStateAction<Camera3D>>;
   onSelectSolid: (id: string | null) => void;
   onAddSolid?: (type: Solid3DType, customDim?: { width: number; height: number; depth: number; radius?: number }, customPos?: Point3D) => void;
+  onDeleteSolid?: (id?: string) => void;
   setActive3DTool?: (tool: Tool3DMode) => void;
   onUpdateSolidPosition: (id: string, newPos: Point3D) => void;
   onSwitchTo2D: () => void;
@@ -44,6 +46,7 @@ export function Canvas3D({
   setCamera,
   onSelectSolid,
   onAddSolid,
+  onDeleteSolid,
   setActive3DTool,
   onUpdateSolidPosition,
   onSwitchTo2D,
@@ -62,7 +65,54 @@ export function Canvas3D({
   const [dragSolidStart, setDragSolidStart] = useState<{ x: number; y: number } | null>(null);
   const [dragSolidCurrent, setDragSolidCurrent] = useState<{ x: number; y: number } | null>(null);
 
+  // 3D Cisim Sürükleme (Drag & Move) Durumu
+  const [draggingSolidId, setDraggingSolidId] = useState<string | null>(null);
+  const dragSolidRef = useRef<{
+    solidId: string;
+    axis: 'x' | 'y' | 'z' | 'free';
+    startClientX: number;
+    startClientY: number;
+    startPos: Point3D;
+  } | null>(null);
+
   const isCreationMode = activeTool.startsWith('create_');
+
+  // Katı Cisme veya X/Y/Z Taşıma Oklarına Basıldığında Sürüklemeyi Başlat ya da Sil
+  const handleSolidMouseDown = (
+    solidId: string,
+    e: React.MouseEvent,
+    axis: 'x' | 'y' | 'z' | 'free' = 'free'
+  ) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+
+    // Silme Modu Aktifse Tıklanan Cismi Doğrudan Sil
+    if (activeTool === 'delete') {
+      if (onDeleteSolid) onDeleteSolid(solidId);
+      return;
+    }
+
+    onSelectSolid(solidId);
+
+    // Orbit veya Pan araçlarında cisim üzerinden kamera döndürmeye izin ver
+    if (activeTool === 'orbit' || activeTool === 'pan') {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
+
+    const targetSolid = solids.find((s) => s.id === solidId);
+    if (targetSolid) {
+      dragSolidRef.current = {
+        solidId,
+        axis,
+        startClientX: e.clientX,
+        startClientY: e.clientY,
+        startPos: { ...targetSolid.position },
+      };
+      setDraggingSolidId(solidId);
+    }
+  };
 
   // Ekran Boyutlarını İzle
   useEffect(() => {
@@ -104,17 +154,94 @@ export function Canvas3D({
       return;
     }
 
+    // Boşluğa tıklandığında seçimi temizle (Taşıma modundaysa)
+    if (activeTool === 'select_move' && e.button === 0) {
+      onSelectSolid(null);
+    }
+
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
+      // 1. Cisim Sürükleme (X, Y, Z Eksen Okları veya Serbest Taşıma)
+      if (dragSolidRef.current) {
+        const dx = e.clientX - dragSolidRef.current.startClientX;
+        const dy = e.clientY - dragSolidRef.current.startClientY;
+        const initialPos = dragSolidRef.current.startPos;
+        const axis = dragSolidRef.current.axis;
+
+        let deltaX = 0;
+        let deltaY = 0;
+        let deltaZ = 0;
+
+        const center3D = { ...initialPos };
+        const centerScreen = project3DToScreen(center3D, camera, dimensions.width, dimensions.height);
+
+        if (axis === 'x') {
+          // X Ekseni Boyunca 1D Vektör İzdüşümü (Kırmızı Ok)
+          const tip3D = { x: initialPos.x + 2.5, y: initialPos.y, z: initialPos.z };
+          const tipScreen = project3DToScreen(tip3D, camera, dimensions.width, dimensions.height);
+          const vx = tipScreen.x - centerScreen.x;
+          const vy = tipScreen.y - centerScreen.y;
+          const lenSq = Math.max(1, vx * vx + vy * vy);
+          const t = (dx * vx + dy * vy) / lenSq;
+          deltaX = t * 2.5;
+        } else if (axis === 'y') {
+          // Y Ekseni Boyunca 1D Vektör İzdüşümü (Yeşil Ok)
+          const tip3D = { x: initialPos.x, y: initialPos.y + 2.5, z: initialPos.z };
+          const tipScreen = project3DToScreen(tip3D, camera, dimensions.width, dimensions.height);
+          const vx = tipScreen.x - centerScreen.x;
+          const vy = tipScreen.y - centerScreen.y;
+          const lenSq = Math.max(1, vx * vx + vy * vy);
+          const t = (dx * vx + dy * vy) / lenSq;
+          deltaY = t * 2.5;
+        } else if (axis === 'z') {
+          // Z Ekseni Boyunca 1D Vektör İzdüşümü (Mavi Ok)
+          const tip3D = { x: initialPos.x, y: initialPos.y, z: initialPos.z + 2.5 };
+          const tipScreen = project3DToScreen(tip3D, camera, dimensions.width, dimensions.height);
+          const vx = tipScreen.x - centerScreen.x;
+          const vy = tipScreen.y - centerScreen.y;
+          const lenSq = Math.max(1, vx * vx + vy * vy);
+          const t = (dx * vx + dy * vy) / lenSq;
+          deltaZ = t * 2.5;
+        } else {
+          // Serbest Zemin Taşıma (XY)
+          const radYaw = (camera.rotY * Math.PI) / 180;
+          const radPitch = (camera.rotX * Math.PI) / 180;
+          const scale = Math.max(15, camera.zoom);
+
+          const u = dx / scale;
+          const v = -dy / scale;
+
+          if (e.shiftKey) {
+            deltaZ = v * 1.5;
+          } else {
+            const sinPitch = Math.sin(radPitch);
+            const pitchFactor = Math.abs(sinPitch) > 0.15 ? 1 / Math.sin(radPitch) : 2.5;
+            deltaX = u * Math.cos(radYaw) + (v * pitchFactor) * Math.sin(radYaw);
+            deltaY = -u * Math.sin(radYaw) + (v * pitchFactor) * Math.cos(radYaw);
+          }
+        }
+
+        const newPos: Point3D = {
+          x: Number((initialPos.x + deltaX).toFixed(2)),
+          y: Number((initialPos.y + deltaY).toFixed(2)),
+          z: Number((initialPos.z + deltaZ).toFixed(2)),
+        };
+
+        onUpdateSolidPosition(dragSolidRef.current.solidId, newPos);
+        return;
+      }
+
+      // 2. Yeni Cisim Boyutlandırma
       if (isCreatingSolid) {
         setDragSolidCurrent({ x: e.clientX, y: e.clientY });
         return;
       }
 
+      // 3. Kamera Döndürme / Kaydırma
       if (!isDragging) return;
       const dx = e.clientX - dragStart.x;
       const dy = e.clientY - dragStart.y;
@@ -128,18 +255,23 @@ export function Canvas3D({
           panY: prev.panY + dy,
         }));
       } else {
-        // 3D Döndürme (Orbit)
+        // 3D Döndürme (Orbit - Fare yönüyle birebir eşleşme)
         setCamera((prev) => ({
           ...prev,
-          rotY: (prev.rotY + dx * 0.45) % 360,
+          rotY: (prev.rotY - dx * 0.45) % 360,
           rotX: Math.max(-85, Math.min(85, prev.rotX - dy * 0.45)),
         }));
       }
     },
-    [isDragging, isCreatingSolid, dragStart, activeTool, setCamera]
+    [isDragging, isCreatingSolid, dragStart, activeTool, camera, onUpdateSolidPosition, setCamera]
   );
 
   const handleMouseUp = () => {
+    if (dragSolidRef.current) {
+      dragSolidRef.current = null;
+      setDraggingSolidId(null);
+    }
+
     if (isCreatingSolid && dragSolidStart && dragSolidCurrent && onAddSolid) {
       const distPx = Math.hypot(dragSolidCurrent.x - dragSolidStart.x, dragSolidCurrent.y - dragSolidStart.y);
       const computedSize = Number(Math.max(2, Math.min(8, distPx / 20)).toFixed(1));
@@ -376,6 +508,9 @@ export function Canvas3D({
         </div>
       </div>
 
+      {/* TİNKERCAD STİLİ 3D NAVİGASYON KÜPÜ (Sol Üst) */}
+      <ViewCube3D camera={camera} setCamera={setCamera} />
+
       {/* 2. ANA SVG 3D ÇİZİM TUVALİ */}
       <svg className="w-full h-full block pointer-events-none">
         {/* A) Zemin Izgarası (Z = 0, Tam Ekran Sonsuz Zemin) */}
@@ -561,28 +696,277 @@ export function Canvas3D({
           renderedSolids.map((rf, idx) => {
             const solid = solids.find((s) => s.id === rf.solidId);
             const opacity = solid?.opacity || 0.85;
+            const isSelected = selectedSolidId === rf.solidId;
 
             return (
               <g
                 key={`face-${rf.solidId}-${rf.faceIdx}-${idx}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectSolid(rf.solidId);
-                }}
-                className="pointer-events-auto cursor-pointer group"
+                onMouseDown={(e) => handleSolidMouseDown(rf.solidId, e)}
+                className="pointer-events-auto cursor-grab active:cursor-grabbing group"
               >
                 <path
                   d={rf.pointsD}
                   fill={rf.fillColor}
                   fillOpacity={opacity}
-                  stroke={rf.strokeColor}
-                  strokeWidth={showGlobalEdges ? 1.8 : 0.5}
+                  stroke={isSelected ? '#38bdf8' : rf.strokeColor}
+                  strokeWidth={isSelected ? 2.5 : showGlobalEdges ? 1.8 : 0.5}
                   strokeLinejoin="round"
                   className="transition-colors group-hover:brightness-110"
                 />
               </g>
             );
           })}
+
+        {/* C.1) Seçili Cismin 3D Eksen Taşıma Okları (Sadece 'Cismi seç / taşı' aracı aktifken görünür) */}
+        {activeTool === 'select_move' &&
+          solids.map((solid) => {
+            if (selectedSolidId !== solid.id) return null;
+          const solidHeight = solid.dimensions.height || solid.dimensions.width || 3;
+          const arrowLen3D = 2.4;
+
+          const center3D = {
+            x: solid.position.x,
+            y: solid.position.y,
+            z: solid.position.z + (solidHeight / 2),
+          };
+
+          const groundPt = project3DToScreen(
+            { x: solid.position.x, y: solid.position.y, z: 0 },
+            camera,
+            dimensions.width,
+            dimensions.height
+          );
+          const centerPt = project3DToScreen(center3D, camera, dimensions.width, dimensions.height);
+
+          // X, Y, Z Ok Uç Noktaları
+          const xTipPt = project3DToScreen(
+            { x: center3D.x + arrowLen3D, y: center3D.y, z: center3D.z },
+            camera,
+            dimensions.width,
+            dimensions.height
+          );
+          const yTipPt = project3DToScreen(
+            { x: center3D.x, y: center3D.y + arrowLen3D, z: center3D.z },
+            camera,
+            dimensions.width,
+            dimensions.height
+          );
+          const zTipPt = project3DToScreen(
+            { x: center3D.x, y: center3D.y, z: center3D.z + arrowLen3D },
+            camera,
+            dimensions.width,
+            dimensions.height
+          );
+
+          // Ok Geometrisi Hesaplayıcı
+          const calcArrow = (p0: { x: number; y: number }, p1: { x: number; y: number }) => {
+            const dx = p1.x - p0.x;
+            const dy = p1.y - p0.y;
+            const len = Math.hypot(dx, dy) || 1;
+            const ux = dx / len;
+            const uy = dy / len;
+            const px = -uy;
+            const py = ux;
+            const headLen = 12;
+            const headW = 5.5;
+
+            const tip = { x: p1.x, y: p1.y };
+            const left = { x: p1.x - ux * headLen + px * headW, y: p1.y - uy * headLen + py * headW };
+            const right = { x: p1.x - ux * headLen - px * headW, y: p1.y - uy * headLen - py * headW };
+            const badge = { x: p1.x + ux * 15, y: p1.y + uy * 15 };
+
+            return {
+              lineEnd: { x: p1.x - ux * (headLen * 0.7), y: p1.y - uy * (headLen * 0.7) },
+              headPoints: `${tip.x},${tip.y} ${left.x},${left.y} ${right.x},${right.y}`,
+              badge,
+            };
+          };
+
+          const xArrow = calcArrow(centerPt, xTipPt);
+          const yArrow = calcArrow(centerPt, yTipPt);
+          const zArrow = calcArrow(centerPt, zTipPt);
+
+          return (
+            <g key={`move-gizmo-${solid.id}`} className="pointer-events-auto select-none">
+              {/* Zemin İzdüşüm Çizgisi ve Zemin Noktası */}
+              <line
+                x1={groundPt.x}
+                y1={groundPt.y}
+                x2={centerPt.x}
+                y2={centerPt.y}
+                stroke="#64748b"
+                strokeWidth={1.4}
+                strokeDasharray="4,3"
+                className="opacity-70"
+              />
+              <circle
+                cx={groundPt.x}
+                cy={groundPt.y}
+                r={4.5}
+                fill="#64748b"
+                className="opacity-70"
+              />
+
+              {/* 1. X EKSENİ OKU (Kırmızı / Red) */}
+              <g
+                onMouseDown={(e) => handleSolidMouseDown(solid.id, e, 'x')}
+                className="cursor-pointer group/xarrow"
+              >
+                <line
+                  x1={centerPt.x}
+                  y1={centerPt.y}
+                  x2={xArrow.lineEnd.x}
+                  y2={xArrow.lineEnd.y}
+                  stroke="#ef4444"
+                  strokeWidth={3.5}
+                  strokeLinecap="round"
+                  className="group-hover/xarrow:stroke-rose-600 transition-colors drop-shadow-sm"
+                />
+                <polygon
+                  points={xArrow.headPoints}
+                  fill="#ef4444"
+                  className="group-hover/xarrow:fill-rose-600 transition-colors drop-shadow-sm"
+                />
+                <circle
+                  cx={xArrow.badge.x}
+                  cy={xArrow.badge.y}
+                  r={9}
+                  fill="#ef4444"
+                  stroke="#ffffff"
+                  strokeWidth={1.5}
+                  className="group-hover/xarrow:fill-rose-600 transition-colors drop-shadow-md"
+                />
+                <text
+                  x={xArrow.badge.x}
+                  y={xArrow.badge.y + 3}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  className="text-[9px] font-black font-mono pointer-events-none"
+                >
+                  X
+                </text>
+              </g>
+
+              {/* 2. Y EKSENİ OKU (Yeşil / Green) */}
+              <g
+                onMouseDown={(e) => handleSolidMouseDown(solid.id, e, 'y')}
+                className="cursor-pointer group/yarrow"
+              >
+                <line
+                  x1={centerPt.x}
+                  y1={centerPt.y}
+                  x2={yArrow.lineEnd.x}
+                  y2={yArrow.lineEnd.y}
+                  stroke="#10b981"
+                  strokeWidth={3.5}
+                  strokeLinecap="round"
+                  className="group-hover/yarrow:stroke-emerald-600 transition-colors drop-shadow-sm"
+                />
+                <polygon
+                  points={yArrow.headPoints}
+                  fill="#10b981"
+                  className="group-hover/yarrow:fill-emerald-600 transition-colors drop-shadow-sm"
+                />
+                <circle
+                  cx={yArrow.badge.x}
+                  cy={yArrow.badge.y}
+                  r={9}
+                  fill="#10b981"
+                  stroke="#ffffff"
+                  strokeWidth={1.5}
+                  className="group-hover/yarrow:fill-emerald-600 transition-colors drop-shadow-md"
+                />
+                <text
+                  x={yArrow.badge.x}
+                  y={yArrow.badge.y + 3}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  className="text-[9px] font-black font-mono pointer-events-none"
+                >
+                  Y
+                </text>
+              </g>
+
+              {/* 3. Z EKSENİ OKU (Mavi / Blue) */}
+              <g
+                onMouseDown={(e) => handleSolidMouseDown(solid.id, e, 'z')}
+                className="cursor-pointer group/zarrow"
+              >
+                <line
+                  x1={centerPt.x}
+                  y1={centerPt.y}
+                  x2={zArrow.lineEnd.x}
+                  y2={zArrow.lineEnd.y}
+                  stroke="#3b82f6"
+                  strokeWidth={3.5}
+                  strokeLinecap="round"
+                  className="group-hover/zarrow:stroke-blue-600 transition-colors drop-shadow-sm"
+                />
+                <polygon
+                  points={zArrow.headPoints}
+                  fill="#3b82f6"
+                  className="group-hover/zarrow:fill-blue-600 transition-colors drop-shadow-sm"
+                />
+                <circle
+                  cx={zArrow.badge.x}
+                  cy={zArrow.badge.y}
+                  r={9}
+                  fill="#3b82f6"
+                  stroke="#ffffff"
+                  strokeWidth={1.5}
+                  className="group-hover/zarrow:fill-blue-600 transition-colors drop-shadow-md"
+                />
+                <text
+                  x={zArrow.badge.x}
+                  y={zArrow.badge.y + 3}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  className="text-[9px] font-black font-mono pointer-events-none"
+                >
+                  Z
+                </text>
+              </g>
+
+              {/* Merkez Bağlantı Noktası (Serbest Taşıma) */}
+              <circle
+                cx={centerPt.x}
+                cy={centerPt.y}
+                r={6}
+                fill="#ffffff"
+                stroke="#0f172a"
+                strokeWidth={2.2}
+                className="cursor-move hover:fill-sky-400 transition-colors drop-shadow-sm"
+                onMouseDown={(e) => handleSolidMouseDown(solid.id, e, 'free')}
+              />
+
+              {/* Koordinat Rozeti */}
+              <g
+                transform={`translate(${centerPt.x}, ${centerPt.y - 30})`}
+                className="cursor-grab active:cursor-grabbing"
+                onMouseDown={(e) => handleSolidMouseDown(solid.id, e, 'free')}
+              >
+                <rect
+                  x={-55}
+                  y={-12}
+                  width={110}
+                  height={24}
+                  rx={12}
+                  fill="rgba(15, 23, 42, 0.92)"
+                  stroke="#38bdf8"
+                  strokeWidth={1.5}
+                />
+                <text
+                  textAnchor="middle"
+                  y={4}
+                  fill="#ffffff"
+                  className="text-[11px] font-mono font-black select-none pointer-events-none"
+                >
+                  X:{solid.position.x} Y:{solid.position.y} Z:{solid.position.z}
+                </text>
+              </g>
+            </g>
+          );
+        })}
 
         {/* D) 3D Ayrıt Çizgileri (Wireframe) */}
         {showGlobalEdges &&

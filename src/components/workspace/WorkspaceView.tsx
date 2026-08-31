@@ -46,7 +46,7 @@ export function WorkspaceView() {
   // 3D Stüdyo Durumları
   const [solids, setSolids] = useState<Solid3DObject[]>(INITIAL_SOLIDS);
   const [selectedSolidId, setSelectedSolidId] = useState<string | null>(null);
-  const [active3DTool, setActive3DTool] = useState<Tool3DMode>('orbit');
+  const [active3DTool, setActive3DTool] = useState<Tool3DMode>('select_move');
   const [camera3D, setCamera3D] = useState<Camera3D>(DEFAULT_CAMERA_3D);
   const [showGlobalVertices, setShowGlobalVertices] = useState(true);
   const [showGlobalEdges, setShowGlobalEdges] = useState(true);
@@ -120,7 +120,9 @@ export function WorkspaceView() {
     setCamera3D((prev) => ({ ...prev, rotX: 25, rotY: -40, panX: 0, panY: 30, zoom: 45 }));
   };
 
-  const handleSetCameraPreset = (preset: 'isometric' | 'front' | 'top' | 'side') => {
+  const handleSetCameraPreset = (
+    preset: 'isometric' | 'front' | 'back' | 'top' | 'bottom' | 'right' | 'left' | 'side'
+  ) => {
     switch (preset) {
       case 'isometric':
         setCamera3D((prev) => ({ ...prev, rotX: 25, rotY: -40, panX: 0, panY: 30, zoom: 55 }));
@@ -128,11 +130,21 @@ export function WorkspaceView() {
       case 'front':
         setCamera3D((prev) => ({ ...prev, rotX: 0, rotY: 0, panX: 0, panY: 30, zoom: 55 }));
         break;
+      case 'back':
+        setCamera3D((prev) => ({ ...prev, rotX: 0, rotY: 180, panX: 0, panY: 30, zoom: 55 }));
+        break;
       case 'top':
         setCamera3D((prev) => ({ ...prev, rotX: 85, rotY: 0, panX: 0, panY: 0, zoom: 55 }));
         break;
+      case 'bottom':
+        setCamera3D((prev) => ({ ...prev, rotX: -85, rotY: 0, panX: 0, panY: 0, zoom: 55 }));
+        break;
+      case 'right':
       case 'side':
         setCamera3D((prev) => ({ ...prev, rotX: 0, rotY: -90, panX: 0, panY: 30, zoom: 55 }));
+        break;
+      case 'left':
+        setCamera3D((prev) => ({ ...prev, rotX: 0, rotY: 90, panX: 0, panY: 30, zoom: 55 }));
         break;
     }
   };
@@ -166,8 +178,8 @@ export function WorkspaceView() {
               onAddSolid={handleAddSolid}
               onDeleteSelected={handleDeleteSolid}
               onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
-              onAutoArrange={() => {}}
-              onSetCameraPreset={() => {}}
+              onAutoArrange={handleAutoArrange}
+              onSetCameraPreset={handleSetCameraPreset}
             />
           )
         )}
@@ -197,6 +209,14 @@ export function WorkspaceView() {
             setCamera={setCamera3D}
             onSelectSolid={setSelectedSolidId}
             onAddSolid={handleAddSolid}
+            onDeleteSolid={(id) => {
+              if (id) {
+                setSolids((prev) => prev.filter((s) => s.id !== id));
+                if (selectedSolidId === id) setSelectedSolidId(null);
+              } else {
+                handleDeleteSolid();
+              }
+            }}
             setActive3DTool={setActive3DTool}
             onUpdateSolidPosition={(id, newPos) => {
               setSolids((prev) =>

@@ -27,6 +27,8 @@ import {
   formatTurkishNumber,
   formatCoordinate,
 } from '@/math/coordinates';
+import { MeasurementInstruments } from './MeasurementInstruments';
+import { TextNoteDialog } from './TextNoteDialog';
 import {
   calculateDistance,
   calculateMidpoint,
@@ -85,6 +87,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     handlePointDrag,
     deleteObject,
     addObject,
+    updateObject,
     studioDimension,
     setStudioDimension,
     undo,
@@ -93,6 +96,11 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     canRedo,
     cancelPendingAction,
   } = useWorkspace();
+
+  // Yazı / Metin Notu Düzenleme Durumu
+  const [isTextDialogOpen, setIsTextDialogOpen] = useState(false);
+  const [editingTextObj, setEditingTextObj] = useState<TextObject | null>(null);
+  const [pendingTextWorldPos, setPendingTextWorldPos] = useState<Point2D | null>(null);
 
   // Sürükleme ve Kaydırma (Pan/Drag) Durumları
   const [isPanning, setIsPanning] = useState(false);
@@ -298,6 +306,13 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     const screenX = e.clientX - rect.left;
     const screenY = e.clientY - rect.top;
     const world = screenToWorld({ x: screenX, y: screenY }, viewport);
+
+    if (activeTool === 'text') {
+      setPendingTextWorldPos(world);
+      setEditingTextObj(null);
+      setIsTextDialogOpen(true);
+      return;
+    }
 
     if (activeTool === 'pen') {
       setIsDrawingPen(true);
@@ -1509,32 +1524,65 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             const txt = obj as TextObject;
             const sPos = worldToScreen({ x: txt.x, y: txt.y }, viewport);
             const isSelected = selectedObjectId === txt.id;
+            const fontSize = txt.fontSize || 14;
+            const textWidth = Math.max(70, txt.text.length * (fontSize * 0.62) + 28);
+            const textHeight = fontSize + 16;
 
             return (
               <g
                 key={txt.id}
-                onClick={() => setSelectedObjectId(txt.id)}
-                className="cursor-pointer select-none"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedObjectId(txt.id);
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setEditingTextObj(txt);
+                  setPendingTextWorldPos({ x: txt.x, y: txt.y });
+                  setIsTextDialogOpen(true);
+                }}
+                className="cursor-pointer select-none group/txt"
               >
+                {/* Not Arka Plan Kartı */}
                 <rect
-                  x={sPos.x - 8}
-                  y={sPos.y - 18}
-                  width={txt.text.length * 8 + 16}
-                  height={26}
-                  rx={6}
-                  fill={isSelected ? '#fdf2f8' : '#ffffff'}
-                  stroke={isSelected ? '#ec4899' : '#cbd5e1'}
-                  strokeWidth={1.5}
-                  className="shadow-2xs"
+                  x={sPos.x - 10}
+                  y={sPos.y - textHeight + 6}
+                  width={textWidth}
+                  height={textHeight}
+                  rx={8}
+                  fill={isSelected ? '#eff6ff' : '#ffffff'}
+                  stroke={isSelected ? '#2563eb' : '#cbd5e1'}
+                  strokeWidth={isSelected ? 2 : 1.2}
+                  className="shadow-xs transition-all group-hover/txt:stroke-blue-400 dark:fill-slate-800 dark:stroke-slate-700"
                 />
+
+                {/* Not Metni */}
                 <text
                   x={sPos.x}
                   y={sPos.y}
                   fill={txt.color || '#1e293b'}
-                  className="font-bold text-xs font-sans"
+                  fontSize={fontSize}
+                  className="font-bold font-sans dark:fill-slate-100"
                 >
                   {txt.text}
                 </text>
+
+                {/* Düzenleme Kalem İkonu (Hover'da Görünür) */}
+                <g
+                  transform={`translate(${sPos.x + textWidth - 24}, ${sPos.y - textHeight + 10})`}
+                  className="opacity-0 group-hover/txt:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingTextObj(txt);
+                    setPendingTextWorldPos({ x: txt.x, y: txt.y });
+                    setIsTextDialogOpen(true);
+                  }}
+                >
+                  <circle cx="6" cy="6" r="8" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1" />
+                  <text x="6" y="9.5" textAnchor="middle" fontSize="9" className="font-sans">
+                    ✏️
+                  </text>
+                </g>
               </g>
             );
           })}
@@ -1654,9 +1702,38 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           }
           return null;
         })()}
+
+        {/* 14. İNTERAKTİF ÖLÇME ARAÇLARI KATMANI (Açıölçer / İletki, Cetvel, Gönye, Alan Modeli) */}
+        <MeasurementInstruments activeTool={activeTool} viewport={viewport} />
       </svg>
 
-      {/* 4. ÇOKGEN OLUŞTURMA YARDIMCI VE TAMAMLAMA KAPSÜLÜ */}
+      {/* 4. AÇIÖLÇER VE ÖLÇÜM REHBER KAPSÜLÜ */}
+      {['measure_angle', 'angle', 'measure_distance', 'measure_area', 'measure_perimeter', 'unit_measure'].includes(activeTool) && (
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-card/95 backdrop-blur-md text-white border border-border shadow-2xl px-4 py-2.5 rounded-2xl flex items-center gap-3 z-30 select-none animate-in slide-in-from-bottom-3 duration-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-black">
+              {activeTool === 'measure_angle' && '📐 Açıölçer: Açıyı ölçmek için 3 noktaya tıklayın veya ibreyi sürükleyin.'}
+              {activeTool === 'angle' && `📐 Açı Oluştur: 3 nokta seçin (${pendingPointIds.length}/3 seçildi).`}
+              {activeTool === 'measure_distance' && `📏 Uzunluk Ölç: Mesafe için 2 nokta veya doğru parçası seçin (${pendingPointIds.length}/2 seçildi).`}
+              {activeTool === 'measure_area' && '🟩 Alanı Bul: Alanını görmek istediğiniz çokgene veya şekle dokunun.'}
+              {activeTool === 'measure_perimeter' && '🔄 Çevre Tahmin: Çevresini görmek istediğiniz çokgene dokunun.'}
+              {activeTool === 'unit_measure' && '🔢 Birimle Ölç: Birim kare sayısını ölçmek için 2 nokta seçin.'}
+            </span>
+          </div>
+
+          {pendingPointIds.length > 0 && (
+            <button
+              onClick={cancelPendingAction}
+              className="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 font-bold text-xs cursor-pointer transition-all active:scale-95"
+            >
+              ✕ Temizle
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 5. ÇOKGEN OLUŞTURMA YARDIMCI VE TAMAMLAMA KAPSÜLÜ */}
       {activeTool === 'polygon' && pendingPointIds.length > 0 && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-card/95 backdrop-blur-md text-white border border-border shadow-2xl px-4 py-2.5 rounded-2xl flex items-center gap-3 z-30 select-none animate-in slide-in-from-bottom-3 duration-200">
           <div className="flex items-center gap-2">
@@ -1858,6 +1935,49 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           <Trash2 className="w-4 h-4 text-red-500" />
         </button>
       </div>
+
+      {/* 6. YAZI VE MATEMATİK NOTU DÜZENLEME DİYALOĞU */}
+      <TextNoteDialog
+        isOpen={isTextDialogOpen}
+        onClose={() => {
+          setIsTextDialogOpen(false);
+          setEditingTextObj(null);
+        }}
+        initialText={editingTextObj?.text || ''}
+        initialColor={editingTextObj?.color || '#0f172a'}
+        initialFontSize={editingTextObj?.fontSize || 14}
+        onSave={(text, color, fontSize) => {
+          if (editingTextObj) {
+            updateObject(editingTextObj.id, { text, color, fontSize });
+          } else if (pendingTextWorldPos) {
+            const newTextObj: TextObject = {
+              id: `txt-${Date.now()}`,
+              type: 'text',
+              label: text.slice(0, 20),
+              showLabel: true,
+              text,
+              x: pendingTextWorldPos.x,
+              y: pendingTextWorldPos.y,
+              fontSize,
+              color,
+              visible: true,
+              createdAt: Date.now(),
+            };
+            addObject(newTextObj, `"${text}" notu eklendi`);
+          }
+          setIsTextDialogOpen(false);
+          setEditingTextObj(null);
+        }}
+        onDelete={
+          editingTextObj
+            ? () => {
+                deleteObject(editingTextObj.id);
+                setIsTextDialogOpen(false);
+                setEditingTextObj(null);
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

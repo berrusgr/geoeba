@@ -8,7 +8,7 @@ import { Header } from '@/components/layout/Header';
 export const metadata: Metadata = {
   title: 'GeoEBA - Etkileşimli Matematik ve Geometri Platformu',
   description:
-    'İlkokul, ortaokul ve lise düzeyinde Türkiye Yüzyılı Maarif Modeli uyumlu etkileşimli matematik, geometri ve 3D simülasyon platformu.',
+    'İlkokul, ortaokul ve lise düzeyinde etkileşimli matematik, geometri ve 3D simülasyon platformu.',
 };
 
 export default function RootLayout({

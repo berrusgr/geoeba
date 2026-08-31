@@ -442,7 +442,7 @@ export const ilkokulLevel: Level = {
     {
       gradeNumber: 2,
       title: '2. Sınıf',
-      subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+      subtitle: 'Etkileşimli Matematik',
       description: '100’e kadar sayılar, basamak değeri, bütün-yarım-çeyrek, çarpma ve bölmeye giriş, saatler ve simetri.',
       themes: [
         {
@@ -924,7 +924,7 @@ export const ilkokulLevel: Level = {
     {
       gradeNumber: 3,
       title: '3. Sınıf',
-      subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+      subtitle: 'Etkileşimli Matematik',
       description: '1000’e kadar sayılar, birim kesirler, tek/çift sayılar, geometrik cisimlerin köşe-yüz-ayrıtları, çevre uzunluğu ve nokta grafiği.',
       themes: [
         {
@@ -1510,7 +1510,7 @@ export const ilkokulLevel: Level = {
     {
       gradeNumber: 4,
       title: '4. Sınıf',
-      subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+      subtitle: 'Etkileşimli Matematik',
       description: '6 basamaklı sayılar, basit/bileşik/denk kesirler, 4 basamaklı dört işlem, açılar dönme miktarı, açınımlar, ayna simetrisi ve olasılık.',
       themes: [
         {

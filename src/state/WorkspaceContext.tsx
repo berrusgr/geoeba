@@ -484,7 +484,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
         setPendingPointIds([]);
       }
-    } else if (activeTool === 'angle') {
+    } else if (activeTool === 'angle' || activeTool === 'measure_angle') {
       const nextPending = [...pendingPointIds, pointId];
       if (nextPending.length < 3) {
         setPendingPointIds(nextPending);
@@ -492,10 +492,38 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         const p1 = objects.find((o) => o.id === nextPending[0]) as PointObject;
         const vertex = objects.find((o) => o.id === nextPending[1]) as PointObject;
         const p3 = objects.find((o) => o.id === nextPending[2]) as PointObject;
-        const label = p1 && vertex && p3 ? `∠${p1.label}${vertex.label}${p3.label}` : 'Açı';
+        const deg = p1 && vertex && p3 ? Math.round(calculateAngleDegrees(p1, vertex, p3)) : 0;
+        const label = p1 && vertex && p3 ? `∠${p1.label}${vertex.label}${p3.label} = ${deg}°` : 'Açı';
+
+        // Açının kollarını birleştiren doğru parçaları
+        const seg1: SegmentObject = {
+          id: `seg-${Date.now()}`,
+          type: 'segment',
+          label: `${vertex?.label || ''}${p1?.label || ''}`,
+          showLabel: false,
+          startPointId: nextPending[1],
+          endPointId: nextPending[0],
+          color: '#f59e0b',
+          visible: true,
+          thickness: 2,
+          createdAt: Date.now(),
+        };
+
+        const seg2: SegmentObject = {
+          id: `seg-${Date.now() + 1}`,
+          type: 'segment',
+          label: `${vertex?.label || ''}${p3?.label || ''}`,
+          showLabel: false,
+          startPointId: nextPending[1],
+          endPointId: nextPending[2],
+          color: '#f59e0b',
+          visible: true,
+          thickness: 2,
+          createdAt: Date.now() + 1,
+        };
 
         const newAngle: AngleObject = {
-          id: `ang-${Date.now()}`,
+          id: `ang-${Date.now() + 2}`,
           type: 'angle',
           label,
           showLabel: true,
@@ -505,10 +533,72 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           color: '#f59e0b',
           visible: true,
           showValue: true,
+          createdAt: Date.now() + 2,
+        };
+
+        setObjects((prev) => {
+          const next = [...prev, seg1, seg2, newAngle];
+          pushHistory(next, `${label} açıölçer ile ölçüldü`);
+          return next;
+        });
+        setPendingPointIds([]);
+      }
+    } else if (activeTool === 'measure_distance' || activeTool === 'unit_measure') {
+      const nextPending = [...pendingPointIds, pointId];
+      if (nextPending.length === 1) {
+        setPendingPointIds(nextPending);
+      } else if (nextPending.length === 2) {
+        if (nextPending[0] !== nextPending[1]) {
+          const p1 = objects.find((o) => o.id === nextPending[0]) as PointObject;
+          const p2 = objects.find((o) => o.id === nextPending[1]) as PointObject;
+          const dist = p1 && p2 ? calculateDistance(p1, p2).toFixed(2) : '0';
+          const label = p1 && p2 ? `|${p1.label}${p2.label}| = ${dist} br` : 'Ölçüm';
+
+          const newSegment: SegmentObject = {
+            id: `seg-${Date.now()}`,
+            type: 'segment',
+            label,
+            showLabel: true,
+            startPointId: nextPending[0],
+            endPointId: nextPending[1],
+            color: '#059669',
+            visible: true,
+            showLength: true,
+            thickness: 3,
+            createdAt: Date.now(),
+          };
+          addObject(newSegment, `${label} uzunluğu ölçüldü`);
+        }
+        setPendingPointIds([]);
+      }
+    } else if (activeTool === 'measure_area' || activeTool === 'measure_perimeter') {
+      // Çokgen veya şekil köşe noktalarını topla
+      if (pendingPointIds.length >= 3 && pendingPointIds[0] === pointId) {
+        const polyPoints = pendingPointIds
+          .map((id) => objects.find((o) => o.id === id) as PointObject)
+          .filter(Boolean);
+        const areaVal = calculatePolygonArea(polyPoints).toFixed(2);
+        const perimVal = calculatePolygonPerimeter(polyPoints).toFixed(2);
+        const label = activeTool === 'measure_area' ? `Alan = ${areaVal} br²` : `Çevre = ${perimVal} br`;
+
+        const newPolygon: PolygonObject = {
+          id: `poly-${Date.now()}`,
+          type: 'polygon',
+          label,
+          showLabel: true,
+          pointIds: [...pendingPointIds],
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.2,
+          visible: true,
+          showArea: activeTool === 'measure_area',
+          showPerimeter: activeTool === 'measure_perimeter',
           createdAt: Date.now(),
         };
-        addObject(newAngle, `${label} oluşturuldu`);
+        addObject(newPolygon, `${label} hesaplandı`);
         setPendingPointIds([]);
+      } else if (!pendingPointIds.includes(pointId)) {
+        setPendingPointIds([...pendingPointIds, pointId]);
       }
     } else if (activeTool === 'polygon') {
       // İlk noktaya tekrar tıklandıysa çokgeni kapat

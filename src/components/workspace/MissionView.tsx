@@ -276,6 +276,351 @@ export function MissionView() {
   const [tileRemovedNegatives, setTileRemovedNegatives] = useState<number>(3); // 3 adet (-) dışarı atıldı
   const [tilesVerified, setTilesVerified] = useState<boolean>(false);
 
+  // 14. KARIŞ VE ADIM İLE UZUNLUK ÖLÇÜMÜ (1. Sınıf Standart Olmayan Ölçme)
+  const [placedSpans, setPlacedSpans] = useState<number>(0);
+  const targetSpans = 6;
+  const [spanVerified, setSpanVerified] = useState<boolean>(false);
+
+  const handleAddSpan = () => {
+    if (placedSpans < 6) {
+      const next = placedSpans + 1;
+      setPlacedSpans(next);
+      speakText(`${next}. karış yerleştirildi`);
+      if (next === targetSpans) {
+        setSpanVerified(true);
+        speakText('Tebrikler! Masanın boyu tam 6 karış!');
+        if (selectedActivity) markActivityCompleted(selectedActivity.id);
+        try {
+          confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+        } catch (e) {}
+      }
+    }
+  };
+
+  const handleRemoveSpan = () => {
+    if (placedSpans > 0) {
+      setPlacedSpans((prev) => prev - 1);
+      setSpanVerified(false);
+    }
+  };
+
+  const handleResetSpans = () => {
+    setPlacedSpans(0);
+    setSpanVerified(false);
+  };
+
+  const handleVerifySpans = () => {
+    if (placedSpans === targetSpans) {
+      setSpanVerified(true);
+      speakText('Tebrikler! Sıranın uzunluğu 6 karış olarak doğru ölçüldü!');
+      if (selectedActivity) markActivityCompleted(selectedActivity.id);
+      try {
+        confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+      } catch (e) {}
+    } else {
+      speakText(`Masa henüz tam ölçülmedi. Masayı doldurmak için ${targetSpans - placedSpans} karış daha yerleştir!`);
+    }
+  };
+
+  // 15. PİSAGOR TEOREMİ & DİK ÜÇGEN MODELLERİ (8. Sınıf LGS)
+  const [pythA, setPythA] = useState<number>(3);
+  const [pythB, setPythB] = useState<number>(4);
+  const [pythScenario, setPythScenario] = useState<'abstract' | 'ladder' | 'tree'>('abstract');
+  const [pythVerified, setPythVerified] = useState<boolean>(false);
+  const pythC = Math.round(Math.sqrt(pythA * pythA + pythB * pythB) * 100) / 100;
+  const isPythSpecial = Number.isInteger(pythC);
+
+  const handleVerifyPythagoras = () => {
+    setPythVerified(true);
+    speakText(`Harika! a kare artı b kare eşittir c kare. ${pythA} karesi artı ${pythB} karesi eşittir ${pythC} karesi.`);
+    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+    try {
+      confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+    } catch (e) {}
+  };
+
+  // 16. KAREKÖKLÜ SAYILAR & ALAN-KENAR İLİŞKİSİ (8. Sınıf LGS)
+  const [sqrtArea, setSqrtArea] = useState<number>(25);
+  const [sqrtVerified, setSqrtVerified] = useState<boolean>(false);
+  const sqrtVal = Math.round(Math.sqrt(sqrtArea) * 100) / 100;
+  const isPerfectSquare = Number.isInteger(Math.sqrt(sqrtArea));
+
+  const handleVerifySqrt = () => {
+    setSqrtVerified(true);
+    if (isPerfectSquare) {
+      speakText(`Tebrikler! Alanı ${sqrtArea} olan karenin bir kenarı tam karekök ${sqrtArea} yani ${sqrtVal} birimdir.`);
+    } else {
+      const lowerSquare = Math.floor(Math.sqrt(sqrtArea)) ** 2;
+      const upperSquare = Math.ceil(Math.sqrt(sqrtArea)) ** 2;
+      speakText(`Tebrikler! Karekök ${sqrtArea}, karekök ${lowerSquare} yani ${Math.floor(Math.sqrt(sqrtArea))} ile karekök ${upperSquare} yani ${Math.ceil(Math.sqrt(sqrtArea))} arasındadır.`);
+    }
+    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+    try {
+      confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+    } catch (e) {}
+  };
+
+  // 17. EBOB & EKOK FAYANS VE PERİYODİK MODEL (6 & 8. Sınıf)
+  const [roomW, setRoomW] = useState<number>(24);
+  const [roomH, setRoomH] = useState<number>(36);
+  const [tileSize, setTileSize] = useState<number>(6);
+  const [ebobVerified, setEbobVerified] = useState<boolean>(false);
+
+  // EBOB Hesaplayıcı
+  const getGCD = (a: number, b: number): number => (b === 0 ? a : getGCD(b, a % b));
+  const currentEBOB = getGCD(roomW, roomH);
+  const currentEKOK = (roomW * roomH) / currentEBOB;
+  const isTilePerfect = roomW % tileSize === 0 && roomH % tileSize === 0;
+  const totalTilesCount = isTilePerfect ? (roomW / tileSize) * (roomH / tileSize) : 0;
+
+  const handleSetEBOBTile = () => {
+    setTileSize(currentEBOB);
+    speakText(`En büyük ortak bölen EBOB bulundu: ${currentEBOB} cm. Odaya en az sayıda ${ (roomW/currentEBOB)*(roomH/currentEBOB) } adet kare fayans döşenir!`);
+  };
+
+  const handleVerifyEBOB = () => {
+    if (isTilePerfect) {
+      setEbobVerified(true);
+      speakText(`Mükemmel! ${tileSize} cmlik fayanslarla oda tam kaplandı. Toplam ${totalTilesCount} adet fayans gerekir.`);
+      if (selectedActivity) markActivityCompleted(selectedActivity.id);
+      try {
+        confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+      } catch (e) {}
+    } else {
+      speakText(`Seçilen ${tileSize} cmlik fayans odayı tam bölmüyor! Lütfen her iki kenarı da tam bölen bir ölçü seçiniz.`);
+    }
+  };
+
+  // 18. ORAN, ORANTI, YÜZDE & İNDİRİM (7. Sınıf)
+  const [priceItem, setPriceItem] = useState<number>(200);
+  const [discountPercent, setDiscountPercent] = useState<number>(20);
+  const [ratioVerified, setRatioVerified] = useState<boolean>(false);
+  const discountAmount = (priceItem * discountPercent) / 100;
+  const finalPrice = priceItem - discountAmount;
+
+  const handleVerifyRatio = () => {
+    setRatioVerified(true);
+    speakText(`Tebrikler! ${priceItem} TL lik ürüne yüzde ${discountPercent} indirim uygulandığında indirim tutarı ${discountAmount} TL ve yeni fiyat ${finalPrice} TL olur.`);
+    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+    try {
+      confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+    } catch (e) {}
+  };
+
+  // 19. ASAL ÇARPAN AĞACI (6 & 8. Sınıf - Dinamik Matematik Motoru)
+  const [treeNumber, setTreeNumber] = useState<number>(24);
+  const [treeStep, setTreeStep] = useState<number>(1);
+  const [treeVerified, setTreeVerified] = useState<boolean>(false);
+
+  // Asal Sayı Kontrolü
+  const isPrime = (n: number): boolean => {
+    if (n < 2) return false;
+    for (let i = 2; i * i <= n; i++) {
+      if (n % i === 0) return false;
+    }
+    return true;
+  };
+
+  // En Küçük Asal Bölen
+  const getSmallestPrime = (n: number): number => {
+    for (let i = 2; i <= n; i++) {
+      if (n % i === 0 && isPrime(i)) return i;
+    }
+    return n;
+  };
+
+  // Dinamik Adım Adım Ağaç Ayrıştırma
+  const treeDecomposition = useMemo(() => {
+    const steps: {
+      parentVal: number;
+      leftPrime: number;
+      rightVal: number;
+      rightIsPrime: boolean;
+    }[] = [];
+
+    let current = treeNumber;
+    while (!isPrime(current) && current > 1) {
+      const p = getSmallestPrime(current);
+      const q = current / p;
+      steps.push({
+        parentVal: current,
+        leftPrime: p,
+        rightVal: q,
+        rightIsPrime: isPrime(q),
+      });
+      current = q;
+    }
+    return steps;
+  }, [treeNumber]);
+
+  const maxTreeSteps = Math.max(1, treeDecomposition.length);
+
+  // Üslü ve Asal Çarpan Özeti
+  const primeSummary = useMemo(() => {
+    const counts: { [k: number]: number } = {};
+    treeDecomposition.forEach((st) => {
+      counts[st.leftPrime] = (counts[st.leftPrime] || 0) + 1;
+    });
+    if (treeDecomposition.length > 0) {
+      const last = treeDecomposition[treeDecomposition.length - 1];
+      if (last.rightIsPrime) {
+        counts[last.rightVal] = (counts[last.rightVal] || 0) + 1;
+      }
+    }
+
+    const superDigits = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+    const expString = Object.entries(counts)
+      .map(([prime, power]) => {
+        const pStr = power > 1 ? power.toString().split('').map((d) => superDigits[parseInt(d)]).join('') : '';
+        return `${prime}${pStr}`;
+      })
+      .join(' · ');
+
+    const uniquePrimes = Object.keys(counts).join(', ');
+
+    return {
+      counts,
+      expString: expString || `${treeNumber}`,
+      uniquePrimes: uniquePrimes || `${treeNumber}`,
+    };
+  }, [treeDecomposition, treeNumber]);
+
+  const handleNextTreeStep = () => {
+    if (treeStep < maxTreeSteps) {
+      const next = treeStep + 1;
+      setTreeStep(next);
+      speakText(`${next}. dal açıldı`);
+      if (next === maxTreeSteps) {
+        setTreeVerified(true);
+        speakText(`Tebrikler! ${treeNumber} sayısının tüm asal çarpanları bulundu: ${primeSummary.expString}`);
+        if (selectedActivity) markActivityCompleted(selectedActivity.id);
+        try {
+          confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+        } catch (e) {}
+      }
+    }
+  };
+
+  const handleResetTree = () => {
+    setTreeStep(1);
+    setTreeVerified(false);
+  };
+
+  const handleFullTree = () => {
+    setTreeStep(maxTreeSteps);
+    setTreeVerified(true);
+    speakText(`${treeNumber} sayısının asal çarpan ağacı tamamlandı: ${primeSummary.expString}`);
+    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+    try {
+      confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+    } catch (e) {}
+  };
+
+  // 20. ERATOSTHENES KALBURU (1-100 Asal Sayılar)
+  const [sieveEliminated, setSieveEliminated] = useState<number[]>([1]); // 1 her zaman asal değil
+  const [sieveVerified, setSieveVerified] = useState<boolean>(false);
+
+  const isSieveEliminated = (n: number) => {
+    if (n === 1) return true;
+    for (const p of sieveEliminated) {
+      if (p > 1 && n > p && n % p === 0) return true;
+    }
+    return false;
+  };
+
+  const handleSieveEliminate = (prime: number) => {
+    if (!sieveEliminated.includes(prime)) {
+      const updated = [...sieveEliminated, prime];
+      setSieveEliminated(updated);
+      speakText(`${prime}'nin katları elendi`);
+      if (updated.length >= 5) {
+        setSieveVerified(true);
+        speakText('Tebrikler! 100 e kadar olan 25 asal sayı bulundu.');
+        if (selectedActivity) markActivityCompleted(selectedActivity.id);
+        try {
+          confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+        } catch (e) {}
+      }
+    }
+  };
+
+  const handleRunAllSieve = () => {
+    setSieveEliminated([1, 2, 3, 5, 7]);
+    setSieveVerified(true);
+    speakText('100 e kadar olan tüm asal sayılar kalburdan süzüldü!');
+    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+    try {
+      confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
+    } catch (e) {}
+  };
+
+  const handleResetSieve = () => {
+    setSieveEliminated([1]);
+    setSieveVerified(false);
+  };
+
+  // 21. BÖLÜNEBİLME KURALLARI MOTORU (2, 3, 4, 5, 6, 9, 10)
+  const [divNum, setDivNum] = useState<number>(240);
+  const [selectedDivRule, setSelectedDivRule] = useState<number>(2);
+
+  const checkDivisibility = (num: number, divisor: number) => {
+    return num % divisor === 0;
+  };
+
+  // 22. ORTAK BÖLENLER VE VENN ŞEMASI (18 & 24)
+  const [vennA, setVennA] = useState<number>(18);
+  const [vennB, setVennB] = useState<number>(24);
+
+  const getDivisors = (n: number) => {
+    const d: number[] = [];
+    for (let i = 1; i <= n; i++) {
+      if (n % i === 0) d.push(i);
+    }
+    return d;
+  };
+
+  const divisorsA = useMemo(() => getDivisors(vennA), [vennA]);
+  const divisorsB = useMemo(() => getDivisors(vennB), [vennB]);
+  const commonDivisors = useMemo(() => divisorsA.filter((x) => divisorsB.includes(x)), [divisorsA, divisorsB]);
+  const onlyA = useMemo(() => divisorsA.filter((x) => !divisorsB.includes(x)), [divisorsA, divisorsB]);
+  const onlyB = useMemo(() => divisorsB.filter((x) => !divisorsA.includes(x)), [divisorsA, divisorsB]);
+  const ebobVal = useMemo(() => (commonDivisors.length > 0 ? Math.max(...commonDivisors) : 1), [commonDivisors]);
+
+  // 23. ORTAK KATLAR VE RİTİM MODELİ (EKOK)
+  const [rhythmA, setRhythmA] = useState<number>(4);
+  const [rhythmB, setRhythmB] = useState<number>(6);
+
+  const gcd = (a: number, b: number): number => (!b ? a : gcd(b, a % b));
+  const ekokVal = useMemo(() => (rhythmA * rhythmB) / gcd(rhythmA, rhythmB), [rhythmA, rhythmB]);
+
+  // 24. ALAN MODELİ İLE ÇARPANLAR (Dikdörtgenler)
+  const [areaTarget, setAreaTarget] = useState<number>(36);
+  const areaFactorPairs = useMemo(() => {
+    const pairs: { w: number; h: number }[] = [];
+    for (let i = 1; i * i <= areaTarget; i++) {
+      if (areaTarget % i === 0) {
+        pairs.push({ w: areaTarget / i, h: i });
+      }
+    }
+    return pairs;
+  }, [areaTarget]);
+  const [selectedPairIdx, setSelectedPairIdx] = useState<number>(0);
+
+  // 25. BÖLEN LİSTESİ (Asal Çarpan Algoritması)
+  const [ladderNum, setLadderNum] = useState<number>(24);
+  const [ladderStep, setLadderStep] = useState<number>(1);
+  const ladderSteps = useMemo(() => {
+    const list: { val: number; prime: number }[] = [];
+    let current = ladderNum;
+    while (current > 1) {
+      const p = getSmallestPrime(current);
+      list.push({ val: current, prime: p });
+      current = current / p;
+    }
+    list.push({ val: 1, prime: 1 });
+    return list;
+  }, [ladderNum]);
+
   // Sesli Okuma / Web Speech Synthesis
   const speakText = (text: string) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -288,6 +633,17 @@ export function MissionView() {
       } catch (e) { }
     }
   };
+
+  // Ekran veya görev değiştiğinde / bileşen kapandığında seslendirmeyi derhal durdur
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    };
+  }, []);
 
   // Karar Ver (Adım 2) Seçimi
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -354,6 +710,19 @@ export function MissionView() {
       return 'angle_explorer';
     }
 
+    // Karış, Adım, Ayak ve Uzunluk Ölçümü
+    if (
+      prev === 'body_measurements' ||
+      prev === 'span_measurement' ||
+      selectedActivity?.id === 'act-1-olcme-karis' ||
+      title.includes('karış') ||
+      title.includes('adım') ||
+      title.includes('kulaç') ||
+      title.includes('standart olmayan')
+    ) {
+      return 'span_measurement';
+    }
+
     // İlkokul 1. Sınıf Sayılar ve Örüntüler
     if (prev === 'matching_pairs' || selectedActivity?.id === 'act-1-yon-2') {
       return 'matching_pairs';
@@ -373,7 +742,17 @@ export function MissionView() {
     if (prev === 'frog_rhythmic' || selectedActivity?.id === 'act-1-sayi-5' || title.includes('kurbağa') || title.includes('zıp zıp')) {
       return 'frog_rhythmic';
     }
-    if (prev === 'pattern_blocks' || selectedActivity?.id === 'act-1-sayi-6' || title.includes('örüntü')) {
+    if (
+      prev === 'pattern_blocks' ||
+      prev === 'polygon_shapes' ||
+      selectedActivity?.id === 'act-1-sayi-6' ||
+      selectedActivity?.id === 'act-1-sekil-ayir' ||
+      selectedActivity?.id === 'act-1-sekil-ev' ||
+      selectedActivity?.id === 'act-1-sekil-kose' ||
+      title.includes('örüntü') ||
+      title.includes('şekil') ||
+      title.includes('tangram')
+    ) {
       return 'pattern_blocks';
     }
     if (prev === 'fruit_estimation' || selectedActivity?.id === 'act-1-sayi-7' || title.includes('tahmin')) {
@@ -425,6 +804,125 @@ export function MissionView() {
       return 'number_line';
     }
 
+    // Pisagor Teoremi & Dik Üçgen (8. Sınıf)
+    if (
+      prev === 'pythagoras_theorem' ||
+      title.includes('pisagor') ||
+      title.includes('hipotenüs') ||
+      title.includes('dik üçgen') ||
+      desc.includes('pisagor')
+    ) {
+      return 'pythagoras_theorem';
+    }
+
+    // Kareköklü Sayılar & Alan-Kenar (8. Sınıf)
+    if (
+      prev === 'square_roots' ||
+      prev === 'square_root_area' ||
+      title.includes('karekök') ||
+      title.includes('tam kare') ||
+      desc.includes('karekök')
+    ) {
+      return 'square_roots';
+    }
+
+    // Eratosthenes Kalburu (6. Sınıf)
+    if (
+      prev === 'eratosthenes_sieve' ||
+      selectedActivity?.id === 'act-6-eratosthenes' ||
+      title.includes('eratosthenes') ||
+      title.includes('kalbur') ||
+      (title.includes('1-100') && title.includes('asal'))
+    ) {
+      return 'eratosthenes_sieve';
+    }
+
+    // Bölünebilme Kuralları (6. Sınıf)
+    if (
+      prev === 'divisibility_rules' ||
+      title.includes('bölünebilme') ||
+      title.includes('rakamlar toplamı') ||
+      title.includes('bölünme')
+    ) {
+      return 'divisibility_rules';
+    }
+
+    // Venn Şeması & Ortak Bölenler (6. Sınıf)
+    if (
+      prev === 'venn_divisors' ||
+      selectedActivity?.id === 'act-6-ortak-bolen' ||
+      title.includes('ortak bölen') ||
+      title.includes('venn')
+    ) {
+      return 'venn_divisors';
+    }
+
+    // Ritmik Ortak Katlar & EKOK (6. Sınıf)
+    if (
+      prev === 'rhythmic_multiples' ||
+      selectedActivity?.id === 'act-6-ortak-kat' ||
+      title.includes('ortak kat') ||
+      title.includes('ritim modeli')
+    ) {
+      return 'rhythmic_multiples';
+    }
+
+    // Alan Modeli ile Çarpanlar (6. Sınıf)
+    if (
+      prev === 'area_rectangles' ||
+      selectedActivity?.id === 'act-6-carpan-dikdortgen' ||
+      (title.includes('çarpan') && title.includes('alan')) ||
+      title.includes('dikdörtgen')
+    ) {
+      return 'area_rectangles';
+    }
+
+    // Bölen Listesi Algoritması (6. Sınıf)
+    if (
+      prev === 'division_ladder' ||
+      selectedActivity?.id === 'act-6-asal-carpan-algoritma' ||
+      title.includes('bölen listesi') ||
+      title.includes('çarpan algoritma')
+    ) {
+      return 'division_ladder';
+    }
+
+    // Asal Çarpan Ağacı (6 & 8. Sınıf)
+    if (
+      prev === 'prime_factor_tree' ||
+      selectedActivity?.id === 'act-6-asal-1' ||
+      title.includes('çarpan ağacı') ||
+      title.includes('asal çarpan ağacı') ||
+      (title.includes('asal') && title.includes('ağaç')) ||
+      (title.includes('asal çarpan') && !title.includes('ebob'))
+    ) {
+      return 'prime_factor_tree';
+    }
+
+    // EBOB & EKOK Fayans & Periyodik Olaylar (6 & 8. Sınıf)
+    if (
+      prev === 'ebob_ekok_tiles' ||
+      title.includes('ebob') ||
+      title.includes('ekok') ||
+      title.includes('fayans') ||
+      title.includes('katlar')
+    ) {
+      return 'ebob_ekok_tiles';
+    }
+
+    // Oran, Orantı, Yüzde & İndirim (7. Sınıf)
+    if (
+      prev === 'ratio_proportion' ||
+      title.includes('oranti') ||
+      title.includes('orantı') ||
+      title.includes('yüzde') ||
+      title.includes('indirim') ||
+      title.includes('kâr') ||
+      title.includes('kdv')
+    ) {
+      return 'ratio_proportion';
+    }
+
     // Eğim ve Doğrusal Fonksiyon
     if (prev === 'slope_line' || title.includes('eğim') || title.includes('doğru') || cat === 'fonksiyon') {
       return 'slope_explorer';
@@ -432,6 +930,429 @@ export function MissionView() {
 
     return 'data_barchart';
   }, [mission, selectedActivity]);
+
+  // Kapsamlı Pedagojik Veri (Karar Ver Soruları, Açıklamalar ve Notlar)
+  const pedagogicalData = useMemo(() => {
+    switch (missionType) {
+      case 'prime_factor_tree':
+        return {
+          question: `${treeNumber} sayısının asal çarpanlarına ayrılmış üslü gösterimi aşağıdakilerden hangisidir?`,
+          options: [
+            `${treeNumber} = ${primeSummary.expString}`,
+            `${treeNumber} = ${treeNumber} × 1`,
+            `${treeNumber} = 2 × ${Math.floor(treeNumber / 2)}`,
+            `${treeNumber} = 3 × ${Math.floor(treeNumber / 3)}`,
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! ${treeNumber} sayısı asal çarpanlarına ayrıştırıldığında en uçtaki asal yaprakların çarpımı ${primeSummary.expString} olur. Asal çarpanlar kümesi: { ${primeSummary.uniquePrimes} } olarak bulunur.`,
+          summaryNotes: [
+            `• Asal Çarpan Ağacı: Sayıyı 1'den büyük en küçük asal bölenlerine dallandırarak çözümler.`,
+            `• Üslü Gösterim: Aynı asal çarpanların tekrar eden adedi üs olarak yazılır (${treeNumber} = ${primeSummary.expString}).`,
+            `• Asal Sayı: Yalnızca 1'e ve kendisine bölünebilen 1'den büyük doğal sayılardır.`,
+            `• Temel Aritmetik Teoremi: 1'den büyük her tam sayı, asal çarpanların çarpımı olarak tek bir şekilde yazılabilir.`,
+          ],
+        };
+
+      case 'eratosthenes_sieve':
+        return {
+          question: '1 ile 100 arasındaki asal sayılarla ilgili aşağıdaki ifadelerden hangisi DOĞRUDUR?',
+          options: [
+            '100 e kadar toplam 25 adet asal sayı vardır ve en küçük asal sayı 2 dir.',
+            '1 sayısı asal sayıdır.',
+            'Tüm tek sayılar asal sayıdır.',
+            'Çift sayıların hiçbiri asal olamaz.',
+          ],
+          correctIndex: 0,
+          explanation: 'Tebrikler! 1 asal değildir. 2 sayısı hem en küçük hem de tek çift asal sayıdır. 2, 3, 5, 7 katları elendiğinde 1-100 arasında tam 25 asal sayı kalır.',
+          summaryNotes: [
+            '• Eratosthenes Kalburu: Bileşik sayıları katlarına göre eleyerek asal sayıları bulan antik yöntemdir.',
+            '• 1-100 Arası 25 Asal Sayı: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97.',
+            '• Çift Asal Kuralı: 2 haricindeki tüm çift sayılar 2 ye bölündüğü için asal değildir.',
+          ],
+        };
+
+      case 'divisibility_rules':
+        return {
+          question: `${divNum} sayısının bölünebilme durumları incelendiğinde hangisi kesinlikle doğrudur?`,
+          options: [
+            divNum % 10 === 0
+              ? `${divNum} sayısının son basamağı 0 olduğu için hem 2, hem 5 hem de 10 a kalansız bölünür.`
+              : divNum % 2 === 0
+              ? `${divNum} sayısı çift sayı olduğu için 2 ye kalansız bölünür.`
+              : `${divNum} sayısı tek sayı olduğu için 2 ye bölünmez.`,
+            'Rakamları toplamı çift olan her sayı 2 ye bölünür.',
+            'Son basamağı 5 olan her sayı 10 a kalansız bölünür.',
+            'Yalnızca 9 a bölünen sayılar 3 e bölünür.',
+          ],
+          correctIndex: 0,
+          explanation: `Harika! ${divNum} sayısının son basamağı (${divNum % 10}) ve rakamlar toplamı kuralına göre bölünebilirlik tespiti başarıyla doğrulandı.`,
+          summaryNotes: [
+            '• 2 ile Bölünme: Son basamak çift (0, 2, 4, 6, 8) olmalıdır.',
+            '• 3 ve 9 ile Bölünme: Rakamlar toplamı sırasıyla 3 veya 9 un katı olmalıdır.',
+            '• 4 ile Bölünme: Son iki basamağın oluşturduğu sayı 00 veya 4 ün katı olmalıdır.',
+            '• 5 ve 10 ile Bölünme: Son basamak 5 için (0, 5), 10 için (0) olmalıdır.',
+            '• 6 ile Bölünme: Sayı hem 2 ye hem de 3 e aynı anda kalansız bölünmelidir.',
+          ],
+        };
+
+      case 'venn_divisors':
+        return {
+          question: `${vennA} ve ${vennB} sayılarının En Büyük Ortak Böleni (EBOB) kaçtır?`,
+          options: [
+            `EBOB(${vennA}, ${vennB}) = ${ebobVal}`,
+            `EBOB(${vennA}, ${vennB}) = 1`,
+            `EBOB(${vennA}, ${vennB}) = ${vennA * vennB}`,
+            `EBOB(${vennA}, ${vennB}) = ${Math.max(vennA, vennB)}`,
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! ${vennA} ve ${vennB} sayılarının ortak bölenler kümesi { ${commonDivisors.join(', ')} } olup bunların en büyüğü EBOB = ${ebobVal} dir.`,
+          summaryNotes: [
+            `• Ortak Bölen: İki veya daha fazla sayıyı aynı anda kalansız bölen pozitif tam sayılardır.`,
+            `• EBOB (En Büyük Ortak Bölen): Ortak bölenlerin en büyüğüdür.`,
+            `• Venn Şeması Kesişimi: İki kümenin kesişim bölgesi ortak bölenleri gösterir.`,
+          ],
+        };
+
+      case 'rhythmic_multiples':
+        return {
+          question: `${rhythmA}'şar ve ${rhythmB}'şer ritmik saymada karşılaşılan ilk ortak kat (EKOK) kaçtır?`,
+          options: [
+            `EKOK(${rhythmA}, ${rhythmB}) = ${ekokVal}`,
+            `EKOK = ${rhythmA + rhythmB}`,
+            `EKOK = ${Math.abs(rhythmA - rhythmB)}`,
+            `EKOK = ${rhythmA * rhythmB * 2}`,
+          ],
+          correctIndex: 0,
+          explanation: `Harika! ${rhythmA} ve ${rhythmB} sayılarının pozitif katları sayı doğrusunda incelendiğinde buluştukları en küçük ortak kat EKOK = ${ekokVal} dir.`,
+          summaryNotes: [
+            `• Ortak Kat: Verilen sayıların her birine kalansız bölünebilen sayılardır.`,
+            `• EKOK (En Küçük Ortak Kat): Sıfırdan farklı ortak katların en küçüğüdür.`,
+            `• Ritim Modeli: İki farklı periyodun ilk çakıştığı anı bulmak için EKOK kullanılır.`,
+          ],
+        };
+
+      case 'area_rectangles':
+        return {
+          question: `Alanı ${areaTarget} br² olan bir dikdörtgenin kenar uzunlukları aşağıdakilerden hangisi OLABİLİR?`,
+          options: [
+            `${areaFactorPairs[0]?.w || 6} br ve ${areaFactorPairs[0]?.h || 6} br (${areaTarget} = ${areaFactorPairs[0]?.w || 6} × ${areaFactorPairs[0]?.h || 6})`,
+            '5 br ve 7 br',
+            '10 br ve 4 br',
+            '8 br ve 3 br',
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! Dikdörtgenin alanı Kenar × Kenar olduğundan, ${areaTarget} alanını veren tüm (En, Boy) ikilileri bu sayının çarpan çiftlerini oluşturur.`,
+          summaryNotes: [
+            `• Alan - Çarpan İlişkisi: Dikdörtgensel alan modelleri bir sayının tüm pozitif çarpanlarını somutlaştırır.`,
+            `• Çevre Hesabı: Çevre = 2 × (En + Boy)`,
+            `• Kare Özel Durumu: En = Boy olduğunda alan tam karedir (${areaTarget === 36 ? '6 × 6 = 36' : ''}).`,
+          ],
+        };
+
+      case 'division_ladder':
+        return {
+          question: `${ladderNum} sayısının bölen listesi (asal çarpan algoritması) sonucunda elde edilen asal çarpanlar hangisidir?`,
+          options: [
+            `${ladderNum} = ${primeSummary.expString}`,
+            `${ladderNum} = ${ladderNum} × 1`,
+            `${ladderNum} = 2 + ${ladderNum - 2}`,
+            `${ladderNum} = 10 × ${Math.floor(ladderNum / 10)}`,
+          ],
+          correctIndex: 0,
+          explanation: `Harika! Dikey çizginin sağına en küçük asallardan başlayarak bölme yapıldığında sağdaki sayıların çarpımı ${ladderNum} sayısını verir.`,
+          summaryNotes: [
+            `• Bölen Listesi: Sayı 1 olana kadar en küçük asallara bölünerek dikey sırada yazılır.`,
+            `• Sağdaki Asallar: Dikey çizginin sağındaki tüm sayıların çarpımı başlangıç sayısına eşittir.`,
+          ],
+        };
+
+      case 'pythagoras_theorem':
+        return {
+          question: 'Kenarları a = 3 br ve b = 4 br olan dik üçgende hipotenüs c uzunluğu kaç birimdir?',
+          options: ['5 br (3² + 4² = 9 + 16 = 25 = 5²)', '7 br (3 + 4)', '6 br', '8 br'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Pisagor bağıntısına göre dik kenarların kareleri toplamı hipotenüsün karesine eşittir: a² + b² = c² (9 + 16 = 25 ⇒ c = 5).',
+          summaryNotes: [
+            '• Pisagor Bağıntısı: Bir dik üçgende a² + b² = c²',
+            '• Özel Dik Üçgenler: (3-4-5), (5-12-13), (6-8-10), (8-15-17), (7-24-25)',
+            '• Alan Modeli: Dik kenarlar üzerine kurulan karelerin alanları toplamı, hipotenüs karesinin alanına eşittir.',
+          ],
+        };
+
+      case 'square_roots':
+        return {
+          question: 'Alanı 49 br² olan karenin bir kenar uzunluğu kaç birimdir?',
+          options: ['7 br (√49 = 7)', '14 br', '24.5 br', '49 br'],
+          correctIndex: 0,
+          explanation: 'Harika! Bir sayının karekökü, karesi o sayıya eşit olan pozitif sayıdır. Alanı A olan karenin kenarı s = √A dır (√49 = 7).',
+          summaryNotes: [
+            '• Karekök Tanımı: √A, karesi A olan pozitif sayıdır.',
+            '• Tam Kare Sayılar: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225...',
+            '• İrrasyonel Karekök Tahmini: √20 sayısı √16 (4) ile √25 (5) arasındadır (≈ 4.47).',
+          ],
+        };
+
+      case 'ebob_ekok_tiles':
+        return {
+          question: `${roomW} cm ve ${roomH} cm ölçülerindeki bir odayı hiç boşluk kalmadan kaplayacak EN BÜYÜK kare fayansın kenarı kaç cm dir?`,
+          options: [
+            `${currentEBOB} cm (EBOB = ${currentEBOB})`,
+            '1 cm',
+            `${Math.min(roomW, roomH)} cm`,
+            `${roomW * roomH} cm`,
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! Dikdörtgen şeklindeki bir alanı en büyük eş karelere bölmek için boyutların En Büyük Ortak Böleni (EBOB) hesaplanır: EBOB(${roomW}, ${roomH}) = ${currentEBOB} cm.`,
+          summaryNotes: [
+            `• Parçalama / Bölme Problemleri: Büyük bütünü eş küçük parçalara ayırırken EBOB kullanılır.`,
+            `• Fayans Sayısı Hesabı: Toplam Alan / Bir Fayansın Alanı = (${roomW} × ${roomH}) / (${tileSize} × ${tileSize}) = ${totalTilesCount} adet.`,
+            `• Katlama / Birleştirme Problemleri: Küçük parçalardan büyük bütüne giderken EKOK kullanılır.`,
+          ],
+        };
+
+      case 'ratio_proportion':
+        return {
+          question: `${priceItem} TL etiket fiyatlı bir ürüne %${discountPercent} indirim uygulandığında müşterinin ödeyeceği tutar kaç TL dir?`,
+          options: [
+            `${finalPrice} TL (İndirim: -${discountAmount} TL)`,
+            `${priceItem - 10} TL`,
+            `${priceItem + discountAmount} TL`,
+            `${discountAmount} TL`,
+          ],
+          correctIndex: 0,
+          explanation: `Harika! İndirim Tutarı = ${priceItem} × %${discountPercent} = ${discountAmount} TL. Ödenecek Tutar = ${priceItem} - ${discountAmount} = ${finalPrice} TL dir.`,
+          summaryNotes: [
+            `• Yüzde Hesabı: A sayısının %X'i = (A × X) / 100`,
+            `• İndirimli Fiyat: Etiket Fiyatı × (100 - İndirim Oranı) / 100`,
+            `• Doğru Orantı: Bir çokluk artarken diğeri de aynı oranda artar (İçler - Dışlar çarpımı).`,
+          ],
+        };
+
+      case 'span_measurement':
+        return {
+          question: 'Masayı karış ile ölçerken sonucun kişiden kişiye farklı çıkmasının sebebi nedir?',
+          options: [
+            'Karış standart olmayan bir ölçme birimidir ve herkesin el büyüklüğü farklıdır.',
+            'Masa sürekli büyüyüp küçülmektedir.',
+            'Karışla sadece yuvarlak nesneler ölçülebilir.',
+            'Cetvel yerine karış kullanmak yasaktır.',
+          ],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Karış, kulaç, adım, ayak gibi vücut uzuvlarıyla yapılan ölçmeler standart değildir; kişiden kişiye değişir. Bu nedenle bilimde ve ticarette standart metre (m) ve santimetre (cm) kullanılır.',
+          summaryNotes: [
+            '• Standart Olmayan Ölçme Birimleri: Karış, Kulaç, Adım, Ayak, Parmak.',
+            '• Standart Ölçme Birimi: Metre (m), Santimetre (cm), Milimetre (mm).',
+            '• 1 Metre = 100 Santimetredir.',
+          ],
+        };
+
+      case 'algebraic_tiles':
+        return {
+          question: 'Sayma pulları modeline göre (+2) - (-3) çıkarma işleminin sonucu kaçtır?',
+          options: ['+5 (5 adet pozitif pul)', '-1', '-5', '+1'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! (+2) sayısından (-3) çıkarmak için modele 3 adet sıfır çifti (+ / -) eklenir ve 3 negatif pul dışarı atıldığında sonuçta +5 pozitif pul kaldığını ispatladınız: (+2) - (-3) = (+2) + (+3) = +5.',
+          summaryNotes: [
+            '• Tam Sayılarda Çıkarma: a - (-b) = a + (+b)',
+            '• Sıfır Çifti: Bir (+) ve bir (-) pulun değeri 0 dır.',
+            '• Çıkarma Modellemesi: Olmayan pullar yerine sıfır çifti eklenir.',
+          ],
+        };
+
+      case 'balance_scale':
+        return {
+          question: '2x + 4 = 10 denkleminde terazinin dengede kalması için x ağırlığı kaç kg olmalıdır?',
+          options: ['x = 2', 'x = 3 (2×3 + 4 = 10)', 'x = 4', 'x = 5'],
+          correctIndex: 1,
+          explanation: 'Harika! Eşitliğin her iki tarafından 4 çıkarıldığında 2x = 6 kalır. Her iki taraf 2 ye bölündüğünde x = 3 bulunur.',
+          summaryNotes: [
+            '• Eşitliğin Korunumu: Terazi prensibi gereği her iki tarafa aynı işlem uygulanır.',
+            '• Denklem Çözümü: ax + b = c ⇒ ax = c - b ⇒ x = (c - b)/a',
+          ],
+        };
+
+      case 'slope_explorer':
+        return {
+          question: 'y = 2x + 1 doğrusunda x değeri 1 birim arttığında y değeri kaç birim artar?',
+          options: ['2 birim (Eğim m = 2)', '1 birim', '3 birim', '4 birim'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Eğim m, dikey değişimin yatay değişime oranıdır (Δy / Δx). m = 2 doğrunun dikliğini ve artış hızını belirler.',
+          summaryNotes: [
+            '• Doğru Denklemi: y = mx + n',
+            '• m (Eğim): Δy / Δx (Dikey Değişim / Yatay Değişim)',
+            '• n (Sabit Terim): Doğrunun y-eksenini kestiği nokta (0, n).',
+          ],
+        };
+
+      case 'pizza_fractions':
+        return {
+          question: '3/6 kesri aşağıdaki kesirlerden hangisine denktir?',
+          options: ['1/4', '1/2 (%50 Yarım)', '2/3', '3/4'],
+          correctIndex: 1,
+          explanation: 'Harika! Kesrin pay ve paydası 3 ile sadeleştirildiğinde 3/6 = 1/2 olur. Her iki model de bütünün tam yarısını temsil eder.',
+          summaryNotes: [
+            '• Denk Kesirler: a/b = (a × k) / (b × k)',
+            '• Sadeleştirme: Pay ve paydanın aynı sayıya bölünmesi.',
+            '• 3/6 = 1/2 = %50',
+          ],
+        };
+
+      case 'data_barchart':
+        return {
+          question: 'Şekil grafiğindeki her yıldız 2 öğrenciyi temsil ettiğinde, 6 yıldızlı Yaz mevsimini kaç öğrenci seçmiştir?',
+          options: ['12 öğrenci (6 × 2)', '6 öğrenci', '8 öğrenci', '10 öğrenci'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Grafiğin altındaki gösterge notuna göre her sembol 2 kişidir: 6 × 2 = 12 öğrenci.',
+          summaryNotes: [
+            '• Şekil Grafiği: Verilerin sembol veya resimlerle gösterilmesidir.',
+            '• Ölçek Notu: Her şeklin kaç birimi temsil ettiği kuralına dikkat edilmelidir.',
+          ],
+        };
+
+      case 'probability_spinner':
+        return {
+          question: 'Tamamı kırmızı olan bir çark çevrildiğinde kırmızı gelme olasılığı hangi kavramla ifade edilir?',
+          options: ['Kesin Olay (%100 Olasılık: P = 1)', 'İmkânsız Olay (P = 0)', 'Eşit Olasılık', 'Rastgele Olay'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Gerçekleşmesi kesin olan olayların olasılığı 1 (%100), gerçekleşmesi imkânsız olan olayların olasılığı 0 dır.',
+          summaryNotes: [
+            '• Olasılık Değer Aralığı: 0 ≤ P(A) ≤ 1',
+            '• İmkânsız Olay: P = 0 (%0)',
+            '• Kesin Olay: P = 1 (%100)',
+          ],
+        };
+
+      case 'spatial_grid':
+        return {
+          question: 'Tavşanı başlangıç noktasından havuca ulaştırmak için hangi yön sıralaması izlenmelidir?',
+          options: ['2 birim Sağa, 2 birim Aşağı', '2 birim Sola, 1 birim Yukarı', '3 birim Aşağı', '1 birim Sağa'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Uzamsal ızgara üzerinde sağ-sol ve yukarı-aşağı koordinat adımları başarıyla tamamlandı.',
+          summaryNotes: [
+            '• Yön ve Konum: İleri, Geri, Sağ, Sol, Yukarı, Aşağı.',
+            '• Koordinat Adımları: Grid üzerinde birim kareler sayılarak hedef konuma ulaşılır.',
+          ],
+        };
+
+      case 'money_coins':
+        return {
+          question: 'Kumbarada 2 adet 10 TL madeni/kağıt para olduğunda toplam kaç TL birikmiş olur?',
+          options: ['20 TL (2 × 10 TL)', '15 TL', '12 TL', '30 TL'],
+          correctIndex: 0,
+          explanation: 'Harika! 10 TL + 10 TL = 20 TL eder. 1 TL = 100 Kuruştur.',
+          summaryNotes: [
+            '• Madeni Paralarımız: 1 kr, 5 kr, 10 kr, 25 kr, 50 kr, 1 TL, 5 TL.',
+            '• Kağıt Paralarımız: 5 TL, 10 TL, 20 TL, 50 TL, 100 TL, 200 TL.',
+            '• 1 TL = 100 Kuruş.',
+          ],
+        };
+
+      case 'pattern_blocks':
+        return {
+          question: '🔴 🟦 🔴 🟦 🔴 ? örüntüsünde soru işareti yerine hangi şekil gelmelidir?',
+          options: ['🟦 Mavi Kare', '🔴 Kırmızı Daire', '🟡 Sarı Daire', '🔺 Üçgen'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Örüntü kuralı (1 Kırmızı Daire, 1 Mavi Kare) şeklinde periyodik olarak devam etmektedir.',
+          summaryNotes: [
+            '• Geometrik Örüntü: Belirli bir kurala göre düzenli tekrar eden şekil dizileridir.',
+            '• Örüntü Kuralı: Tekrar eden ana blok belirlenerek eksik adım bulunur.',
+          ],
+        };
+
+      case 'unit_cubes':
+        return {
+          question: '4 Yüzlük + 5 Onluk + 6 Birlik taban bloklarıyla modellenen sayı kaçtır?',
+          options: ['456', '546', '654', '465'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! 4×100 + 5×10 + 6×1 = 400 + 50 + 6 = 456 sayısı elde edilir.',
+          summaryNotes: [
+            '• Basamak Değeri: Rakamın sayıda bulunduğu basamağa göre aldığı değerdir.',
+            '• Yüzler (×100), Onlar (×10), Birler (×1) basamağı.',
+          ],
+        };
+
+      case 'prism_volume':
+        return {
+          question: 'Uzunluğu 5, genişliği 4 ve yüksekliği 3 birim olan bir prizmanın hacmi kaç birim küptür?',
+          options: ['60 birim küp (5 × 4 × 3)', '20 birim küp', '12 birim küp', '48 birim küp'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Prizmanın hacmi V = Uzunluk × Genişlik × Yükseklik = 5 × 4 × 3 = 60 birim küptür.',
+          summaryNotes: [
+            '• Prizma Hacmi: V = a × b × c (Taban Alanı × Yükseklik)',
+            '• Küp Hacmi: V = a³',
+          ],
+        };
+
+      case 'quadrant_target':
+        return {
+          question: '(3; 2) koordinatları analitik düzlemde kaçıncı bölgededir?',
+          options: ['I. Bölge (+, +)', 'II. Bölge (-, +)', 'III. Bölge (-, -)', 'IV. Bölge (+, -)'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Hem x hem de y pozitif olduğunda nokta I. Bölgede yer alır.',
+          summaryNotes: [
+            '• I. Bölge: (+, +)',
+            '• II. Bölge: (-, +)',
+            '• III. Bölge: (-, -)',
+            '• IV. Bölge: (+, -)',
+          ],
+        };
+
+      case 'circle_radius':
+        return {
+          question: 'Yarıçapı r = 3 br olan bir çemberin çapı (R = 2r) kaç birimdir?',
+          options: ['6 br (2 × 3)', '3 br', '9 br', '12 br'],
+          correctIndex: 0,
+          explanation: 'Tebrikler! Çap, yarıçapın 2 katıdır: R = 2r = 2 × 3 = 6 birimdir.',
+          summaryNotes: [
+            '• Çap: R = 2r',
+            '• Çember Çevresi: 2πr',
+            '• Daire Alanı: πr²',
+          ],
+        };
+
+      default:
+        return {
+          question: `${selectedActivity?.title || 'Matematik Görevi'} ile ilgili temel matematiksel çıkarım hangisidir?`,
+          options: [
+            'Model üzerinde yapılan adımlar matematiksel kurallarla tam uyumludur.',
+            'Matematik modelleri rastgele sonuçlar üretir.',
+            'Geometrik çizimlerde ölçümler önemsizdir.',
+            'Formüller gerçek hayat durumlarıyla uyuşmaz.',
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! ${selectedActivity?.title || 'Bu etkinlik'} başarıyla çözümlendi ve kavramsal ilişki kavrandı.`,
+          summaryNotes: [
+            `• Matematiksel Modelleme: Somut materyaller ve dijital simülasyonlar soyut kavramları anlamayı kolaylaştırır.`,
+            `• TYMM 2026: Keşfet, Karar Ver, Açıkla ve Not Al adımlarıyla derinlemesine kalıcı öğrenme sağlanır.`,
+          ],
+        };
+    }
+  }, [
+    missionType,
+    treeNumber,
+    primeSummary,
+    divNum,
+    vennA,
+    vennB,
+    ebobVal,
+    commonDivisors,
+    rhythmA,
+    rhythmB,
+    ekokVal,
+    areaTarget,
+    areaFactorPairs,
+    ladderNum,
+    currentEBOB,
+    roomW,
+    roomH,
+    tileSize,
+    totalTilesCount,
+    priceItem,
+    discountPercent,
+    discountAmount,
+    finalPrice,
+    selectedActivity,
+  ]);
 
   // Prizma Hacmi
   const currentVolume = prismLength * prismWidth * prismHeight;
@@ -785,21 +1706,17 @@ export function MissionView() {
 
   // Adım 2 Doğrulama
   const handleVerifyStep2 = () => {
-    let correctIdx = 2;
-    if (missionType === 'balance_scale') correctIdx = 1; // x = 3
-    if (missionType === 'slope_explorer') correctIdx = 0; // m = 2
-    if (missionType === 'quadrant_target') correctIdx = 0; // I. Bölge (+, +)
-    if (missionType === 'pizza_fractions') correctIdx = 1; // 1/2 = 3/6
-    if (missionType === 'algebraic_tiles') correctIdx = 0; // (+5)
-    if (missionType === 'data_barchart') correctIdx = 0; // Yaz Mevsimi (12)
+    const correctIdx = pedagogicalData.correctIndex;
 
     if (selectedOption === correctIdx) {
       setStep2Verified(true);
       setActiveStep(3);
+      speakText('Harika! Doğru cevabı buldunuz.');
       try {
         confetti({ particleCount: 90, spread: 100, origin: { y: 0.5 } });
       } catch (e) { }
     } else {
+      speakText('Tekrar deneyin! Verilen matematiksel modeli ve seçenekleri inceleyin.');
       alert('Tekrar deneyin! Verilen matematiksel eşitliği ve yönergeleri inceleyin.');
     }
   };
@@ -887,30 +1804,28 @@ export function MissionView() {
       <div className="flex flex-1 flex-col lg:flex-row min-h-0 min-w-0 h-full w-full overflow-hidden">
         {/* SOL: SİMÜLASYON ALANI */}
         <div className="flex-1 flex flex-col min-h-0 min-w-0 h-full relative bg-background border-r border-border">
-          {/* Üst Yönerge Kutuları */}
-          <div className="p-3 sm:p-4 bg-muted/30 border-b border-border/70 flex flex-wrap items-center gap-3 select-none">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>SİMÜLASYON: {selectedActivity?.title || 'İnteraktif Model'}</span>
-            </div>
-            <div className="text-xs text-foreground font-semibold flex items-center gap-2">
-              <span className="text-emerald-600 font-black">GÖREV:</span>
-              <span>
-                {selectedGrade?.gradeNumber === 1
-                  ? (selectedActivity?.title?.includes('Labirent') ? 'Tavşanı havuca ulaştır! 🐰' : 'Elmaları sayalım! 🍎')
-                  : (selectedActivity?.description || 'Matematiksel modeli keşfedin ve hedefleri tamamlayın.')}
+          {/* Üst Yönerge / Görev Kutusu (Büyük Punto & Vurgulu) */}
+          <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-transparent dark:from-emerald-950/40 dark:via-slate-900/60 border-b border-border/80 flex items-center justify-between gap-4 select-none shadow-2xs">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 dark:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                <Target className="w-4 h-4" />
+                <span>GÖREV</span>
               </span>
-              {selectedGrade?.gradeNumber === 1 && (
-                <button
-                  onClick={() => speakText(selectedActivity?.description || '')}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold text-[10px] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer ml-1"
-                  title="Sesli Dinle"
-                >
-                  <Volume2 className="w-3.5 h-3.5" />
-                  <span>Dinle</span>
-                </button>
-              )}
+              <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-snug truncate sm:whitespace-normal">
+                {selectedActivity?.description || selectedActivity?.title || 'Matematiksel modeli keşfedin ve hedefleri tamamlayın.'}
+              </p>
             </div>
+
+            {selectedGrade && selectedGrade.gradeNumber <= 4 && (
+              <button
+                onClick={() => speakText(selectedActivity?.description || '')}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                title="Sesli Dinle"
+              >
+                <Volume2 className="w-4 h-4" />
+                <span>Sesli Dinle</span>
+              </button>
+            )}
           </div>
 
           {/* SİMÜLASYON ÇİZİM TUVALİ (100% RESPONSIVE) */}
@@ -1473,14 +2388,8 @@ export function MissionView() {
             {/* F1) İLKOKUL 1: EŞ NESNELERİ BULMA OYUNU (ÇORAP & ELDİVEN) */}
             {missionType === 'matching_pairs' && (
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
-                <div className="text-center space-y-2">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs">
-                    <span>🧦 Eş Nesneleri Bulma Oyunu</span>
-                  </div>
-                </div>
-
                 {/* Çorap & Eldiven Eşleştirme Izgarası (Büyütüldü & SVG yapıldı) */}
-                <div className="grid grid-cols-3 gap-6 sm:gap-8 p-6 sm:p-8 rounded-[36px] bg-card border-2 border-border shadow-xl my-6">
+                <div className="grid grid-cols-3 gap-6 sm:gap-8 p-6 sm:p-8 rounded-[36px] bg-card border-2 border-border shadow-xl my-auto">
                   {socksList.map((item, idx) => {
                     const isSelected = selectedSockIds.includes(idx);
                     const isMatched = matchedSockIds.includes(idx);
@@ -2164,6 +3073,1326 @@ export function MissionView() {
               </div>
             )}
 
+            {/* F8) İLKOKUL 1: KARIŞ İLE MASA ÖLÇME SİMÜLATÖRÜ */}
+            {missionType === 'span_measurement' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                {/* Üst Bilgi Rozeti */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20 shadow-2xs">
+                    <span>🖐️ Masayı Karışla Ölçme Laboratuvarı</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Masayı sol kenarından başlayarak boşluk bırakmadan karışlarla (✋) ölçün.
+                  </p>
+                </div>
+
+                {/* İnteraktif Masa & Karışlar Sahnesi */}
+                <div className="w-full max-w-4xl h-72 sm:h-80 relative flex items-center justify-center p-4 bg-gradient-to-b from-sky-50/50 via-white to-amber-50/40 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 rounded-3xl border-2 border-amber-200 dark:border-slate-800 shadow-xl overflow-hidden my-auto">
+                  <svg className="w-full h-full block" viewBox="0 0 800 320" preserveAspectRatio="xMidYMid meet">
+                    {/* Arka Plan Zemin & Duvar Çizgisi */}
+                    <line x1="40" y1="260" x2="760" y2="260" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
+
+                    {/* Masa Sol Ayak */}
+                    <rect x="130" y="160" width="22" height="100" rx="4" fill="#78350f" stroke="#451a03" strokeWidth="2" />
+                    {/* Masa Sağ Ayak */}
+                    <rect x="648" y="160" width="22" height="100" rx="4" fill="#78350f" stroke="#451a03" strokeWidth="2" />
+                    {/* Masa Ara Destek */}
+                    <rect x="150" y="210" width="500" height="12" rx="3" fill="#92400e" opacity="0.7" />
+
+                    {/* Masa Tablası (Ahşap Üst Yüzey: x=100'den x=700'e -> Toplam 600px genişlik = 6 karış x 100px) */}
+                    <rect x="100" y="145" width="600" height="28" rx="8" fill="#d97706" stroke="#92400e" strokeWidth="3" />
+                    <rect x="106" y="148" width="588" height="8" rx="4" fill="#fef3c7" opacity="0.4" />
+
+                    {/* Karış Yuvaları (6 Adet Slot) */}
+                    {Array.from({ length: 6 }).map((_, idx) => {
+                      const slotX = 100 + idx * 100;
+                      const isPlaced = idx < placedSpans;
+
+                      return (
+                        <g
+                          key={idx}
+                          onClick={handleAddSpan}
+                          className="cursor-pointer transition-all hover:opacity-90"
+                        >
+                          {/* Slot Kesikli Çerçeve */}
+                          <rect
+                            x={slotX + 4}
+                            y="70"
+                            width="92"
+                            height="70"
+                            rx="14"
+                            fill={isPlaced ? '#fef3c7' : '#ffffff'}
+                            fillOpacity={isPlaced ? '0.9' : '0.4'}
+                            stroke={isPlaced ? '#f59e0b' : '#cbd5e1'}
+                            strokeWidth={isPlaced ? '3' : '2'}
+                            strokeDasharray={isPlaced ? 'none' : '4,3'}
+                            className="transition-all"
+                          />
+
+                          {/* Karış İkonu */}
+                          {isPlaced ? (
+                            <g className="animate-in zoom-in-50 duration-200">
+                              <text x={slotX + 50} y="118" textAnchor="middle" fontSize="38">
+                                ✋
+                              </text>
+                              {/* Karış Numarası Rozeti */}
+                              <rect x={slotX + 32} y="126" width="36" height="16" rx="8" fill="#d97706" />
+                              <text x={slotX + 50} y="138" textAnchor="middle" fill="#ffffff" fontWeight="900" fontSize="10">
+                                {idx + 1}. Karış
+                              </text>
+                            </g>
+                          ) : (
+                            <g opacity="0.4">
+                              <text x={slotX + 50} y="112" textAnchor="middle" fontSize="24">
+                                ✋
+                              </text>
+                              <text x={slotX + 50} y="132" textAnchor="middle" fill="#94a3b8" fontWeight="700" fontSize="9">
+                                {idx + 1}
+                              </text>
+                            </g>
+                          )}
+
+                          {/* Dikey Ayrım Çizgisi */}
+                          <line x1={slotX + 100} y1="65" x2={slotX + 100} y2="175" stroke="#f59e0b" strokeWidth="2" strokeDasharray="3,3" opacity={idx < 5 ? 0.7 : 0} />
+                        </g>
+                      );
+                    })}
+
+                    {/* Ölçüm Özet Çubuğu */}
+                    <g transform="translate(250, 275)">
+                      <rect width="300" height="36" rx="14" fill="#ffffff" stroke="#f59e0b" strokeWidth="2.5" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))" />
+                      <text x="150" y="23" textAnchor="middle" fill="#78350f" fontWeight="900" fontSize="13">
+                        Ölçüm: {placedSpans} / 6 Karış {placedSpans === 6 ? '🎉 (Tam Ölçüldü!)' : ''}
+                      </text>
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Alt İnteraktif Kontrol Butonları */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-3 pt-4">
+                  <button
+                    onClick={handleAddSpan}
+                    disabled={placedSpans >= 6}
+                    className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-black text-sm shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span className="text-lg">✋</span>
+                    <span>+1 Karış Yerleştir</span>
+                  </button>
+
+                  <button
+                    onClick={handleRemoveSpan}
+                    disabled={placedSpans === 0}
+                    className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-800 dark:text-white font-black text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span>↩️ Karış Çıkar</span>
+                  </button>
+
+                  <button
+                    onClick={handleResetSpans}
+                    disabled={placedSpans === 0}
+                    className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 disabled:opacity-40 font-black text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Sıfırla</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* H1) ORTAOKUL 8: PİSAGOR TEOREMİ & HİPOTENÜS ALAN LABORATUVARI */}
+            {missionType === 'pythagoras_theorem' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                {/* Üst Başlık Rozeti */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-black text-xs border border-emerald-500/20 shadow-2xs">
+                    <span>📐 Pisagor Teoremi &amp; Hipotenüs Alan Modeli (a² + b² = c²)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Dik kenarların karelerinin alanları toplamı, hipotenüsün karesinin alanına eşittir!
+                  </p>
+                </div>
+
+                {/* İnteraktif SVG Pisagor Sahnesi */}
+                <div className="w-full max-w-4xl h-80 sm:h-96 relative flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 via-white to-emerald-50/30 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 rounded-3xl border-2 border-border shadow-xl overflow-hidden my-auto">
+                  <svg className="w-full h-full block" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet">
+                    {/* Arka Plan Izgarası */}
+                    <g className="opacity-15 dark:opacity-10" stroke="currentColor">
+                      {Array.from({ length: 17 }).map((_, i) => (
+                        <React.Fragment key={i}>
+                          <line x1={i * 50} y1="0" x2={i * 50} y2="380" strokeDasharray="3,3" />
+                          <line x1="0" y1={i * 50} x2="800" y2={i * 50} strokeDasharray="3,3" />
+                        </React.Fragment>
+                      ))}
+                    </g>
+
+                    {/* Dik Üçgen ve Kareler Grubu (Merkezlenmiş) */}
+                    <g transform="translate(280, 220)">
+                      {/* 1. Dik Kenar a Karesi (Alt Kare - Pembe) */}
+                      <rect
+                        x="0"
+                        y="0"
+                        width={pythA * 16}
+                        height={pythA * 16}
+                        fill="#fce7f3"
+                        fillOpacity="0.8"
+                        stroke="#f43f5e"
+                        strokeWidth="2.5"
+                        rx="4"
+                      />
+                      <text x={(pythA * 16) / 2} y={(pythA * 16) / 2 + 5} textAnchor="middle" fill="#be123c" fontWeight="900" fontSize="13">
+                        a² = {pythA * pythA} br²
+                      </text>
+
+                      {/* 2. Dik Kenar b Karesi (Sol Kare - Mavi) */}
+                      <rect
+                        x={-(pythB * 16)}
+                        y={-(pythB * 16)}
+                        width={pythB * 16}
+                        height={pythB * 16}
+                        fill="#e0f2fe"
+                        fillOpacity="0.8"
+                        stroke="#0284c7"
+                        strokeWidth="2.5"
+                        rx="4"
+                      />
+                      <text x={-(pythB * 16) / 2} y={-(pythB * 16) / 2 + 5} textAnchor="middle" fill="#0369a1" fontWeight="900" fontSize="13">
+                        b² = {pythB * pythB} br²
+                      </text>
+
+                      {/* 3. Ana Dik Üçgen (Sarı/Turuncu) */}
+                      <polygon
+                        points={`0,0 ${pythA * 16},0 0,${-(pythB * 16)}`}
+                        fill="#fef08a"
+                        fillOpacity="0.85"
+                        stroke="#d97706"
+                        strokeWidth="3.5"
+                      />
+
+                      {/* Dik Açı İşareti (Köşede ⊾) */}
+                      <rect x="0" y="-14" width="14" height="14" fill="none" stroke="#d97706" strokeWidth="2" />
+                      <circle cx="7" cy="-7" r="2" fill="#d97706" />
+
+                      {/* Kenar Ölçü Etiketleri */}
+                      <text x={(pythA * 16) / 2} y="-6" textAnchor="middle" fill="#b45309" fontWeight="900" fontSize="12">
+                        a = {pythA}
+                      </text>
+                      <text x="-8" y={-(pythB * 16) / 2} textAnchor="end" fill="#0284c7" fontWeight="900" fontSize="12">
+                        b = {pythB}
+                      </text>
+                      <text
+                        x={(pythA * 16) / 2 + 12}
+                        y={-(pythB * 16) / 2 - 8}
+                        textAnchor="start"
+                        fill="#059669"
+                        fontWeight="900"
+                        fontSize="14"
+                      >
+                        c = {pythC} {isPythSpecial ? '⭐' : ''}
+                      </text>
+                    </g>
+
+                    {/* Sağ Taraf: Canlı Pisagor Formülü ve Özel Üçgen Bilgisi */}
+                    <g transform="translate(540, 60)">
+                      <rect width="230" height="240" rx="20" fill="#ffffff" stroke="#10b981" strokeWidth="2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.06))" />
+                      <text x="115" y="32" textAnchor="middle" fill="#047857" fontWeight="900" fontSize="14">
+                        PİSAGOR BAĞINTISI
+                      </text>
+                      <line x1="20" y1="46" x2="210" y2="46" stroke="#e2e8f0" strokeWidth="1.5" />
+
+                      <text x="115" y="76" textAnchor="middle" fill="#0f172a" fontWeight="900" fontSize="15" fontFamily="monospace">
+                        a² + b² = c²
+                      </text>
+
+                      <text x="115" y="112" textAnchor="middle" fill="#334155" fontWeight="700" fontSize="12">
+                        {pythA}² + {pythB}² = c²
+                      </text>
+
+                      <text x="115" y="142" textAnchor="middle" fill="#334155" fontWeight="700" fontSize="12">
+                        {pythA * pythA} + {pythB * pythB} = {pythA * pythA + pythB * pythB}
+                      </text>
+
+                      <rect x="25" y="165" width="180" height="42" rx="12" fill="#ecfdf5" stroke="#10b981" strokeWidth="2" />
+                      <text x="115" y="191" textAnchor="middle" fill="#065f46" fontWeight="900" fontSize="15">
+                        c = √{pythA * pythA + pythB * pythB} = {pythC} br
+                      </text>
+
+                      {isPythSpecial && (
+                        <text x="115" y="224" textAnchor="middle" fill="#d97706" fontWeight="900" fontSize="11">
+                          ✨ Özel Tam Sayılı Üçgen ({pythA}-{pythB}-{pythC})
+                        </text>
+                      )}
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* H2) ORTAOKUL 8: KAREKÖKLÜ SAYILAR & ALAN-KENAR LABORATUVARI */}
+            {missionType === 'square_roots' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                {/* Üst Başlık Rozeti */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-800 dark:text-rose-300 font-black text-xs border border-rose-500/20 shadow-2xs">
+                    <span>🟩 Tam Kare Sayılar &amp; Karekök Alan-Kenar Modeli</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Alanı bilinen bir karenin bir kenar uzunluğu, alanın kareköküne (√A) eşittir.
+                  </p>
+                </div>
+
+                {/* İnteraktif Kare & Sayı Doğrusu Sahnesi */}
+                <div className="w-full max-w-4xl h-80 sm:h-96 relative flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 via-white to-rose-50/30 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 rounded-3xl border-2 border-border shadow-xl overflow-hidden my-auto">
+                  <svg className="w-full h-full block" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet">
+                    {/* Sol Alan: Dinamik Kare Geometrisi */}
+                    <g transform="translate(140, 40)">
+                      {/* Karenin Kendisi */}
+                      <rect
+                        x="0"
+                        y="0"
+                        width={Math.min(220, Math.max(70, sqrtVal * 22))}
+                        height={Math.min(220, Math.max(70, sqrtVal * 22))}
+                        rx="10"
+                        fill="#fee2e2"
+                        fillOpacity="0.75"
+                        stroke="#ef4444"
+                        strokeWidth="3.5"
+                      />
+
+                      {/* Alan Rozeti */}
+                      <text
+                        x={Math.min(220, Math.max(70, sqrtVal * 22)) / 2}
+                        y={Math.min(220, Math.max(70, sqrtVal * 22)) / 2 + 6}
+                        textAnchor="middle"
+                        fill="#991b1b"
+                        fontWeight="900"
+                        fontSize="18"
+                      >
+                        Alan = {sqrtArea} br²
+                      </text>
+
+                      {/* Kenar Etiketleri */}
+                      <text
+                        x={Math.min(220, Math.max(70, sqrtVal * 22)) / 2}
+                        y="-10"
+                        textAnchor="middle"
+                        fill="#dc2626"
+                        fontWeight="900"
+                        fontSize="13"
+                      >
+                        Kenar (s) = √{sqrtArea} = {sqrtVal} br
+                      </text>
+
+                      <text
+                        x="-12"
+                        y={Math.min(220, Math.max(70, sqrtVal * 22)) / 2}
+                        textAnchor="end"
+                        fill="#dc2626"
+                        fontWeight="900"
+                        fontSize="13"
+                      >
+                        √{sqrtArea}
+                      </text>
+                    </g>
+
+                    {/* Sağ Taraf: Karekök Sayı Doğrusu ve Aralık Tespiti */}
+                    <g transform="translate(420, 60)">
+                      <rect width="350" height="250" rx="20" fill="#ffffff" stroke="#ef4444" strokeWidth="2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.06))" />
+                      <text x="175" y="32" textAnchor="middle" fill="#991b1b" fontWeight="900" fontSize="14">
+                        KAREKÖK TAHMİNİ &amp; DEĞERİ
+                      </text>
+                      <line x1="20" y1="46" x2="330" y2="46" stroke="#e2e8f0" strokeWidth="1.5" />
+
+                      {/* Tam Kare mi? */}
+                      <g transform="translate(25, 65)">
+                        <rect width="300" height="40" rx="10" fill={isPerfectSquare ? '#ecfdf5' : '#fffbeb'} stroke={isPerfectSquare ? '#10b981' : '#f59e0b'} strokeWidth="1.5" />
+                        <text x="150" y="25" textAnchor="middle" fill={isPerfectSquare ? '#065f46' : '#92400e'} fontWeight="900" fontSize="12">
+                          {isPerfectSquare ? `🎉 ${sqrtArea} Tam Kare Sayıdır (√${sqrtArea} = ${sqrtVal})` : `📍 √${sqrtArea} İrrasyoneldir (≈ ${sqrtVal})`}
+                        </text>
+                      </g>
+
+                      {/* Sayı Doğrusu Cetveli */}
+                      <g transform="translate(30, 170)">
+                        <line x1="0" y1="0" x2="290" y2="0" stroke="#0f172a" strokeWidth="3" />
+                        {/* 1'den 10'a kadar tam kare sayı çentikleri */}
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+                          const px = (n - 1) * 32;
+                          const isCurrentFloor = Math.floor(sqrtVal) === n;
+                          const isCurrentCeil = Math.ceil(sqrtVal) === n;
+
+                          return (
+                            <g key={n} transform={`translate(${px}, 0)`}>
+                              <line y1="-8" y2="8" stroke="#64748b" strokeWidth="2" />
+                              <text y="24" textAnchor="middle" fill="#475569" fontWeight="700" fontSize="11">
+                                {n}
+                              </text>
+                              <text y="-14" textAnchor="middle" fill="#94a3b8" fontWeight="600" fontSize="9">
+                                √{n * n}
+                              </text>
+                            </g>
+                          );
+                        })}
+
+                        {/* Canlı İbre / Pin */}
+                        <g transform={`translate(${Math.min(288, Math.max(0, (sqrtVal - 1) * 32))}, 0)`}>
+                          <polygon points="0,-2 6,-14 -6,-14" fill="#ef4444" />
+                          <circle cx="0" cy="0" r="4" fill="#ef4444" />
+                          <rect x="-30" y="-36" width="60" height="20" rx="6" fill="#ef4444" />
+                          <text x="0" y="-22" textAnchor="middle" fill="#ffffff" fontWeight="900" fontSize="10">
+                            √{sqrtArea}
+                          </text>
+                        </g>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* H3) ORTAOKUL 6 & 8: EBOB & EKOK FAYANS DÖŞEME LABORATUVARI */}
+            {missionType === 'ebob_ekok_tiles' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                {/* Üst Başlık Rozeti */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-800 dark:text-blue-300 font-black text-xs border border-blue-500/20 shadow-2xs">
+                    <span>🧱 EBOB &amp; EKOK / Fayans Döşeme &amp; Periyodik Olaylar Modeli</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    {roomW} cm × {roomH} cm boyutundaki odayı en az sayıda eş kare fayanslarla boşluksuz kaplayın.
+                  </p>
+                </div>
+
+                {/* İnteraktif Oda & Fayans Sahnesi */}
+                <div className="w-full max-w-4xl h-80 sm:h-96 relative flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 via-white to-blue-50/30 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 rounded-3xl border-2 border-border shadow-xl overflow-hidden my-auto">
+                  <svg className="w-full h-full block" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet">
+                    {/* Sol: Oda Zemini ve Döşenen Fayanslar */}
+                    <g transform="translate(100, 50)">
+                      {/* Oda Dış Çerçevesi (Genişlik=300px, Yükseklik=220px) */}
+                      <rect
+                        width="320"
+                        height="240"
+                        rx="8"
+                        fill="#f8fafc"
+                        stroke="#3b82f6"
+                        strokeWidth="3"
+                      />
+
+                      {/* Döşenen Fayans Izgarası */}
+                      {isTilePerfect ? (
+                        Array.from({ length: Math.round(roomH / tileSize) }).map((_, r) =>
+                          Array.from({ length: Math.round(roomW / tileSize) }).map((_, c) => {
+                            const fw = 320 / (roomW / tileSize);
+                            const fh = 240 / (roomH / tileSize);
+                            return (
+                              <rect
+                                key={`${r}-${c}`}
+                                x={c * fw + 1}
+                                y={r * fh + 1}
+                                width={fw - 2}
+                                height={fh - 2}
+                                rx="3"
+                                fill={(r + c) % 2 === 0 ? '#dbeafe' : '#bfdbfe'}
+                                stroke="#2563eb"
+                                strokeWidth="1"
+                              />
+                            );
+                          })
+                        )
+                      ) : (
+                        <g>
+                          <rect width="320" height="240" fill="#fee2e2" fillOpacity="0.4" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,4" />
+                          <text x="160" y="125" textAnchor="middle" fill="#dc2626" fontWeight="900" fontSize="13">
+                            ⚠️ Seçilen {tileSize} cm fayans kenarları tam bölmüyor!
+                          </text>
+                        </g>
+                      )}
+
+                      {/* Boyut Etiketleri */}
+                      <text x="160" y="-12" textAnchor="middle" fill="#1d4ed8" fontWeight="900" fontSize="13">
+                        Genişlik (W) = {roomW} cm
+                      </text>
+                      <text x="-12" y="125" textAnchor="end" fill="#1d4ed8" fontWeight="900" fontSize="13">
+                        Yükseklik (H) = {roomH} cm
+                      </text>
+                    </g>
+
+                    {/* Sağ Taraf: EBOB / EKOK Çözüm Kartı */}
+                    <g transform="translate(480, 50)">
+                      <rect width="280" height="240" rx="20" fill="#ffffff" stroke="#3b82f6" strokeWidth="2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.06))" />
+                      <text x="140" y="32" textAnchor="middle" fill="#1d4ed8" fontWeight="900" fontSize="14">
+                        EBOB &amp; EKOK ANALİZİ
+                      </text>
+                      <line x1="20" y1="46" x2="260" y2="46" stroke="#e2e8f0" strokeWidth="1.5" />
+
+                      <g transform="translate(20, 60)">
+                        <rect width="240" height="42" rx="10" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.5" />
+                        <text x="120" y="26" textAnchor="middle" fill="#1e40af" fontWeight="900" fontSize="13">
+                          EBOB({roomW}, {roomH}) = {currentEBOB} cm
+                        </text>
+                      </g>
+
+                      <g transform="translate(20, 115)">
+                        <rect width="240" height="42" rx="10" fill="#f0fdf4" stroke="#10b981" strokeWidth="1.5" />
+                        <text x="120" y="26" textAnchor="middle" fill="#065f46" fontWeight="900" fontSize="13">
+                          EKOK({roomW}, {roomH}) = {currentEKOK} cm
+                        </text>
+                      </g>
+
+                      <g transform="translate(20, 170)">
+                        <rect width="240" height="48" rx="10" fill="#faf5ff" stroke="#a855f7" strokeWidth="1.5" />
+                        <text x="120" y="22" textAnchor="middle" fill="#7e22ce" fontWeight="900" fontSize="11">
+                          Fayans Sayısı = ({roomW}×{roomH}) / ({tileSize}×{tileSize})
+                        </text>
+                        <text x="120" y="38" textAnchor="middle" fill="#6b21a8" fontWeight="900" fontSize="13">
+                          = {totalTilesCount > 0 ? `${totalTilesCount} Adet Kare Fayans` : 'Tam Bölünmüyor'}
+                        </text>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* H4) ORTAOKUL 7: ORAN, ORANTI, YÜZDE & İNDİRİM LABORATUVARI */}
+            {missionType === 'ratio_proportion' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                {/* Üst Başlık Rozeti */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20 shadow-2xs">
+                    <span>🏷️ Yüzde, İndirim, KDV ve Kâr-Zarar Simülatörü (7. Sınıf)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Etiket fiyatı {priceItem} TL olan bir ürüne %{discountPercent} indirim uygulandığında indirim tutarını ve yeni fiyatı hesaplayın.
+                  </p>
+                </div>
+
+                {/* İnteraktif Fiyat & İndirim Kartı Sahnesi */}
+                <div className="w-full max-w-4xl h-80 sm:h-96 relative flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 via-white to-amber-50/30 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 rounded-3xl border-2 border-border shadow-xl overflow-hidden my-auto">
+                  <svg className="w-full h-full block" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet">
+                    {/* Sol: Alışveriş Fiyat Etiketi */}
+                    <g transform="translate(120, 60)">
+                      <rect width="240" height="240" rx="24" fill="#ffffff" stroke="#f59e0b" strokeWidth="3" filter="drop-shadow(0 6px 14px rgba(0,0,0,0.08))" />
+                      <circle cx="120" cy="30" r="8" fill="#f59e0b" />
+
+                      <text x="120" y="70" textAnchor="middle" fill="#92400e" fontWeight="900" fontSize="13">
+                        ÜRÜN ETİKETİ
+                      </text>
+                      <line x1="30" y1="82" x2="210" y2="82" stroke="#fde68a" strokeWidth="2" />
+
+                      {/* Eski Fiyat (Üstü Çizili) */}
+                      <text x="120" y="118" textAnchor="middle" fill="#94a3b8" fontWeight="900" fontSize="18" className="line-through">
+                        {priceItem} TL
+                      </text>
+
+                      {/* İndirim Rozeti */}
+                      <rect x="50" y="132" width="140" height="32" rx="12" fill="#ef4444" />
+                      <text x="120" y="153" textAnchor="middle" fill="#ffffff" fontWeight="900" fontSize="14">
+                        %{discountPercent} İNDİRİM
+                      </text>
+
+                      {/* Yeni İndirimli Fiyat */}
+                      <text x="120" y="205" textAnchor="middle" fill="#16a34a" fontWeight="900" fontSize="26">
+                        {finalPrice} TL
+                      </text>
+                    </g>
+
+                    {/* Sağ: Matematiksel Hesaplama Adımları */}
+                    <g transform="translate(420, 60)">
+                      <rect width="320" height="240" rx="24" fill="#ffffff" stroke="#10b981" strokeWidth="2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.06))" />
+                      <text x="160" y="34" textAnchor="middle" fill="#047857" fontWeight="900" fontSize="14">
+                        YÜZDE HESAPLAMA ADIMLARI
+                      </text>
+                      <line x1="20" y1="46" x2="300" y2="46" stroke="#e2e8f0" strokeWidth="1.5" />
+
+                      {/* Adım 1: İndirim Tutarı */}
+                      <g transform="translate(20, 60)">
+                        <rect width="280" height="46" rx="10" fill="#fff1f2" stroke="#f43f5e" strokeWidth="1.5" />
+                        <text x="140" y="20" textAnchor="middle" fill="#be123c" fontWeight="800" fontSize="10">
+                          1. ADIM: İndirim Tutarı = Fiyat × (Yüzde / 100)
+                        </text>
+                        <text x="140" y="38" textAnchor="middle" fill="#9f1239" fontWeight="900" fontSize="13">
+                          {priceItem} × (%{discountPercent} / 100) = {discountAmount} TL İndirim
+                        </text>
+                      </g>
+
+                      {/* Adım 2: Yeni Satış Fiyatı */}
+                      <g transform="translate(20, 120)">
+                        <rect width="280" height="46" rx="10" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
+                        <text x="140" y="20" textAnchor="middle" fill="#047857" fontWeight="800" fontSize="10">
+                          2. ADIM: İndirimli Fiyat = Eski Fiyat - İndirim
+                        </text>
+                        <text x="140" y="38" textAnchor="middle" fill="#065f46" fontWeight="900" fontSize="13">
+                          {priceItem} - {discountAmount} = {finalPrice} TL
+                        </text>
+                      </g>
+
+                      {/* Pratik Yol */}
+                      <g transform="translate(20, 180)">
+                        <rect width="280" height="38" rx="10" fill="#f8fafc" stroke="#64748b" strokeWidth="1.5" />
+                        <text x="140" y="24" textAnchor="middle" fill="#334155" fontWeight="900" fontSize="11">
+                          ⚡ Pratik Yol: {priceItem} × {(100 - discountPercent) / 100} = {finalPrice} TL
+                        </text>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* H5) ORTAOKUL 6: ASAL ÇARPAN AĞACI LABORATUVARI (DAİRELER & DALLAR) */}
+            {missionType === 'prime_factor_tree' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                {/* Üst Başlık Rozeti */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 font-black text-xs border border-indigo-500/20 shadow-2xs">
+                    <span>🌳 Asal Çarpan Ağacı Modeli ({treeNumber} = {primeSummary.expString})</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Dallara dokunarak veya butonları kullanarak sayıyı en küçük asal çarpanlarına kadar ayrıştırın.
+                  </p>
+                </div>
+
+                {/* İnteraktif Asal Çarpan Ağacı SVG Sahnesi */}
+                <div className="w-full max-w-4xl h-80 sm:h-96 relative flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 via-white to-indigo-50/30 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 rounded-3xl border-2 border-border shadow-xl overflow-hidden my-auto">
+                  <svg className="w-full h-full block" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid meet">
+                    {/* Arka Plan Hafif Izgara Çizgileri */}
+                    <g className="opacity-15 dark:opacity-10" stroke="currentColor">
+                      {Array.from({ length: 17 }).map((_, i) => (
+                        <line key={i} x1={i * 50} y1="0" x2={i * 50} y2="380" strokeDasharray="3,3" />
+                      ))}
+                    </g>
+
+                    {/* Sol Bilgi Kutusu: Üslü Gösterim ve Asal Çarpanlar */}
+                    <g transform="translate(40, 60)">
+                      <rect width="180" height="230" rx="20" fill="#ffffff" stroke="#6366f1" strokeWidth="2" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.06))" />
+                      <text x="90" y="32" textAnchor="middle" fill="#4338ca" fontWeight="900" fontSize="13">
+                        ASAL ÇARPANLAR
+                      </text>
+                      <line x1="15" y1="44" x2="165" y2="44" stroke="#e0e7ff" strokeWidth="1.5" />
+
+                      <text x="90" y="74" textAnchor="middle" fill="#64748b" fontWeight="700" fontSize="11">
+                        Sayı:
+                      </text>
+                      <text x="90" y="98" textAnchor="middle" fill="#4f46e5" fontWeight="900" fontSize="22">
+                        {treeNumber}
+                      </text>
+
+                      <rect x="20" y="115" width="140" height="36" rx="10" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5" />
+                      <text x="90" y="138" textAnchor="middle" fill="#b45309" fontWeight="900" fontSize="12">
+                        Asallar: &#123; {primeSummary.uniquePrimes} &#125;
+                      </text>
+
+                      <rect x="20" y="162" width="140" height="46" rx="10" fill="#e0e7ff" stroke="#6366f1" strokeWidth="1.5" />
+                      <text x="90" y="180" textAnchor="middle" fill="#3730a3" fontWeight="700" fontSize="10">
+                        Üslü Çarpım:
+                      </text>
+                      <text x="90" y="198" textAnchor="middle" fill="#312e81" fontWeight="900" fontSize="14" fontFamily="monospace">
+                        {primeSummary.expString}
+                      </text>
+                    </g>
+
+                    {/* Merkez & Sağ: Daireler ve Dallardan Oluşan Ağaç (Dinamik) */}
+                    <g transform="translate(130, 0)">
+                      {/* DALLAR (Çizgiler arka planda çizilir) */}
+                      {treeDecomposition.map((step, idx) => {
+                        if (idx >= treeStep) return null;
+                        const px = 320 + idx * 70;
+                        const py = 55 + idx * 75;
+                        const lx = px - 80;
+                        const ly = py + 75;
+                        const rx = px + 70;
+                        const ry = py + 75;
+
+                        return (
+                          <g key={`branch-${idx}`}>
+                            <line x1={px} y1={py} x2={lx} y2={ly} stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+                            <line x1={px} y1={py} x2={rx} y2={ry} stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+                          </g>
+                        );
+                      })}
+
+                      {/* LEVEL 0: KÖK DÜĞÜM */}
+                      <g>
+                        <circle cx="320" cy="55" r="32" fill="#e0e7ff" stroke="#4f46e5" strokeWidth="3.5" filter="drop-shadow(0 4px 6px rgba(79,70,229,0.2))" />
+                        <text x="320" y="63" textAnchor="middle" fill="#3730a3" fontWeight="900" fontSize="20">
+                          {treeNumber}
+                        </text>
+                      </g>
+
+                      {/* TÜM DÜĞÜMLER (Açılmış Seviyeler) */}
+                      {treeDecomposition.map((step, idx) => {
+                        if (idx >= treeStep) return null;
+                        const px = 320 + idx * 70;
+                        const py = 55 + idx * 75;
+                        const lx = px - 80;
+                        const ly = py + 75;
+                        const rx = px + 70;
+                        const ry = py + 75;
+
+                        return (
+                          <g key={`nodes-${idx}`} className="animate-in fade-in duration-300">
+                            {/* Sol Çocuk Düğüm (Asal Turuncu Daire) */}
+                            <g transform={`translate(${lx}, ${ly})`}>
+                              <circle cx="0" cy="0" r={26 - idx * 1} fill="#fef3c7" stroke="#d97706" strokeWidth="3" filter="drop-shadow(0 2px 4px rgba(217,119,6,0.15))" />
+                              <text x="0" y="6" textAnchor="middle" fill="#b45309" fontWeight="900" fontSize={18 - idx}>
+                                {step.leftPrime}
+                              </text>
+                              <rect x="-18" y={32 - idx} width="36" height="16" rx="8" fill="#d97706" />
+                              <text x="0" y={43 - idx} textAnchor="middle" fill="#ffffff" fontWeight="900" fontSize="8">
+                                ASAL
+                              </text>
+                            </g>
+
+                            {/* Sağ Çocuk Düğüm */}
+                            <g
+                              transform={`translate(${rx}, ${ry})`}
+                              onClick={!step.rightIsPrime ? handleNextTreeStep : undefined}
+                              className={!step.rightIsPrime ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}
+                            >
+                              <circle
+                                cx="0"
+                                cy="0"
+                                r={26 - idx * 1}
+                                fill={step.rightIsPrime ? '#fef3c7' : '#ecfdf5'}
+                                stroke={step.rightIsPrime ? '#d97706' : '#059669'}
+                                strokeWidth="3"
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.12))"
+                              />
+                              <text
+                                x="0"
+                                y="6"
+                                textAnchor="middle"
+                                fill={step.rightIsPrime ? '#b45309' : '#047857'}
+                                fontWeight="900"
+                                fontSize={18 - idx}
+                              >
+                                {step.rightVal}
+                              </text>
+                              <rect
+                                x="-22"
+                                y={32 - idx}
+                                width="44"
+                                height="16"
+                                rx="8"
+                                fill={step.rightIsPrime ? '#d97706' : '#059669'}
+                              />
+                              <text x="0" y={43 - idx} textAnchor="middle" fill="#ffffff" fontWeight="900" fontSize="8">
+                                {step.rightIsPrime ? 'ASAL' : 'Bileşik'}
+                              </text>
+                            </g>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Alt Kontrol Butonları */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-3 pt-4">
+                  <button
+                    onClick={handleNextTreeStep}
+                    disabled={treeStep >= maxTreeSteps}
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-black text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span>🌿 +1 Dal Aç</span>
+                  </button>
+
+                  <button
+                    onClick={handleFullTree}
+                    disabled={treeStep >= maxTreeSteps}
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-xs shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span>⚡ Tüm Ağacı Aç</span>
+                  </button>
+
+                  <button
+                    onClick={handleResetTree}
+                    disabled={treeStep === 1}
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-foreground disabled:opacity-40 font-black text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Baştan Başla</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* H6) ORTAOKUL 6: ERATOSTHENES KALBURU (1-100 ASAL SAYILAR) */}
+            {missionType === 'eratosthenes_sieve' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-4 select-none min-h-[520px]">
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-800 dark:text-rose-300 font-black text-xs border border-rose-500/20">
+                    <span>🔴 Eratosthenes Kalburu (1-100 Arası 25 Asal Sayı)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Asal sayıları tutun, katlarını eleyerek 100'e kadar olan tüm asalları süzün!
+                  </p>
+                </div>
+
+                {/* 10x10 Izgara (1-100) */}
+                <div className="w-full max-w-2xl bg-white dark:bg-slate-900 p-3 rounded-3xl border-2 border-border shadow-lg my-auto">
+                  <div className="grid grid-cols-10 gap-1 sm:gap-1.5">
+                    {Array.from({ length: 100 }).map((_, i) => {
+                      const num = i + 1;
+                      const eliminated = isSieveEliminated(num);
+                      const isPrimeNum = isPrime(num);
+                      const isKeptPrime = isPrimeNum && sieveEliminated.includes(num);
+
+                      return (
+                        <div
+                          key={num}
+                          className={`h-7 sm:h-8 flex items-center justify-center rounded-lg font-black text-xs transition-all duration-200 ${
+                            num === 1
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 line-through opacity-40'
+                              : isKeptPrime
+                              ? 'bg-amber-400 dark:bg-amber-500 text-amber-950 shadow-md ring-2 ring-amber-600 scale-105'
+                              : eliminated
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 line-through opacity-35'
+                              : 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 border border-indigo-200/50 hover:bg-indigo-100'
+                          }`}
+                        >
+                          {num}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Filtreleme Adım Butonları */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <button
+                    onClick={() => handleSieveEliminate(2)}
+                    disabled={sieveEliminated.includes(2)}
+                    className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-amber-950 font-black text-xs shadow-xs cursor-pointer"
+                  >
+                    <span>🟠 2'nin Katlarını Ele</span>
+                  </button>
+                  <button
+                    onClick={() => handleSieveEliminate(3)}
+                    disabled={sieveEliminated.includes(3)}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-xs shadow-xs cursor-pointer"
+                  >
+                    <span>🟢 3'ün Katlarını Ele</span>
+                  </button>
+                  <button
+                    onClick={() => handleSieveEliminate(5)}
+                    disabled={sieveEliminated.includes(5)}
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-black text-xs shadow-xs cursor-pointer"
+                  >
+                    <span>🔵 5'in Katlarını Ele</span>
+                  </button>
+                  <button
+                    onClick={() => handleSieveEliminate(7)}
+                    disabled={sieveEliminated.includes(7)}
+                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white font-black text-xs shadow-xs cursor-pointer"
+                  >
+                    <span>🟣 7'nin Katlarını Ele</span>
+                  </button>
+                  <button
+                    onClick={handleRunAllSieve}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md cursor-pointer"
+                  >
+                    <span>⚡ Tümünü Süz (25 Asal)</span>
+                  </button>
+                  <button
+                    onClick={handleResetSieve}
+                    className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-foreground font-black text-xs cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* H7) ORTAOKUL 6: BÖLÜNEBİLME KURALLARI LABORATUVARI */}
+            {missionType === 'divisibility_rules' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-black text-xs border border-emerald-500/20">
+                    <span>⚡ Bölünebilme Kuralı İnceleme Laboratuvarı ({divNum})</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Son basamak ve rakamlar toplamı kurallarını canlı simülasyonla doğrulayın.
+                  </p>
+                </div>
+
+                {/* Merkez İnteraktif Sayı Kartı ve Kural Kartları */}
+                <div className="w-full max-w-3xl space-y-4 my-auto">
+                  {/* Büyük Sayı Göstergesi */}
+                  <div className="p-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 rounded-3xl border-2 border-emerald-500/20 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-bold text-muted-foreground">İncelenen Sayı:</div>
+                      <div className="font-mono text-3xl font-black text-foreground">
+                        {divNum}{' '}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          (Son Basamak: <strong className="text-emerald-600">{divNum % 10}</strong>, Rakamlar Toplamı:{' '}
+                          <strong className="text-indigo-600">
+                            {divNum
+                              .toString()
+                              .split('')
+                              .map(Number)
+                              .reduce((a, b) => a + b, 0)}
+                          </strong>
+                          )
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-1.5 flex-wrap">
+                      {[120, 240, 315, 459, 1024, 7500].map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => setDivNum(val)}
+                          className={`px-3 py-1.5 rounded-xl font-mono font-black text-xs border transition-all cursor-pointer ${
+                            divNum === val ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs' : 'bg-muted/60 text-foreground'
+                          }`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Kural Kontrol Matrisi */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                    {[
+                      {
+                        d: 2,
+                        title: '2 ile Bölünme',
+                        rule: 'Son basamak çift (0,2,4,6,8)',
+                        pass: divNum % 2 === 0,
+                      },
+                      {
+                        d: 3,
+                        title: '3 ile Bölünme',
+                        rule: 'Rakamlar toplamı 3\'ün katı',
+                        pass: divNum % 3 === 0,
+                      },
+                      {
+                        d: 4,
+                        title: '4 ile Bölünme',
+                        rule: 'Son 2 basamak 4\'ün katı',
+                        pass: divNum % 4 === 0,
+                      },
+                      {
+                        d: 5,
+                        title: '5 ile Bölünme',
+                        rule: 'Son basamak 0 veya 5',
+                        pass: divNum % 5 === 0,
+                      },
+                      {
+                        d: 6,
+                        title: '6 ile Bölünme',
+                        rule: 'Hem 2 hem 3\'e tam bölünür',
+                        pass: divNum % 6 === 0,
+                      },
+                      {
+                        d: 9,
+                        title: '9 ile Bölünme',
+                        rule: 'Rakamlar toplamı 9\'un katı',
+                        pass: divNum % 9 === 0,
+                      },
+                      {
+                        d: 10,
+                        title: '10 ile Bölünme',
+                        rule: 'Son basamak 0',
+                        pass: divNum % 10 === 0,
+                      },
+                    ].map((k) => (
+                      <div
+                        key={k.d}
+                        className={`p-3 rounded-2xl border transition-all ${
+                          k.pass
+                            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500/40 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-900 border-border opacity-70'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-black text-xs text-foreground">{k.title}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full font-black text-[10px] ${
+                              k.pass ? 'bg-emerald-600 text-white' : 'bg-rose-500/20 text-rose-700 dark:text-rose-300'
+                            }`}
+                          >
+                            {k.pass ? 'BÖLÜNÜR ✓' : 'Bölünmez ✕'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground font-medium">{k.rule}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    speakText(`${divNum} sayısının bölünebilme kuralları doğrulandı.`);
+                    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                    try {
+                      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                    } catch (e) {}
+                  }}
+                  className="px-8 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Kuralları Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* H8) ORTAOKUL 6: VENN ŞEMASI & ORTAK BÖLENLER */}
+            {missionType === 'venn_divisors' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/10 text-pink-800 dark:text-pink-300 font-black text-xs border border-pink-500/20">
+                    <span>⭕ Ortak Bölenler ve EBOB Venn Şeması ({vennA} &amp; {vennB})</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    İki sayının çarpanlarını Venn şemasında kesiştirerek ortak bölenleri ve EBOB'u bulun.
+                  </p>
+                </div>
+
+                {/* Venn Şeması SVG */}
+                <div className="w-full max-w-2xl h-72 relative flex items-center justify-center p-2 bg-white dark:bg-slate-900 rounded-3xl border-2 border-border shadow-xl my-auto">
+                  <svg viewBox="0 0 600 240" className="w-full h-full">
+                    {/* Sol Halka (A) */}
+                    <circle cx="230" cy="120" r="100" fill="#f472b6" fillOpacity="0.25" stroke="#db2777" strokeWidth="3" />
+                    {/* Sağ Halka (B) */}
+                    <circle cx="370" cy="120" r="100" fill="#60a5fa" fillOpacity="0.25" stroke="#2563eb" strokeWidth="3" />
+
+                    {/* Başlıklar */}
+                    <text x="180" y="45" textAnchor="middle" fill="#db2777" fontWeight="900" fontSize="14">
+                      {vennA}'nın Bölenleri
+                    </text>
+                    <text x="420" y="45" textAnchor="middle" fill="#2563eb" fontWeight="900" fontSize="14">
+                      {vennB}'nin Bölenleri
+                    </text>
+                    <text x="300" y="35" textAnchor="middle" fill="#4f46e5" fontWeight="900" fontSize="13">
+                      ORTAK BÖLENLER (EBOB = {ebobVal})
+                    </text>
+
+                    {/* Yalnızca A'nın Bölenleri */}
+                    <g transform="translate(180, 110)">
+                      <text x="0" y="0" textAnchor="middle" fill="#9d174d" fontWeight="900" fontSize="13">
+                        {onlyA.join(', ') || '-'}
+                      </text>
+                    </g>
+
+                    {/* Kesişim / Ortak Bölenler */}
+                    <g transform="translate(300, 110)">
+                      <text x="0" y="0" textAnchor="middle" fill="#312e81" fontWeight="900" fontSize="15">
+                        {commonDivisors.join(', ')}
+                      </text>
+                      <rect x="-35" y="16" width="70" height="20" rx="10" fill="#4f46e5" />
+                      <text x="0" y="30" textAnchor="middle" fill="#ffffff" fontWeight="900" fontSize="9">
+                        EBOB = {ebobVal}
+                      </text>
+                    </g>
+
+                    {/* Yalnızca B'nin Bölenleri */}
+                    <g transform="translate(420, 110)">
+                      <text x="0" y="0" textAnchor="middle" fill="#1e40af" fontWeight="900" fontSize="13">
+                        {onlyB.join(', ') || '-'}
+                      </text>
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Kontroller */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <div className="flex items-center gap-2 bg-muted/60 px-3 py-1.5 rounded-2xl text-xs font-bold">
+                    <span>A:</span>
+                    {[12, 18, 20, 30].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setVennA(v)}
+                        className={`px-2.5 py-1 rounded-xl cursor-pointer ${vennA === v ? 'bg-pink-600 text-white' : 'bg-background'}`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-muted/60 px-3 py-1.5 rounded-2xl text-xs font-bold">
+                    <span>B:</span>
+                    {[18, 24, 36, 48].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setVennB(v)}
+                        className={`px-2.5 py-1 rounded-xl cursor-pointer ${vennB === v ? 'bg-blue-600 text-white' : 'bg-background'}`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      speakText(`${vennA} ve ${vennB} sayılarının en büyük ortak böleni EBOB ${ebobVal} dir.`);
+                      if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                      try {
+                        confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                      } catch (e) {}
+                    }}
+                    className="px-6 py-2.5 rounded-2xl bg-pink-600 hover:bg-pink-700 text-white font-black text-xs shadow-md cursor-pointer"
+                  >
+                    EBOB'u Doğrula →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* H9) ORTAOKUL 6: RİTİM MODELİ & ORTAK KATLAR (EKOK) */}
+            {missionType === 'rhythmic_multiples' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 font-black text-xs border border-cyan-500/20">
+                    <span>🏃 Ritmik Sayma &amp; En Küçük Ortak Kat (EKOK = {ekokVal})</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    {rhythmA}'şar ve {rhythmB}'şer ritmik saymada buluşulan ilk ortak noktayı keşfedin.
+                  </p>
+                </div>
+
+                {/* Çift Ritim Çizgisi Sahnesi */}
+                <div className="w-full max-w-3xl h-64 bg-white dark:bg-slate-900 rounded-3xl border-2 border-border p-4 shadow-xl my-auto flex items-center justify-center">
+                  <svg viewBox="0 0 700 200" className="w-full h-full">
+                    {/* Sayı Doğrusu Ana Çizgisi */}
+                    <line x1="30" y1="100" x2="670" y2="100" stroke="#94a3b8" strokeWidth="2.5" />
+
+                    {/* Çentikler (0'dan 24'e) */}
+                    {Array.from({ length: 25 }).map((_, i) => {
+                      const cx = 40 + i * 25;
+                      const isEKOK = i === ekokVal;
+                      return (
+                        <g key={i}>
+                          <line x1={cx} y1="92" x2={cx} y2="108" stroke="#cbd5e1" strokeWidth="1.5" />
+                          <text x={cx} y="124" textAnchor="middle" fontSize="10" fontWeight="bold" fill={isEKOK ? '#ef4444' : '#64748b'}>
+                            {i}
+                          </text>
+                          {isEKOK && (
+                            <g>
+                              <circle cx={cx} cy="100" r="7" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
+                              <rect x={cx - 30} y="132" width="60" height="20" rx="10" fill="#ef4444" />
+                              <text x={cx} y="145" textAnchor="middle" fontSize="9" fontWeight="900" fill="#ffffff">
+                                EKOK = {ekokVal}
+                              </text>
+                            </g>
+                          )}
+                        </g>
+                      );
+                    })}
+
+                    {/* A Ritim Yayları (Üst - Turkuaz) */}
+                    {Array.from({ length: Math.floor(24 / rhythmA) }).map((_, i) => {
+                      const startX = 40 + i * rhythmA * 25;
+                      const endX = startX + rhythmA * 25;
+                      const midX = (startX + endX) / 2;
+                      return (
+                        <path
+                          key={`a-${i}`}
+                          d={`M ${startX} 95 Q ${midX} 45, ${endX} 95`}
+                          fill="none"
+                          stroke="#06b6d4"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
+                      );
+                    })}
+
+                    {/* B Ritim Yayları (Alt - Kehribar) */}
+                    {Array.from({ length: Math.floor(24 / rhythmB) }).map((_, i) => {
+                      const startX = 40 + i * rhythmB * 25;
+                      const endX = startX + rhythmB * 25;
+                      const midX = (startX + endX) / 2;
+                      return (
+                        <path
+                          key={`b-${i}`}
+                          d={`M ${startX} 105 Q ${midX} 155, ${endX} 105`}
+                          fill="none"
+                          stroke="#f59e0b"
+                          strokeWidth="3"
+                          strokeDasharray="4,3"
+                          strokeLinecap="round"
+                        />
+                      );
+                    })}
+                  </svg>
+                </div>
+
+                {/* Kontroller */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <div className="flex items-center gap-2 bg-muted/60 px-3 py-1.5 rounded-2xl text-xs font-bold">
+                    <span>1. Koşucu:</span>
+                    {[3, 4, 5, 6].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setRhythmA(v)}
+                        className={`px-2.5 py-1 rounded-xl cursor-pointer ${rhythmA === v ? 'bg-cyan-600 text-white' : 'bg-background'}`}
+                      >
+                        {v}'er
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-muted/60 px-3 py-1.5 rounded-2xl text-xs font-bold">
+                    <span>2. Koşucu:</span>
+                    {[4, 6, 8, 10].map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setRhythmB(v)}
+                        className={`px-2.5 py-1 rounded-xl cursor-pointer ${rhythmB === v ? 'bg-amber-600 text-white' : 'bg-background'}`}
+                      >
+                        {v}'şer
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      speakText(`${rhythmA} ve ${rhythmB} sayılarının en küçük ortak katı EKOK ${ekokVal} dir.`);
+                      if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                      try {
+                        confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                      } catch (e) {}
+                    }}
+                    className="px-6 py-2.5 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs shadow-md cursor-pointer"
+                  >
+                    EKOK'u Doğrula →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* H10) ORTAOKUL 6: ALAN MODELİ İLE ÇARPANLAR */}
+            {missionType === 'area_rectangles' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20">
+                    <span>📐 Alan Modeli ile Çarpan Keşfi (Alan = {areaTarget} br²)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Alanı {areaTarget} olan farklı dikdörtgen boyutlarını seçerek tüm çarpan çiftlerini görün.
+                  </p>
+                </div>
+
+                {/* Geometrik Dikdörtgen Çizim Sahnesi */}
+                <div className="w-full max-w-2xl h-72 bg-white dark:bg-slate-900 rounded-3xl border-2 border-border p-4 shadow-xl my-auto flex flex-col items-center justify-center gap-4">
+                  {areaFactorPairs[selectedPairIdx] && (
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        style={{
+                          width: `${Math.min(380, Math.max(60, areaFactorPairs[selectedPairIdx].w * 18))}px`,
+                          height: `${Math.min(180, Math.max(40, areaFactorPairs[selectedPairIdx].h * 18))}px`,
+                        }}
+                        className="bg-amber-100 dark:bg-amber-950/40 border-3 border-amber-600 rounded-2xl flex items-center justify-center font-black text-amber-900 dark:text-amber-200 text-sm shadow-md transition-all duration-300"
+                      >
+                        {areaFactorPairs[selectedPairIdx].w} × {areaFactorPairs[selectedPairIdx].h} = {areaTarget} br²
+                      </div>
+
+                      <div className="text-xs font-bold text-muted-foreground">
+                        En: <strong>{areaFactorPairs[selectedPairIdx].w}</strong> | Boy:{' '}
+                        <strong>{areaFactorPairs[selectedPairIdx].h}</strong> | Çevre:{' '}
+                        <strong>
+                          2 × ({areaFactorPairs[selectedPairIdx].w} + {areaFactorPairs[selectedPairIdx].h}) ={' '}
+                          {2 * (areaFactorPairs[selectedPairIdx].w + areaFactorPairs[selectedPairIdx].h)} br
+                        </strong>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Boyut Seçim Butonları */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-2 pt-2">
+                  {areaFactorPairs.map((pair, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedPairIdx(idx)}
+                      className={`px-4 py-2 rounded-xl font-mono font-black text-xs border transition-all cursor-pointer ${
+                        selectedPairIdx === idx ? 'bg-amber-600 text-white border-amber-700 shadow-sm scale-105' : 'bg-muted/60 text-foreground'
+                      }`}
+                    >
+                      {pair.w} × {pair.h}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => {
+                      speakText(`Alan ${areaTarget} olan dikdörtgenin çarpanları keşfedildi.`);
+                      if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                      try {
+                        confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                      } catch (e) {}
+                    }}
+                    className="px-6 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md cursor-pointer ml-2"
+                  >
+                    Çarpanları Doğrula →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* H11) ORTAOKUL 6: BÖLEN LİSTESİ ALGORİTMASI */}
+            {missionType === 'division_ladder' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 font-black text-xs border border-indigo-500/20">
+                    <span>📋 Bölen Listesi (Asal Çarpan Algoritması: {ladderNum})</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    En küçük asaldan başlayarak dikey bölme algoritmasını adım adım uygulayın.
+                  </p>
+                </div>
+
+                {/* Dikey Bölen Listesi Sahnesi */}
+                <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border-2 border-border p-6 shadow-xl my-auto flex flex-col items-center gap-4">
+                  <div className="flex items-center gap-4 font-mono text-xl font-black">
+                    <div className="flex flex-col text-right text-foreground pr-4 border-r-3 border-indigo-600 space-y-2">
+                      {ladderSteps.map((st, i) => (
+                        <span key={i} className={i <= ladderStep ? 'opacity-100' : 'opacity-0'}>
+                          {st.val}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col text-left text-indigo-600 dark:text-indigo-400 space-y-2">
+                      {ladderSteps.slice(0, -1).map((st, i) => (
+                        <span key={i} className={i < ladderStep ? 'opacity-100' : 'opacity-0'}>
+                          {st.prime}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="font-mono text-xs font-black text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-xl">
+                    Üslü Gösterim: {ladderNum} = {primeSummary.expString}
+                  </div>
+                </div>
+
+                {/* Kontroller */}
+                <div className="w-full flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => setLadderStep((p) => Math.min(ladderSteps.length - 1, p + 1))}
+                    disabled={ladderStep >= ladderSteps.length - 1}
+                    className="px-6 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-black text-xs shadow-md cursor-pointer"
+                  >
+                    <span>⬇️ Bir Sonraki Asala Böl (+1)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setLadderStep(ladderSteps.length - 1)}
+                    className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm cursor-pointer"
+                  >
+                    <span>⚡ Tüm Listeyi Aç</span>
+                  </button>
+
+                  <button
+                    onClick={() => setLadderStep(1)}
+                    className="p-2.5 rounded-2xl bg-slate-200 dark:bg-slate-800 text-foreground font-black text-xs cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* G) İLKOKUL 1-2: YÖN VE KONUM LABİRENTİ (TAVŞAN & HAVUÇ) */}
             {missionType === 'spatial_grid' && (
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
@@ -2708,6 +4937,708 @@ export function MissionView() {
                   className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
                 >
                   Modeli Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0B. KARIŞ İLE UZUNLUK ÖLÇÜM KONTROLLERİ */}
+            {missionType === 'span_measurement' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      'Sıranın sol ucundan başlayarak karışlarını uç uca ekle. Sıranın kaç karış olduğunu bul ve Doğrula butonuna bas!'
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Yönergeyi Sesli Dinle</span>
+                </button>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Hedef Ölçüm:</span>
+                    <span className="font-mono text-amber-600 font-black">6 Karış</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Yerleştirilen Karış:</span>
+                    <span className="font-mono text-emerald-600 font-black">{placedSpans} / 6</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground pt-1 border-t">
+                    <span>Kalan Karış:</span>
+                    <span className="font-mono font-bold text-foreground">{Math.max(0, 6 - placedSpans)} Karış</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleVerifySpans}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Ölçümü Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0C. PİSAGOR TEOREMİ SAĞ KONTROLLERİ */}
+            {missionType === 'pythagoras_theorem' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `Dik üçgende dik kenarların kareleri toplamı hipotenüsün karesine eşittir. ${pythA} karesi artı ${pythB} karesi eşittir ${pythC} karesi.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Pisagor Bağıntısını Dinle</span>
+                </button>
+
+                {/* Dik Kenar a Sürgüsü */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-foreground">Dik Kenar (a)</span>
+                    <span className="font-mono text-rose-600 bg-rose-500/10 px-2.5 py-0.5 rounded-lg border border-rose-500/20 font-black">
+                      {pythA} br (a² = {pythA * pythA})
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2}
+                    max={12}
+                    step={1}
+                    value={pythA}
+                    onChange={(e) => setPythA(parseInt(e.target.value))}
+                    className="w-full accent-rose-600 cursor-pointer"
+                  />
+                </div>
+
+                {/* Dik Kenar b Sürgüsü */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-foreground">Dik Kenar (b)</span>
+                    <span className="font-mono text-sky-600 bg-sky-500/10 px-2.5 py-0.5 rounded-lg border border-sky-500/20 font-black">
+                      {pythB} br (b² = {pythB * pythB})
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2}
+                    max={12}
+                    step={1}
+                    value={pythB}
+                    onChange={(e) => setPythB(parseInt(e.target.value))}
+                    className="w-full accent-sky-600 cursor-pointer"
+                  />
+                </div>
+
+                {/* Hızlı Özel Üçgen Butonları */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    { a: 3, b: 4, name: '3-4-5' },
+                    { a: 6, b: 8, name: '6-8-10' },
+                    { a: 5, b: 12, name: '5-12-13' },
+                    { a: 8, b: 15, name: '8-15-17' },
+                  ].map((tri) => (
+                    <button
+                      key={tri.name}
+                      onClick={() => {
+                        setPythA(tri.a);
+                        setPythB(tri.b);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-300 dark:border-emerald-800 transition-all cursor-pointer"
+                    >
+                      {tri.name}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleVerifyPythagoras}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Bağıntıyı Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0D. KAREKÖKLÜ SAYILAR SAĞ KONTROLLERİ */}
+            {missionType === 'square_roots' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `Alanı ${sqrtArea} olan karenin bir kenarı karekök ${sqrtArea} dır. Değeri yaklaşık ${sqrtVal} birimdir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Karekök Yönergesini Dinle</span>
+                </button>
+
+                {/* Karenin Alanı Sürgüsü */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-foreground">Karenin Alanı (A)</span>
+                    <span className="font-mono text-rose-600 bg-rose-500/10 px-2.5 py-0.5 rounded-lg border border-rose-500/20 font-black">
+                      {sqrtArea} br²
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={sqrtArea}
+                    onChange={(e) => setSqrtArea(parseInt(e.target.value))}
+                    className="w-full accent-rose-600 cursor-pointer"
+                  />
+                </div>
+
+                {/* Hızlı Tam Kare Butonları */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[16, 20, 25, 36, 49, 50, 64, 81, 100].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setSqrtArea(val)}
+                      className={`px-2.5 py-1 rounded-lg font-bold text-[10px] border transition-all cursor-pointer ${
+                        sqrtArea === val
+                          ? 'bg-rose-600 text-white border-rose-700'
+                          : 'bg-muted/50 hover:bg-muted text-foreground border-border'
+                      }`}
+                    >
+                      A = {val}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Bir Kenar (s = √A):</span>
+                    <span className="font-mono text-rose-600 font-black">√{sqrtArea} = {sqrtVal} br</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-1 border-t text-[11px] text-muted-foreground">
+                    <span>Aralık:</span>
+                    <span>{Math.floor(sqrtVal)} &lt; √{sqrtArea} &lt; {Math.ceil(sqrtVal)}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleVerifySqrt}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Karekökü Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0E. EBOB & EKOK FAYANS SAĞ KONTROLLERİ */}
+            {missionType === 'ebob_ekok_tiles' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${roomW} ve ${roomH} sayılarının en büyük ortak böleni ${currentEBOB} dir. En büyük kare fayans ${currentEBOB} cm olmalıdır.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 EBOB/EKOK Yönergesini Dinle</span>
+                </button>
+
+                {/* Fayans Kenarı Sürgüsü */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-foreground">Kare Fayans Kenarı (T)</span>
+                    <span className="font-mono text-blue-600 bg-blue-500/10 px-2.5 py-0.5 rounded-lg border border-blue-500/20 font-black">
+                      {tileSize} cm
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={Math.min(roomW, roomH)}
+                    step={1}
+                    value={tileSize}
+                    onChange={(e) => setTileSize(parseInt(e.target.value))}
+                    className="w-full accent-blue-600 cursor-pointer"
+                  />
+                </div>
+
+                {/* EBOB Butonu */}
+                <button
+                  onClick={handleSetEBOBTile}
+                  className="w-full py-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold text-xs border border-amber-300 dark:border-amber-700 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>🎯 En Büyük Fayansı Bul (EBOB = {currentEBOB} cm)</span>
+                </button>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Oda Ölçüleri:</span>
+                    <span className="font-mono text-foreground">{roomW} × {roomH} cm</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Durum:</span>
+                    <span className={isTilePerfect ? 'text-emerald-600 font-black' : 'text-rose-600 font-black'}>
+                      {isTilePerfect ? `✅ Tam Bölüyor (${totalTilesCount} Fayans)` : '❌ Boşluk Kalıyor'}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleVerifyEBOB}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Fayans Döşemeyi Doğrula →
+                </button>
+              </div>
+            )}
+
+            {/* 0F. ORAN, ORANTI & YÜZDE SAĞ KONTROLLERİ */}
+            {missionType === 'ratio_proportion' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${priceItem} TL lik ürüne yüzde ${discountPercent} indirim uygulandığında indirim tutarı ${discountAmount} TL olur. Ödenecek tutar ${finalPrice} TL dir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 İndirim Hesabını Dinle</span>
+                </button>
+
+                {/* Ürün Fiyatı Sürgüsü */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-foreground">Etiket Fiyatı</span>
+                    <span className="font-mono text-amber-600 bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20 font-black">
+                      {priceItem} TL
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={50}
+                    max={1000}
+                    step={50}
+                    value={priceItem}
+                    onChange={(e) => setPriceItem(parseInt(e.target.value))}
+                    className="w-full accent-amber-600 cursor-pointer"
+                  />
+                </div>
+
+                {/* İndirim Yüzdesi Sürgüsü */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-foreground">İndirim Oranı</span>
+                    <span className="font-mono text-rose-600 bg-rose-500/10 px-2.5 py-0.5 rounded-lg border border-rose-500/20 font-black">
+                      %{discountPercent}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={5}
+                    max={75}
+                    step={5}
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(parseInt(e.target.value))}
+                    className="w-full accent-rose-600 cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold text-rose-600">
+                    <span>İndirim Tutarı:</span>
+                    <span className="font-mono font-black">-{discountAmount} TL</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-emerald-600 pt-1 border-t">
+                    <span>Ödenecek Tutar:</span>
+                    <span className="font-mono text-sm font-black">{finalPrice} TL</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleVerifyRatio}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Hesabı Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G. ASAL ÇARPAN AĞACI SAĞ KONTROLLERİ */}
+            {missionType === 'prime_factor_tree' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${treeNumber} sayısının asal çarpanları 2 ve 3 tür. Üslü biçimde ${treeNumber === 24 ? '2 üzeri 3 çarpı 3' : '2 üzeri 2 çarpı 3 üzeri 2'} olarak gösterilir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Asal Çarpan Ağacını Dinle</span>
+                </button>
+
+                {/* Sayı Seçimi */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-foreground">Ayrıştırılacak Sayı</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[24, 36, 48, 60, 72, 90].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setTreeNumber(num);
+                          setTreeStep(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
+                          treeNumber === num
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                            : 'bg-muted/50 hover:bg-muted text-foreground border-border'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Açılan Dal Seviyesi:</span>
+                    <span className="font-mono text-indigo-600 font-black">{treeStep} / {maxTreeSteps}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-amber-600">
+                    <span>Asal Çarpanlar:</span>
+                    <span className="font-mono font-black">&#123; {primeSummary.uniquePrimes} &#125;</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-emerald-600 pt-1 border-t">
+                    <span>Üslü Gösterim:</span>
+                    <span className="font-mono text-sm font-black">
+                      {primeSummary.expString}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    handleFullTree();
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Ağacı Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G2. ERATOSTHENES KALBURU SAĞ KONTROLLERİ */}
+            {missionType === 'eratosthenes_sieve' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      'Eratosthenes kalburunda 1 asal değildir. 2, 3, 5, 7 asaldır ancak katları asal değildir. Katlar elendiğinde 100 e kadar toplam 25 asal sayı kalır.'
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Kalbur Bilgisini Dinle</span>
+                </button>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Elenen Katlar:</span>
+                    <span className="font-mono text-rose-600 font-black">
+                      {sieveEliminated.filter((x) => x > 1).map((x) => `${x}'nin katları`).join(', ') || 'Henüz elenmedi'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-bold text-amber-600">
+                    <span>Kalan Asal Sayılar:</span>
+                    <span className="font-mono font-black">
+                      {sieveEliminated.length >= 5 ? '25 Asal (Tamamlandı)' : 'Süzülüyor...'}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleRunAllSieve}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Kalburu Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G3. BÖLÜNEBİLME KURALLARI SAĞ KONTROLLERİ */}
+            {missionType === 'divisibility_rules' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${divNum} sayısının son basamağı ${divNum % 10}, rakamlar toplamı ${divNum
+                        .toString()
+                        .split('')
+                        .map(Number)
+                        .reduce((a, b) => a + b, 0)} dır.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Kural Açıklamasını Dinle</span>
+                </button>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-foreground">Sayıyı Değiştir</span>
+                  <input
+                    type="range"
+                    min={10}
+                    max={999}
+                    step={5}
+                    value={divNum}
+                    onChange={(e) => setDivNum(parseInt(e.target.value))}
+                    className="w-full accent-emerald-600 cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>2, 5, 10 Uyumu:</span>
+                    <span className={divNum % 10 === 0 ? 'text-emerald-600 font-black' : 'text-foreground'}>
+                      {divNum % 10 === 0 ? 'Hepsine bölünür (Son=0)' : divNum % 2 === 0 ? 'Yalnızca 2' : divNum % 5 === 0 ? 'Yalnızca 5' : 'Bölünmez'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>3 ve 9 Uyumu:</span>
+                    <span className={divNum % 9 === 0 ? 'text-emerald-600 font-black' : divNum % 3 === 0 ? 'text-blue-600 font-black' : 'text-foreground'}>
+                      {divNum % 9 === 0 ? 'Hem 3 hem 9' : divNum % 3 === 0 ? 'Yalnızca 3' : 'Bölünmez'}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    speakText(`${divNum} sayısının bölünebilme kuralları doğrulandı.`);
+                    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                    try {
+                      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                    } catch (e) {}
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Kuralları Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G4. VENN ŞEMASI & ORTAK BÖLENLER SAĞ KONTROLLERİ */}
+            {missionType === 'venn_divisors' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${vennA} ve ${vennB} sayılarının ortak bölenleri ${commonDivisors.join(', ')} dir. En büyük ortak bölen EBOB ${ebobVal} dir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-pink-500 hover:bg-pink-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 EBOB Venn Anlatımını Dinle</span>
+                </button>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Ortak Bölen Kümesi:</span>
+                    <span className="font-mono text-indigo-600 font-black">&#123; {commonDivisors.join(', ')} &#125;</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-pink-600 pt-1 border-t">
+                    <span>EBOB({vennA}, {vennB}):</span>
+                    <span className="font-mono text-sm font-black">{ebobVal}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    speakText(`EBOB ${ebobVal} olarak doğrulandı.`);
+                    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                    try {
+                      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                    } catch (e) {}
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  EBOB'u Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G5. RİTİM MODELİ & EKOK SAĞ KONTROLLERİ */}
+            {missionType === 'rhythmic_multiples' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${rhythmA} ve ${rhythmB} nin katları sayı doğrusunda incelendiğinde ilk ortak katları ${ekokVal} dir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 EKOK Ritim Bilgisini Dinle</span>
+                </button>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>1. Sayının Katları:</span>
+                    <span className="font-mono text-cyan-600 font-black">{rhythmA}, {rhythmA * 2}, {rhythmA * 3}, {rhythmA * 4}...</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>2. Sayının Katları:</span>
+                    <span className="font-mono text-amber-600 font-black">{rhythmB}, {rhythmB * 2}, {rhythmB * 3}, {rhythmB * 4}...</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-red-600 pt-1 border-t">
+                    <span>EKOK({rhythmA}, {rhythmB}):</span>
+                    <span className="font-mono text-sm font-black">{ekokVal}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    speakText(`EKOK ${ekokVal} olarak doğrulandı.`);
+                    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                    try {
+                      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                    } catch (e) {}
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  EKOK'u Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G6. ALAN MODELİ İLE ÇARPANLAR SAĞ KONTROLLERİ */}
+            {missionType === 'area_rectangles' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `Alanı ${areaTarget} olan dikdörtgenin tüm çarpan çiftleri: ${areaFactorPairs.map((p) => `${p.w} çarpı ${p.h}`).join(', ')} dir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Alan Çarpanlarını Dinle</span>
+                </button>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-foreground">Hedef Alan (br²)</span>
+                  <div className="flex gap-1.5">
+                    {[24, 36, 48, 60].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setAreaTarget(num);
+                          setSelectedPairIdx(0);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs border cursor-pointer ${
+                          areaTarget === num ? 'bg-amber-600 text-white border-amber-700 shadow-xs' : 'bg-muted/50'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Toplam Çarpan Çifti:</span>
+                    <span className="font-mono text-amber-600 font-black">{areaFactorPairs.length} Adet</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    speakText(`Alan ${areaTarget} olan dikdörtgenin çarpanları doğrulandı.`);
+                    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                    try {
+                      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                    } catch (e) {}
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Çarpanları Doğrula &amp; Soruya Geç →
+                </button>
+              </div>
+            )}
+
+            {/* 0G7. BÖLEN LİSTESİ SAĞ KONTROLLERİ */}
+            {missionType === 'division_ladder' && (
+              <div className="space-y-4 mb-4">
+                <button
+                  onClick={() =>
+                    speakText(
+                      `${ladderNum} sayısının bölen listesinde en küçük asaldan başlanarak 1 e ulaşılır. Asal çarpanlar ${primeSummary.expString} dir.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Bölen Listesini Dinle</span>
+                </button>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-foreground">Sayıyı Değiştir</span>
+                  <div className="flex gap-1.5">
+                    {[24, 36, 48, 60, 72].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setLadderNum(num);
+                          setLadderStep(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs border cursor-pointer ${
+                          ladderNum === num ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs' : 'bg-muted/50'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Adım İlerlemesi:</span>
+                    <span className="font-mono text-indigo-600 font-black">{ladderStep} / {ladderSteps.length - 1}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-emerald-600 pt-1 border-t">
+                    <span>Üslü Gösterim:</span>
+                    <span className="font-mono text-sm font-black">{primeSummary.expString}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setLadderStep(ladderSteps.length - 1);
+                    speakText(`Bölen listesi algoritması doğrulandı.`);
+                    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+                    try {
+                      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+                    } catch (e) {}
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Listeyi Doğrula &amp; Soruya Geç →
                 </button>
               </div>
             )}
@@ -3376,8 +6307,15 @@ export function MissionView() {
           </div>
 
           {/* ADIM 2: KARAR VER */}
-          <div className={`p-4 rounded-3xl border-2 transition-all ${activeStep === 2 ? 'bg-primary/5 border-primary shadow-xs' : 'bg-muted/30 border-border opacity-70'}`}>
-            <div className="flex items-center justify-between mb-2">
+          <div
+            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
+              activeStep === 2 ? 'bg-primary/5 border-primary shadow-xs' : 'bg-muted/30 border-border opacity-85 hover:opacity-100'
+            }`}
+          >
+            <div
+              onClick={() => setActiveStep(2)}
+              className="flex items-center justify-between mb-2 select-none"
+            >
               <div className="flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground font-black flex items-center justify-center text-xs">
                   2
@@ -3387,62 +6325,22 @@ export function MissionView() {
               {step2Verified && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
             </div>
 
-            {activeStep >= 2 && (
+            {activeStep === 2 && (
               <div className="space-y-3 pt-1">
                 <p className="text-xs text-foreground font-semibold leading-relaxed">
-                  {missionType === 'algebraic_tiles' &&
-                    'Sayma pulları modeline göre (+2) - (-3) çıkarma işleminin sonucu kaçtır?'}
-                  {missionType === 'data_barchart' &&
-                    'Şekil grafiğine göre en çok sevilen mevsim hangisidir ve bu mevsimi toplam kaç öğrenci seçmiştir?'}
-                  {missionType === 'probability_spinner' &&
-                    'Tamamı kırmızı olan bir çarktan kırmızı gelme durumu hangi olasılık kavramıdır?'}
-                  {missionType === 'unit_cubes' &&
-                    '4 Yüzlük + 5 Onluk + 6 Birlik hangi 3 basamaklı sayıyı oluşturur?'}
-                  {missionType === 'counting_objects' && '5 elmanın yanına 2 elma daha eklersek toplam kaç elma olur?'}
-                  {missionType === 'spatial_grid' && 'Tavşanı başlangıç noktasından havuca götürmek için hangi yöne ilerledik?'}
-                  {missionType === 'money_coins' && 'Kumbaraya 2 adet 10 TL attığımızda toplam kaç TL olur?'}
-                  {missionType === 'pattern_blocks' && 'Örüntü kuralı kaç adımda bir kendini tekrar etmektedir?'}
-                  {missionType === 'prism_volume' && 'Uzunluğu 5, genişliği 4 ve yüksekliği 3 olan bir prizmanın hacmi kaç birim küptür?'}
-                  {missionType === 'balance_scale' && '2x + 4 = 10 denkleminde terazinin dengede kalması için x değeri kaç olmalıdır?'}
-                  {missionType === 'slope_explorer' && 'y = 2x + 1 doğrusunda x değeri 1 birim arttığında y değeri kaç birim artar?'}
-                  {missionType === 'pizza_fractions' && '3/6 kesri aşağıdaki kesirlerden hangisine denktir?'}
-                  {missionType === 'quadrant_target' && '(3; 2) koordinatları analitik düzlemde kaçıncı bölgededir?'}
-                  {missionType === 'circle_radius' && 'Yarıçapı r = 3 olan çemberin çapı (2r) kaç birimdir?'}
+                  {pedagogicalData.question}
                 </p>
 
                 <div className="space-y-1.5">
-                  {(missionType === 'algebraic_tiles'
-                    ? ['+5 (5 adet pozitif pul)', '-1', '-5', '+1']
-                    : missionType === 'data_barchart'
-                      ? [
-                        '☀️ Yaz Mevsimi (6 yıldız × 2 = 12 öğrenci)',
-                        '🌸 İlkbahar Mevsimi (4 öğrenci)',
-                        '❄️ Kış Mevsimi (8 öğrenci)',
-                        '🍂 Sonbahar Mevsimi (6 öğrenci)',
-                      ]
-                      : missionType === 'probability_spinner'
-                        ? ['Kesin Olay (%100)', 'İmkânsız Olay (%0)', 'Olabilir (Eşit Olasılık)']
-                        : missionType === 'unit_cubes'
-                          ? ['456', '546', '654', '465']
-                          : missionType === 'prism_volume'
-                            ? ['12 birim küp', '20 birim küp', '60 birim küp (5×4×3)', '48 birim küp']
-                            : missionType === 'balance_scale'
-                              ? ['x = 2', 'x = 3', 'x = 4', 'x = 5']
-                              : missionType === 'slope_explorer'
-                                ? ['2 birim (Eğim = 2)', '1 birim', '3 birim', '4 birim']
-                                : missionType === 'pizza_fractions'
-                                  ? ['1/4', '1/2', '2/3', '3/4']
-                                  : missionType === 'quadrant_target'
-                                    ? ['I. Bölge (+, +)', 'II. Bölge (-, +)', 'III. Bölge (-, -)', 'IV. Bölge (+, -)']
-                                    : ['3 br', '4 br', '6 br (2×3)', '9 br']
-                  ).map((opt, idx) => (
+                  {pedagogicalData.options.map((opt, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedOption(idx)}
-                      className={`w-full p-2.5 rounded-2xl text-xs font-bold text-left transition-all border cursor-pointer ${selectedOption === idx
+                      className={`w-full p-2.5 rounded-2xl text-xs font-bold text-left transition-all border cursor-pointer ${
+                        selectedOption === idx
                           ? 'bg-primary/15 border-primary text-primary shadow-2xs scale-[1.01]'
                           : 'bg-card border-border hover:bg-muted text-foreground'
-                        }`}
+                      }`}
                     >
                       {opt}
                     </button>
@@ -3454,59 +6352,56 @@ export function MissionView() {
                   disabled={selectedOption === null}
                   className="w-full py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs hover:opacity-90 disabled:opacity-40 transition-all shadow-xs cursor-pointer"
                 >
-                  Cevabı Kontrol Et
+                  Cevabı Kontrol Et →
                 </button>
               </div>
             )}
           </div>
 
           {/* ADIM 3: AÇIKLA */}
-          <div className={`p-4 rounded-3xl border-2 transition-all ${activeStep === 3 ? 'bg-emerald-500/10 border-emerald-500' : 'bg-muted/30 border-border opacity-70'}`}>
-            <div className="flex items-center gap-2 mb-2">
+          <div
+            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
+              activeStep === 3 ? 'bg-emerald-500/10 border-emerald-500' : 'bg-muted/30 border-border opacity-85 hover:opacity-100'
+            }`}
+          >
+            <div
+              onClick={() => setActiveStep(3)}
+              className="flex items-center gap-2 mb-2 select-none"
+            >
               <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-xs">
                 3
               </span>
               <h3 className="font-extrabold text-sm text-foreground">Açıkla</h3>
             </div>
 
-            {activeStep >= 3 && (
+            {activeStep === 3 && (
               <div className="space-y-3 pt-1 text-xs text-muted-foreground">
-                <p className="text-foreground font-bold leading-relaxed">
-                  {missionType === 'algebraic_tiles' &&
-                    'Tebrikler! (+2) sayısından (-3) çıkarmak için modele 3 adet sıfır çifti (+ / -) eklenir ve 3 negatif pul dışarı atıldığında sonuçta +5 pozitif pul kaldığını ispatladınız: (+2) - (-3) = (+2) + (+3) = +5.'}
-                  {missionType === 'data_barchart' &&
-                    'Tebrikler! Şekil grafiğindeki her bir sembolün (⭐) 2 öğrenciyi temsil ettiğini ve en çok sevilen mevsimin Yaz (6 × 2 = 12 öğrenci) olduğunu başarıyla hesapladınız.'}
-                  {missionType === 'probability_spinner' &&
-                    'Tebrikler! Gerçekleşmesi %100 kesin olan olaylara "Kesin Olay", imkânsız olanlara "İmkânsız Olay" dendiğini kavradınız.'}
-                  {missionType === 'unit_cubes' &&
-                    'Tebrikler! Basamak değerlerinin (4×100 + 5×10 + 6×1 = 456) sayının toplam büyüklüğünü belirlediğini gördünüz.'}
-                  {missionType === 'prism_volume' &&
-                    'Tebrikler! Prizmanın taban alanı ve yüksekliğinin çarpımıyla hacmin (V = a × b × c) hesaplandığını ispatladın.'}
-                  {missionType === 'balance_scale' &&
-                    'Harika! Eşitliğin her iki tarafından aynı miktar çıkarıldığında (2x = 6) dengenin korunduğunu ve x = 3 olduğunu gördünüz.'}
-                  {missionType === 'slope_explorer' &&
-                    'Tebrikler! Eğim m, dikey değişimin yatay değişime oranıdır (Δy / Δx). m = 2 doğrunun dikliğini belirler.'}
-                  {missionType === 'pizza_fractions' &&
-                    'Harika! Kesir genişletme ve sadeleştirme mantığıyla 3/6 ve 1/2 kesirlerinin aynı büyüklüğü temsil ettiğini kanıtladınız.'}
-                  {missionType === 'quadrant_target' &&
-                    'Tebrikler! x > 0 ve y > 0 olduğunda noktanın analitik düzlemin I. Bölgesinde yer aldığını keşfettiniz.'}
-                  {missionType === 'circle_radius' &&
-                    'Harika! Çemberin tüm noktalarının merkeze eşit uzaklıkta (r) olduğunu ve çapın 2r olduğunu incelediniz.'}
-                </p>
+                <div className="p-3 bg-emerald-500/5 dark:bg-emerald-950/20 rounded-2xl border border-emerald-500/20">
+                  <p className="text-foreground font-bold leading-relaxed">
+                    {pedagogicalData.explanation}
+                  </p>
+                </div>
 
                 <button
                   onClick={() => setActiveStep(4)}
-                  className="w-full py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs shadow-md hover:opacity-90 transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
                 >
-                  Notlara Geç →
+                  Notlar ve Özete Geç →
                 </button>
               </div>
             )}
           </div>
 
-          {/* ADIM 4: NOTLAR */}
-          <div className={`p-4 rounded-3xl border-2 transition-all ${activeStep === 4 ? 'bg-indigo-500/10 border-indigo-500' : 'bg-muted/30 border-border opacity-70'}`}>
-            <div className="flex items-center gap-2 mb-2">
+          {/* ADIM 4: NOTLAR VE ÖZET */}
+          <div
+            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
+              activeStep === 4 ? 'bg-indigo-500/10 border-indigo-500' : 'bg-muted/30 border-border opacity-85 hover:opacity-100'
+            }`}
+          >
+            <div
+              onClick={() => setActiveStep(4)}
+              className="flex items-center gap-2 mb-2 select-none"
+            >
               <span className="w-6 h-6 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-xs">
                 4
               </span>
@@ -3515,63 +6410,20 @@ export function MissionView() {
 
             {activeStep === 4 && (
               <div className="space-y-3 pt-1 text-xs text-muted-foreground">
-                <div className="p-3 bg-card rounded-2xl border border-border space-y-1.5 font-medium text-foreground">
-                  <div className="font-black text-primary">Kavram Özeti:</div>
-                  {missionType === 'algebraic_tiles' && (
-                    <>
-                      <div>• Tam Sayılarda Çıkarma: a - (-b) = a + (+b)</div>
-                      <div>• Sıfır Çifti: Bir (+) ve bir (-) pulun değeri 0&apos;dır.</div>
-                      <div>• Çıkarma Modellemesi: Olmayan pullar yerine sıfır çifti eklenir.</div>
-                    </>
-                  )}
-                  {missionType === 'data_barchart' && (
-                    <>
-                      <div>• Şekil Grafiği: Verilerin şekil veya sembollerle gösterilmesidir.</div>
-                      <div>• Not Kuralı: 'Her şekil X kişiyi temsil eder' bilgisine dikkat edilmelidir.</div>
-                      <div>• Sıklık Tablosu: Verilerin doğrudan sayısal karşılığıdır.</div>
-                    </>
-                  )}
-                  {missionType === 'prism_volume' && (
-                    <>
-                      <div>• Dikdörtgenler Prizması: V = a × b × c</div>
-                      <div>• Küp Hacmi: V = a³</div>
-                    </>
-                  )}
-                  {missionType === 'balance_scale' && (
-                    <>
-                      <div>• Eşitliğin Korunumu: Terazi prensibi</div>
-                      <div>• ax + b = c ⇒ ax = c - b ⇒ x = (c - b)/a</div>
-                    </>
-                  )}
-                  {missionType === 'slope_explorer' && (
-                    <>
-                      <div>• Doğru Denklemi: y = mx + n</div>
-                      <div>• m: Eğim (Δy / Δx), n: y-eksenini kestiği nokta</div>
-                    </>
-                  )}
-                  {missionType === 'pizza_fractions' && (
-                    <>
-                      <div>• Denk Kesirler: a/b = (a×k)/(b×k)</div>
-                      <div>• 3/6 = 1/2 = 50%</div>
-                    </>
-                  )}
-                  {missionType === 'quadrant_target' && (
-                    <>
-                      <div>• I. Bölge: (+, +) | II. Bölge: (-, +)</div>
-                      <div>• III. Bölge: (-, -) | IV. Bölge: (+, -)</div>
-                    </>
-                  )}
-                  {missionType === 'circle_radius' && (
-                    <>
-                      <div>• Çap: R = 2r</div>
-                      <div>• Çevre = 2πr | Alan = πr²</div>
-                    </>
-                  )}
+                <div className="p-3 bg-card rounded-2xl border border-border space-y-2 font-medium text-foreground">
+                  <div className="font-black text-indigo-600 dark:text-indigo-400 text-xs">
+                    📌 Konu Özeti ve Kritik Kazanımlar:
+                  </div>
+                  {pedagogicalData.summaryNotes.map((note, nIdx) => (
+                    <div key={nIdx} className="leading-relaxed">
+                      {note}
+                    </div>
+                  ))}
                 </div>
 
                 <button
                   onClick={openStudioMode}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs shadow-lg hover:opacity-95 transition-all cursor-pointer"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs shadow-lg transition-all cursor-pointer"
                 >
                   Serbest Stüdyoda Çizime Başla →
                 </button>

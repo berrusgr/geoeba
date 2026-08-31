@@ -1,298 +1,238 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { useCurriculum } from '@/state/CurriculumContext';
 import {
   Sparkles,
   ArrowRight,
   Compass,
-  Play,
-  Volume2,
-  CheckCircle2,
-  Box,
-  Layers,
+  Smile,
   GraduationCap,
+  Shapes,
+  Layers,
+  ChevronRight,
 } from 'lucide-react';
 
 export function WelcomeScreen() {
-  const { selectLevel, startFreeSandbox } = useCurriculum();
+  const { selectLevel, selectGrade, startFreeSandbox } = useCurriculum();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-6 lg:p-12 relative overflow-hidden bg-[#faf8f5] dark:bg-[#121316] select-none">
-      {/* 1. YUMUŞAK KİL & MATEMATİK AMBİYANS IŞIKLARI */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-200/35 dark:bg-amber-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-200/35 dark:bg-blue-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-purple-200/25 dark:bg-purple-600/10 rounded-full blur-[160px] pointer-events-none -z-10" />
-
-      {/* Yüzen Matematiksel Süslemeler */}
-      <div className="absolute top-12 right-16 text-amber-500/20 dark:text-amber-400/15 font-black text-6xl font-mono pointer-events-none rotate-12 hidden lg:block">
-        π
-      </div>
-      <div className="absolute bottom-20 left-16 text-blue-500/20 dark:text-blue-400/15 font-black text-7xl font-mono pointer-events-none -rotate-12 hidden lg:block">
-        Σ
-      </div>
-      <div className="absolute top-1/3 left-10 text-cyan-500/20 dark:text-cyan-400/15 font-black text-5xl font-mono pointer-events-none hidden lg:block">
-        φ
-      </div>
-      <div className="absolute bottom-1/3 right-12 text-purple-500/20 dark:text-purple-400/15 font-black text-5xl font-mono pointer-events-none rotate-6 hidden lg:block">
-        ∞
-      </div>
-
-      {/* 2. ANA BAŞLIK VE AÇIKLAMA */}
-      <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-4 relative z-10 animate-in fade-in slide-in-from-bottom-3 duration-500">
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-amber-200/80 dark:border-amber-700/50 shadow-sm text-slate-800 dark:text-slate-200 text-xs font-black tracking-wide">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-          <span className="bg-gradient-to-r from-amber-600 via-orange-600 to-blue-600 bg-clip-text text-transparent uppercase">
-            T.C. MEB Türkiye Yüzyılı Maarif Modeli
-          </span>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#fafbfc] dark:bg-[#0f1115] text-slate-800 dark:text-slate-100 px-4 sm:px-6 lg:px-8 py-5 sm:py-6 flex flex-col items-center justify-start select-none">
+      <div className="w-full max-w-5xl space-y-5">
+        
+        {/* ============================================================== */}
+        {/* 1. ÜST BAŞLIK ALANI (Sade & Zarif Tipografi)                     */}
+        {/* ============================================================== */}
+        <div className="bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Kademe Seçimi
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+            Etkileşimli matematik ve geometri çalışmaları için kademenizi veya doğrudan sınıfınızı seçiniz.
+          </p>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-          Kademe{' '}
-          <span className="bg-gradient-to-r from-amber-500 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Seçiniz
-          </span>
-        </h1>
-      </div>
-
-      {/* 3. ÜÇLÜ 3D KİL KART GRİDİ (İLKOKUL, ORTAOKUL, LİSE) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-7 w-full max-w-6xl mb-10 relative z-10">
-        
-        {/* ===================== 1. İLKOKUL KARTI (Bal & Sıcak Kil Teması) ===================== */}
-        <div className="group relative flex flex-col p-6 sm:p-7 rounded-[32px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-amber-200/80 dark:border-amber-900/40 hover:border-amber-400 dark:hover:border-amber-500 shadow-[0_20px_50px_-15px_rgba(245,158,11,0.15)] hover:shadow-[0_25px_60px_-15px_rgba(245,158,11,0.35)] transition-all duration-300 hover:-translate-y-2">
-          {/* Üst 3D Kil Görsel Alanı (Sıcak Kil & Bal Sarısı Pedestal) */}
-          <div className="relative w-full h-48 sm:h-52 rounded-2xl bg-gradient-to-b from-[#fff8ed] via-[#fef3c7]/60 to-[#fffbeb] dark:from-amber-950/40 dark:to-orange-950/20 border border-amber-200/80 dark:border-amber-800/60 flex items-center justify-center p-3 mb-5 overflow-hidden shadow-inner" style={{ position: 'relative' }}>
-            <div className="relative w-full h-full rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-300 flex items-center justify-center" style={{ position: 'relative', width: '100%', height: '100%' }}>
-              <Image
-                src="/images/ilkokul-3d.png"
-                alt="İlkokul 3D Kil Matematik Okulu"
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-contain drop-shadow-md"
-                priority
-              />
+        {/* ============================================================== */}
+        {/* 2. PASTEL RENKLİ 3 KADEME KARTI                                 */}
+        {/* ============================================================== */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+          
+          {/* ================= KART 1: İLKOKUL (Pastel Sarı/Bal) ================= */}
+          <div
+            onClick={() => selectLevel('ilkokul')}
+            className="group relative h-60 p-5 sm:p-6 rounded-3xl bg-[#fffbeb] hover:bg-[#fef3c7] dark:bg-amber-950/20 dark:hover:bg-amber-950/30 border-2 border-[#fde68a] dark:border-amber-900/40 hover:border-amber-400 dark:hover:border-amber-500 text-left flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer"
+          >
+            {/* Sol Üst İkon & Rozet */}
+            <div className="flex items-center justify-between w-full relative z-10">
+              <div className="w-11 h-11 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
+                <Smile className="w-6 h-6" />
+              </div>
+              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-amber-800 dark:text-amber-300 text-xs font-black border border-amber-200 dark:border-amber-800 shadow-2xs">
+                1-4. Sınıf
+              </span>
             </div>
 
-            {/* Sağ Üst Kademe Rozeti */}
-            <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-amber-600 dark:text-amber-400 font-black text-xs shadow-sm border border-amber-200 dark:border-amber-800">
-              1-4. Sınıf
-            </div>
+            {/* Sağ Alt Silik Filigran İkon */}
+            <Shapes className="absolute -bottom-4 -right-4 w-36 h-36 text-amber-300/35 dark:text-amber-500/10 pointer-events-none group-hover:scale-105 transition-transform duration-300" />
 
-            {/* Sol Alt Sesli/Oyun Rozeti */}
-            <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-xl bg-amber-500 text-white font-black text-[10px] shadow-sm flex items-center gap-1">
-              <Volume2 className="w-3 h-3" />
-              <span>Sesli &amp; Görsel Oyun</span>
-            </div>
-          </div>
-
-          {/* İçerik */}
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+            {/* Sol Alt Başlık ve Sade Sınıf Etiketleri */}
+            <div className="relative z-10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-[#b45309] dark:text-amber-400">
                   İlkokul
                 </h2>
+                <div className="flex items-center gap-1 text-xs font-black text-amber-700 dark:text-amber-300 group-hover:translate-x-1 transition-transform">
+                  <span>Sınıf Seç</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
               </div>
-              <span className="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full">
-                111 Görev
-              </span>
-            </div>
 
-            {/* Sınıf Rozetleri */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
-                1. Sınıf (Görsel &amp; Sesli)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
-                2. Sınıf
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
-                3. Sınıf
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
-                4. Sınıf
-              </span>
+              {/* Sınıf Butonları */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[
+                  { num: 1, label: '1. Sınıf' },
+                  { num: 2, label: '2. Sınıf' },
+                  { num: 3, label: '3. Sınıf' },
+                  { num: 4, label: '4. Sınıf' },
+                ].map((cls) => (
+                  <button
+                    key={cls.num}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectGrade(cls.num as any);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white text-amber-900 dark:text-amber-200 text-xs font-black border border-amber-300/80 shadow-2xs transition-all active:scale-95 cursor-pointer z-20"
+                  >
+                    {cls.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Aksiyon Butonu */}
-          <button
-            onClick={() => selectLevel('ilkokul')}
-            className="mt-auto w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 hover:scale-102 transition-all cursor-pointer"
+          {/* ================= KART 2: ORTAOKUL (Pastel Mavi) ================= */}
+          <div
+            onClick={() => selectLevel('ortaokul')}
+            className="group relative h-60 p-5 sm:p-6 rounded-3xl bg-[#f0f6ff] hover:bg-[#e4efff] dark:bg-blue-950/20 dark:hover:bg-blue-950/30 border-2 border-[#dbeafe] dark:border-blue-900/40 hover:border-blue-400 dark:hover:border-blue-500 text-left flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer"
           >
-            <span>İlkokul Kademesine Gir</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* ===================== 2. ORTAOKUL KARTI (Turkuaz & Kobalt Mavisi Teması) ===================== */}
-        <div className="group relative flex flex-col p-6 sm:p-7 rounded-[32px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-cyan-200/80 dark:border-cyan-900/40 hover:border-cyan-500 dark:hover:border-cyan-400 shadow-[0_20px_50px_-15px_rgba(6,182,212,0.15)] hover:shadow-[0_25px_60px_-15px_rgba(6,182,212,0.35)] transition-all duration-300 hover:-translate-y-2">
-          {/* Üst 3D Kil Görsel Alanı (Turkuaz & Cyan Pedestal) */}
-          <div className="relative w-full h-48 sm:h-52 rounded-2xl bg-gradient-to-b from-[#ecfeff] via-[#cffafe]/60 to-[#e0f2fe] dark:from-cyan-950/40 dark:to-blue-950/20 border border-cyan-200/80 dark:border-cyan-800/60 flex items-center justify-center p-3 mb-5 overflow-hidden shadow-inner" style={{ position: 'relative' }}>
-            <div className="relative w-full h-full rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-300 flex items-center justify-center" style={{ position: 'relative', width: '100%', height: '100%' }}>
-              <Image
-                src="/images/ortaokul-3d.png"
-                alt="Ortaokul 3D Kil İzometrik Geometri Küpleri"
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-contain drop-shadow-md"
-                priority
-              />
+            {/* Sol Üst İkon & Rozet */}
+            <div className="flex items-center justify-between w-full relative z-10">
+              <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                <Compass className="w-6 h-6" />
+              </div>
+              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-blue-800 dark:text-blue-300 text-xs font-black border border-blue-200 dark:border-blue-800 shadow-2xs">
+                5-8. Sınıf
+              </span>
             </div>
 
-            {/* Sağ Üst Kademe Rozeti */}
-            <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-cyan-700 dark:text-cyan-300 font-black text-xs shadow-sm border border-cyan-200 dark:border-cyan-800">
-              5-8. Sınıf
-            </div>
+            {/* Sağ Alt Silik Filigran İkon */}
+            <Compass className="absolute -bottom-4 -right-4 w-36 h-36 text-blue-300/35 dark:text-blue-500/10 pointer-events-none group-hover:scale-105 transition-transform duration-300" />
 
-            {/* Sol Alt Rozet */}
-            <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-xl bg-cyan-600 text-white font-black text-[10px] shadow-sm flex items-center gap-1">
-              <Box className="w-3 h-3" />
-              <span>190 TYMM Görevi</span>
-            </div>
-          </div>
-
-          {/* İçerik */}
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-cyan-500 shadow-sm shadow-cyan-500/50" />
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+            {/* Sol Alt Başlık ve Sade Sınıf Etiketleri */}
+            <div className="relative z-10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-blue-700 dark:text-blue-400">
                   Ortaokul
                 </h2>
+                <div className="flex items-center gap-1 text-xs font-black text-blue-700 dark:text-blue-300 group-hover:translate-x-1 transition-transform">
+                  <span>Sınıf Seç</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
               </div>
-              <span className="text-[11px] font-extrabold text-cyan-700 dark:text-cyan-300 bg-cyan-100/80 dark:bg-cyan-950/80 px-2.5 py-0.5 rounded-full">
-                190 Görev
-              </span>
-            </div>
 
-            {/* Sınıf Rozetleri */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[10px] font-extrabold border border-cyan-500/20">
-                5. Sınıf (42)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[10px] font-extrabold border border-cyan-500/20">
-                6. Sınıf (52)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[10px] font-extrabold border border-cyan-500/20">
-                7. Sınıf (48)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 text-[10px] font-extrabold border border-cyan-500/20">
-                8. Sınıf (48)
-              </span>
+              {/* Sınıf Butonları */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[
+                  { num: 5, label: '5. Sınıf' },
+                  { num: 6, label: '6. Sınıf' },
+                  { num: 7, label: '7. Sınıf' },
+                  { num: 8, label: '8. Sınıf' },
+                ].map((cls) => (
+                  <button
+                    key={cls.num}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectGrade(cls.num as any);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white text-blue-900 dark:text-blue-200 text-xs font-black border border-blue-300/80 shadow-2xs transition-all active:scale-95 cursor-pointer z-20"
+                  >
+                    {cls.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Aksiyon Butonu */}
-          <button
-            onClick={() => selectLevel('ortaokul')}
-            className="mt-auto w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 hover:scale-102 transition-all cursor-pointer"
+          {/* ================= KART 3: LİSE (Pastel Mor/Lavanta) ================= */}
+          <div
+            onClick={() => selectLevel('lise')}
+            className="group relative h-60 p-5 sm:p-6 rounded-3xl bg-[#faf5ff] hover:bg-[#f3e8ff] dark:bg-purple-950/20 dark:hover:bg-purple-950/30 border-2 border-[#f3e8ff] dark:border-purple-900/40 hover:border-purple-400 dark:hover:border-purple-500 text-left flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer"
           >
-            <span>Ortaokul Kademesine Gir</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        {/* ===================== 3. LİSE KARTI (Asil Mor & Fuşya Teması) ===================== */}
-        <div className="group relative flex flex-col p-6 sm:p-7 rounded-[32px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-purple-200/80 dark:border-purple-900/40 hover:border-purple-500 dark:hover:border-purple-400 shadow-[0_20px_50px_-15px_rgba(147,51,234,0.15)] hover:shadow-[0_25px_60px_-15px_rgba(147,51,234,0.35)] transition-all duration-300 hover:-translate-y-2">
-          {/* Üst 3D Kil Görsel Alanı (Asil Mor & Lavanta Pedestal) */}
-          <div className="relative w-full h-48 sm:h-52 rounded-2xl bg-gradient-to-b from-[#faf5ff] via-[#f3e8ff]/60 to-[#fdf4ff] dark:from-purple-950/40 dark:to-fuchsia-950/20 border border-purple-200/80 dark:border-purple-800/60 flex items-center justify-center p-3 mb-5 overflow-hidden shadow-inner" style={{ position: 'relative' }}>
-            <div className="relative w-full h-full rounded-2xl overflow-hidden group-hover:scale-105 transition-transform duration-300 flex items-center justify-center" style={{ position: 'relative', width: '100%', height: '100%' }}>
-              <Image
-                src="/images/lise-3d.png"
-                alt="Lise 3D Kil Altın Oran ve Analitik Düzlem"
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-contain drop-shadow-md"
-                priority
-              />
+            {/* Sol Üst İkon & Rozet */}
+            <div className="flex items-center justify-between w-full relative z-10">
+              <div className="w-11 h-11 rounded-2xl bg-purple-700 text-white flex items-center justify-center shadow-xs">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-purple-800 dark:text-purple-300 text-xs font-black border border-purple-200 dark:border-purple-800 shadow-2xs">
+                9-12. Sınıf
+              </span>
             </div>
 
-            {/* Sağ Üst Kademe Rozeti */}
-            <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-purple-600 dark:text-purple-400 font-black text-xs shadow-sm border border-purple-200 dark:border-purple-800">
-              Hazırlık - 12. Sınıf
-            </div>
+            {/* Sağ Alt Silik Filigran İkon */}
+            <GraduationCap className="absolute -bottom-4 -right-4 w-36 h-36 text-purple-300/35 dark:text-purple-500/10 pointer-events-none group-hover:scale-105 transition-transform duration-300" />
 
-            {/* Sol Alt Rozet */}
-            <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-xl bg-purple-600 text-white font-black text-[10px] shadow-sm flex items-center gap-1">
-              <GraduationCap className="w-3 h-3" />
-              <span>Analitik &amp; Fonksiyon</span>
-            </div>
-          </div>
-
-          {/* İçerik */}
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+            {/* Sol Alt Başlık ve Sade Sınıf Etiketleri */}
+            <div className="relative z-10 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-purple-700 dark:text-purple-400">
                   Lise
                 </h2>
+                <div className="flex items-center gap-1 text-xs font-black text-purple-700 dark:text-purple-300 group-hover:translate-x-1 transition-transform">
+                  <span>Sınıf Seç</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
               </div>
-              <span className="text-[11px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-100/80 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-full">
-                88 Çıktı &amp; 32 Tema
-              </span>
-            </div>
 
-            {/* Sınıf Rozetleri */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
-                Hazırlık (11)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
-                9. Sınıf (20)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
-                10. Sınıf (21)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
-                11. Sınıf (15)
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
-                12. Sınıf (21)
-              </span>
+              {/* Sınıf Butonları */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[
+                  { num: 9, label: '9. Sınıf' },
+                  { num: 10, label: '10. Sınıf' },
+                  { num: 11, label: '11. Sınıf' },
+                  { num: 12, label: '12. Sınıf' },
+                ].map((cls) => (
+                  <button
+                    key={cls.num}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectGrade(cls.num as any);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white text-purple-900 dark:text-purple-200 text-xs font-black border border-purple-300/80 shadow-2xs transition-all active:scale-95 cursor-pointer z-20"
+                  >
+                    {cls.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Aksiyon Butonu */}
-          <button
-            onClick={() => selectLevel('lise')}
-            className="mt-auto w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30 group-hover:shadow-purple-500/50 hover:scale-102 transition-all cursor-pointer"
-          >
-            <span>Lise Kademesine Gir</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
         </div>
 
-      </div>
-
-      {/* 4. SERBEST MATEMATİK & ÇİZİM STÜDYOSU KARTI */}
-      <div className="w-full max-w-4xl relative z-10">
+        {/* ============================================================== */}
+        {/* 3. SERBEST MATEMATİK & ÇİZİM STÜDYOSU (Zarif Yeşil Kart)        */}
+        {/* ============================================================== */}
         <button
           onClick={startFreeSandbox}
-          className="w-full p-5 rounded-[28px] bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-2 border-emerald-200/80 dark:border-emerald-800/40 hover:border-emerald-500 shadow-[0_15px_40px_-10px_rgba(16,185,129,0.12)] hover:shadow-[0_20px_50px_-10px_rgba(16,185,129,0.25)] flex flex-col sm:flex-row items-center justify-between gap-4 transition-all group hover:-translate-y-1 cursor-pointer"
+          className="w-full group relative h-24 p-5 rounded-2xl bg-[#f0fdf4] hover:bg-[#dcfce7] dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 border border-[#bbf7d0] dark:border-emerald-900/40 hover:border-emerald-400 dark:hover:border-emerald-500 text-left flex items-center justify-between overflow-hidden shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <div className="flex items-center gap-4 text-left">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 group-hover:scale-105 shadow-md shadow-emerald-500/30 transition-transform">
-              <Sparkles className="w-7 h-7" />
+          {/* Sol İkon & Başlık */}
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-[#16a34a] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Layers className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-black text-slate-900 dark:text-white text-base group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                Serbest Matematik &amp; Çizim Stüdyosu
-              </div>
-              <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                Müfredata bağlı kalmadan sınırsız tuvalde dilediğin 2D şekli çiz, fonksiyon grafiği oluştur ve serbestçe dene.
-              </div>
+              <h3 className="text-base font-bold text-[#15803d] dark:text-emerald-400">
+                Serbest Geometri &amp; Matematik Stüdyosu
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+                Dinamik 2D şekiller, açılar, alanlar ve 3D prizma laboratuvarı
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-black shadow-md shadow-emerald-500/25 group-hover:shadow-emerald-500/40 transition-all shrink-0">
+          {/* Sağ Alt Silik Filigran */}
+          <Layers className="absolute -bottom-4 -right-4 w-32 h-32 text-emerald-200/40 dark:text-emerald-500/10 pointer-events-none group-hover:scale-105 transition-transform duration-300" />
+
+          {/* Sağ Giriş Butonu */}
+          <div className="relative z-10 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16a34a] text-white text-xs font-semibold shadow-2xs group-hover:bg-[#15803d] transition-colors shrink-0">
             <span>Stüdyoyu Başlat</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </button>
+
       </div>
     </div>
   );

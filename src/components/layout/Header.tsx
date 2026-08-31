@@ -1,245 +1,269 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useCurriculum } from '@/state/CurriculumContext';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import { useTheme } from '@/state/ThemeContext';
 import {
+  Menu,
+  Search,
+  Sparkles,
   Undo2,
   Redo2,
+  Maximize2,
   RotateCcw,
   Sun,
   Moon,
-  Laptop,
-  ChevronRight,
-  Sparkles,
-  Maximize2,
-  HelpCircle,
-  X,
   Compass,
+  Layers,
+  Shapes,
+  Box,
+  X,
 } from 'lucide-react';
 
 export function Header() {
   const {
     currentScreen,
     selectedLevel,
-    selectedGrade,
-    selectedTopic,
-    selectedActivity,
-    isFreeSandbox,
     goHome,
-    goBack,
     startFreeSandbox,
     setScreen,
+    selectLevel,
+    searchQuery,
+    setSearchQuery,
   } = useCurriculum();
 
   const { canUndo, canRedo, undo, redo, resetViewport, clearWorkspace } = useWorkspace();
   const { theme, setTheme } = useTheme();
-  const [showHelp, setShowHelp] = useState(false);
+
+  // State
+  const [showMenuDrawer, setShowMenuDrawer] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <>
-      <header className="h-16 border-b border-border bg-card/85 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between z-30 sticky top-0 shadow-2xs">
-        {/* Sol Alan: Renkli Logo ve Yol Gösterimi */}
+      <header className="h-16 bg-white dark:bg-[#15171c] border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between z-30 sticky top-0 shadow-xs select-none">
+        
+        {/* ================= SOL: LOGO + KADEME BUTONLARI ================= */}
         <div className="flex items-center gap-3">
+          {/* Menü Hamburger Butonu */}
           <button
-            onClick={goHome}
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl hover:bg-muted/70 transition-all text-foreground font-black text-base group"
-            title="Ana Sayfaya Dön"
+            onClick={() => setShowMenuDrawer(!showMenuDrawer)}
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Menü"
           >
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
-              <Compass className="w-5 h-5" />
-            </div>
-            <span className="hidden sm:inline tracking-tight font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-pink-600 bg-clip-text text-transparent text-xl font-sans">
-              GeoEBA
-            </span>
+            <Menu className="w-5 h-5" />
           </button>
 
-          {/* Navigasyon Yolu */}
-          <div className="hidden md:flex items-center gap-2 text-xs font-bold text-muted-foreground">
-            {selectedLevel && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-primary" />
-                <button
-                  onClick={() => setScreen('portal')}
-                  className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                >
-                  {selectedLevel.title}
-                </button>
-              </>
-            )}
-
-            {selectedTopic && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="font-bold text-foreground truncate max-w-[150px] lg:max-w-[220px]">
-                  {selectedTopic.title}
-                </span>
-              </>
-            )}
-
-            {isFreeSandbox && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-lg bg-emerald-500/10">
-                  Serbest Çalışma Masası
-                </span>
-              </>
-            )}
-          </div>
+          {/* Logo */}
+          <button
+            onClick={goHome}
+            className="flex items-center gap-2.5 group focus:outline-hidden"
+            title="Ana Sayfaya Dön"
+          >
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+              <Compass className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col items-start leading-none">
+              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
+                GeoEBA
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                Etkileşimli Çalışma Ortamı
+              </span>
+            </div>
+          </button>
         </div>
 
-        {/* Orta Alan: Çalışma Alanı Kısayolları (Sadece Çalışma Alanında) */}
-        {currentScreen === 'workspace' && (
-          <div className="flex items-center gap-1 bg-muted/60 p-1.5 rounded-2xl border border-border/80 shadow-2xs">
+        {/* ================= ORTA: ARAMA BARI ================= */}
+        <div className="flex-1 max-w-lg mx-3 sm:mx-6 relative">
+          <div className="relative flex items-center">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Ara (Konu, Şekil, Görev...)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              className="w-full pl-9 pr-10 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700/90 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+            />
+            {/* Mor Parlama / Akıllı Arama Butonu */}
             <button
-              onClick={undo}
-              disabled={!canUndo}
-              className="p-1.5 rounded-xl text-foreground hover:bg-background disabled:opacity-30 disabled:pointer-events-none transition-all"
-              title="Geri Al (Ctrl+Z)"
+              onClick={() => {
+                if (searchInputRef.current) searchInputRef.current.focus();
+              }}
+              className="absolute right-1.5 w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 hover:from-purple-700 hover:to-indigo-600 text-white flex items-center justify-center shadow-xs transition-transform active:scale-95"
+              title="Akıllı Arama"
             >
-              <Undo2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={redo}
-              disabled={!canRedo}
-              className="p-1.5 rounded-xl text-foreground hover:bg-background disabled:opacity-30 disabled:pointer-events-none transition-all"
-              title="Yinele (Ctrl+Y)"
-            >
-              <Redo2 className="w-4 h-4" />
-            </button>
-            <div className="w-[1px] h-4 bg-border mx-1" />
-            <button
-              onClick={resetViewport}
-              className="p-1.5 rounded-xl text-foreground hover:bg-background transition-all"
-              title="Görünümü Merkeze Sıfırla"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={clearWorkspace}
-              className="p-1.5 rounded-xl text-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-              title="Tuvali Temizle"
-            >
-              <RotateCcw className="w-4 h-4" />
+              <Sparkles className="w-3.5 h-3.5" />
             </button>
           </div>
-        )}
 
-        {/* Sağ Alan: Serbest Çalışma, Yardım ve Tema */}
-        <div className="flex items-center gap-2.5">
+          {/* Hızlı Arama Sonuçları Açılır Paneli */}
+          {isSearchFocused && searchQuery.trim().length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150 max-h-72 overflow-y-auto">
+              <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Hızlı Sonuçlar
+              </div>
+              <button
+                onMouseDown={() => {
+                  setScreen('portal');
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2"
+              >
+                <Compass className="w-4 h-4 text-blue-600" />
+                <span>&quot;{searchQuery}&quot; ile ilgili tüm etkinlik ve dersleri göster</span>
+              </button>
+              <button
+                onMouseDown={() => startFreeSandbox()}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
+              >
+                <Shapes className="w-4 h-4 text-emerald-500" />
+                <span>Serbest Çizim Masasında Aç</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ================= SAĞ: SERBEST ÇALIŞMA + TEMA ================= */}
+        <div className="flex items-center gap-2">
+          {/* Çalışma Alanı Kısayolları (Sadece Workspace Ekranında Görünür) */}
+          {currentScreen === 'workspace' && (
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 mr-2">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 transition-all"
+                title="Geri Al"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 transition-all"
+                title="Yinele"
+              >
+                <Redo2 className="w-3.5 h-3.5" />
+              </button>
+              <div className="w-[1px] h-3.5 bg-slate-300 dark:bg-slate-700 mx-0.5" />
+              <button
+                onClick={resetViewport}
+                className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all"
+                title="Sıfırla"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={clearWorkspace}
+                className="p-1.5 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
+                title="Temizle"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Serbest Çalışma Butonu */}
           {currentScreen !== 'workspace' && (
             <button
               onClick={startFreeSandbox}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 hover:from-emerald-500/25 hover:to-teal-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-400/40 text-xs font-bold transition-all shadow-2xs"
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-2xs"
             >
-              <Sparkles className="w-4 h-4 text-emerald-500" />
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Serbest Stüdyo</span>
             </button>
           )}
 
-          {/* Yardım Butonu */}
-          <button
-            onClick={() => setShowHelp(true)}
-            className="p-2.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
-            title="Yardım ve İpuçları"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </button>
-
-          {/* Tema Seçici */}
-          <div className="flex items-center bg-muted/80 p-1 rounded-2xl border border-border/80 shadow-2xs">
+          {/* Tema Değiştirici */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
             <button
-              onClick={() => setTheme('light')}
-              className={`p-1.5 rounded-xl text-xs transition-all ${
-                theme === 'light'
-                  ? 'bg-card text-amber-500 shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              title="Açık Tema"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all"
+              title="Temayı Değiştir"
             >
-              <Sun className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setTheme('dark')}
-              className={`p-1.5 rounded-xl text-xs transition-all ${
-                theme === 'dark'
-                  ? 'bg-card text-indigo-400 shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              title="Koyu Tema"
-            >
-              <Moon className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setTheme('system')}
-              className={`p-1.5 rounded-xl text-xs transition-all ${
-                theme === 'system'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-              title="Sistem Teması"
-            >
-              <Laptop className="w-3.5 h-3.5" />
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Yardım ve Kullanım Kılavuzu Modalı */}
-      {showHelp && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border-2 border-border w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h2 className="text-lg font-black text-foreground flex items-center gap-2">
-                <Compass className="w-5 h-5 text-primary" />
-                Matematik Çalışma Ortamı Kılavuzu
-              </h2>
+      {/* Menü Yan Çekmecesi */}
+      {showMenuDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex">
+          <div className="w-72 bg-white dark:bg-slate-900 h-full p-5 shadow-2xl border-r border-slate-200 dark:border-slate-800 space-y-4 animate-in slide-in-from-left duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                  <Compass className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-black text-slate-900 dark:text-white">GeoEBA</span>
+              </div>
               <button
-                onClick={() => setShowHelp(false)}
-                className="p-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
+                onClick={() => setShowMenuDrawer(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-muted-foreground max-h-[60vh] overflow-y-auto pr-1">
-              <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-foreground">
-                <h3 className="font-bold text-blue-600 dark:text-blue-400 mb-1">1. Geometrik Nesneleri Oluşturma</h3>
-                <p>
-                  Sol araç çubuğundan <strong>Nokta</strong>, <strong>Doğru Parçası</strong>,{' '}
-                  <strong>Çember</strong>, <strong>Açı</strong> veya <strong>Çokgen</strong>{' '}
-                  aracını seçerek tuval üzerine tıklayabilirsiniz.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-foreground">
-                <h3 className="font-bold text-purple-600 dark:text-purple-400 mb-1">2. Noktaları Taşıma ve Görevler</h3>
-                <p>
-                  <strong>Seç & Taşı</strong> aracı seçiliyken herhangi bir mavi noktayı farenizle veya
-                  dokunarak sürükleyin. Bağlı doğru parçaları, açılar ve alanlar gerçek zamanlı
-                  olarak yeniden hesaplanır.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-foreground">
-                <h3 className="font-bold text-emerald-600 dark:text-emerald-400 mb-1">3. Etkinlikler ve Hedefler</h3>
-                <p>
-                  Müfredat konularından bir etkinlik seçtiğinizde, yönergeleri takip
-                  ederek matematiksel hedefleri tamamlayabilirsiniz.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-end">
+            <div className="space-y-1.5 text-xs font-semibold">
               <button
-                onClick={() => setShowHelp(false)}
-                className="px-5 py-2.5 rounded-2xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 shadow-md transition-opacity"
+                onClick={() => {
+                  goHome();
+                  setShowMenuDrawer(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white hover:bg-slate-100 flex items-center gap-2.5"
               >
-                Anladım, Kapat
+                <Compass className="w-4 h-4 text-blue-600" />
+                <span>Ana Sayfa (Kademe Seçimi)</span>
+              </button>
+              <button
+                onClick={() => {
+                  selectLevel('ilkokul');
+                  setShowMenuDrawer(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <Shapes className="w-4 h-4 text-amber-500" />
+                <span>İlkokul Matematik (1-4. Sınıf)</span>
+              </button>
+              <button
+                onClick={() => {
+                  selectLevel('ortaokul');
+                  setShowMenuDrawer(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <Compass className="w-4 h-4 text-blue-600" />
+                <span>Ortaokul Matematik (5-8. Sınıf)</span>
+              </button>
+              <button
+                onClick={() => {
+                  selectLevel('lise');
+                  setShowMenuDrawer(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5"
+              >
+                <Box className="w-4 h-4 text-purple-600" />
+                <span>Lise Matematik (9-12. Sınıf)</span>
+              </button>
+              <button
+                onClick={() => {
+                  startFreeSandbox();
+                  setShowMenuDrawer(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-2.5"
+              >
+                <Layers className="w-4 h-4 text-emerald-500" />
+                <span>Serbest Çizim Masası</span>
               </button>
             </div>
           </div>
+          <div className="flex-1" onClick={() => setShowMenuDrawer(false)} />
         </div>
       )}
     </>

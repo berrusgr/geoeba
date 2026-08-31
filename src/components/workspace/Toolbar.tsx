@@ -398,7 +398,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
 
       {/* 2. SAĞ KISIM: İÇERİK PANALE */}
       {!isCollapsed && (
-        <div className="w-64 sm:w-72 h-full flex flex-col min-h-0 overflow-hidden">
+        <div className="w-72 sm:w-80 h-full flex flex-col min-h-0 overflow-hidden">
           
           {/* A. CEBİR GÖRÜNÜMÜ */}
           {sidebarTab === 'cebir' && (
@@ -565,7 +565,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
                                 </div>
 
                                 <span
-                                  className={`text-xs font-extrabold truncate leading-tight ${
+                                  className={`text-[11px] sm:text-xs font-bold leading-tight break-words hyphens-auto ${
                                     isActive ? 'text-white' : 'text-foreground'
                                   }`}
                                 >

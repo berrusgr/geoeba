@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoEBA - Sistem Mimarisi ve Kullanıcı Akış Şeması</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      font-size: 8.5pt;
+      line-height: 1.35;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1e3a8a;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      font-size: 14pt;
+      font-weight: 900;
+      padding: 5px 10px;
+      border-radius: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .title-area h1 {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+    }
+
+    .title-area p {
+      font-size: 7.5pt;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 7.2pt;
+      color: #334155;
+    }
+
+    .badge-engineering {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1e40af;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 9pt;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 2px;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* FLOW DIAGRAM CONTAINER */
+    .flow-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 6px;
+      margin-bottom: 8px;
+    }
+
+    .flow-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 4px;
+      position: relative;
+    }
+
+    .step-box {
+      flex: 1;
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 6px 5px;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .step-box.highlight-1 { border-top: 3px solid #3b82f6; }
+    .step-box.highlight-2 { border-top: 3px solid #10b981; }
+    .step-box.highlight-3 { border-top: 3px solid #f59e0b; }
+    .step-box.highlight-4 { border-top: 3px solid #8b5cf6; }
+    .step-box.highlight-5 { border-top: 3px solid #ec4899; }
+
+    .step-num {
+      font-size: 6.5pt;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .step-title {
+      font-size: 7.8pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 3px;
+    }
+
+    .step-desc {
+      font-size: 6.8pt;
+      color: #475569;
+      line-height: 1.25;
+      text-align: left;
+    }
+
+    .arrow-divider {
+      display: flex;
+      align-items: center;
+      color: #94a3b8;
+      font-weight: bold;
+      font-size: 10pt;
+      padding: 0 1px;
+    }
+
+    /* ARCHITECTURE LAYERS */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .arch-layer {
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 5px 8px;
+      background: #ffffff;
+    }
+
+    .layer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+
+    .layer-title {
+      font-size: 8pt;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .layer-tag {
+      font-size: 6.5pt;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .layer-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .arch-pill {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 7.2pt;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .pill-blue { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+    .pill-emerald { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .pill-purple { background: #faf5ff; border-color: #e9d5ff; color: #6b21a8; }
+    .pill-amber { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+
+    /* TWO COLUMNS */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 6px 8px;
+      background: #ffffff;
+    }
+
+    .card-title {
+      font-size: 8pt;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .card ul li {
+      position: relative;
+      padding-left: 10px;
+      font-size: 7.2pt;
+      color: #334155;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+
+    .card ul li::before {
+      content: "■";
+      position: absolute;
+      left: 0;
+      color: #2563eb;
+      font-size: 6pt;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.2pt;
+      margin-bottom: 6px;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 800;
+      text-align: left;
+      padding: 3px 5px;
+      border: 1px solid #cbd5e1;
+    }
+
+    td {
+      padding: 3px 5px;
+      border: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    /* FOOTER */
+    .footer-bar {
+      border-top: 1px solid #cbd5e1;
+      padding-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 6.8pt;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo-badge">GeoEBA</div>
+        <div class="title-area">
+          <h1>Sistem Mimarisi ve Kullanıcı Akış Şeması</h1>
+          <p>K-12 İnteraktif Matematik Laboratuvarı & Geometri Stüdyosu Mühendislik Raporu</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div><strong>Standart:</strong> MEB TYMM 2026 & SCORM 1.2</div>
+        <div><strong>Mimari:</strong> Modüler FSD (Feature-Sliced Design)</div>
+        <div><span class="badge-engineering">★ PLANLI & KURALLI MİMARİ</span></div>
+      </div>
+    </div>
+
+    <!-- 1. KULLANICI PEDAGOJİK AKIŞ ŞEMASI -->
+    <div class="section-title">🔄 1. Kullanıcı & Pedagojik Deneyim Akış Şeması (User Journey)</div>
+    <div class="flow-container">
+      <div class="flow-steps">
+        <div class="step-box highlight-1">
+          <span class="step-num">Adım 0</span>
+          <span class="step-title">Giriş & Seviye</span>
+          <div class="step-desc">
+            • Kademe seçimi (İlkokul / Ortaokul / Lise)<br>
+            • Konu & Ünite filtreleme (TYMM 2026)
+          </div>
+        </div>
+        <div class="arrow-divider">→</div>
+
+        <div class="step-box highlight-2">
+          <span class="step-num">Adım 1</span>
+          <span class="step-title">Keşfet & Ayarla</span>
+          <div class="step-desc">
+            • Canlı simülatör (Asal ağaç, kalbur, fayans)<br>
+            • Manipülatif etkileşimi & parametre değişimi
+          </div>
+        </div>
+        <div class="arrow-divider">→</div>
+
+        <div class="step-box highlight-3">
+          <span class="step-num">Adım 2</span>
+          <span class="step-title">Karar Ver</span>
+          <div class="step-desc">
+            • Modelle ilişkili 4 şıklı çoktan seçmeli soru<br>
+            • Anında sesli-görsel doğru/yanlış analizi
+          </div>
+        </div>
+        <div class="arrow-divider">→</div>
+
+        <div class="step-box highlight-4">
+          <span class="step-num">Adım 3</span>
+          <span class="step-title">Açıkla</span>
+          <div class="step-desc">
+            • İspat temelli kavramsal açıklama metni<br>
+            • 'Neden bu sonuç çıktı?' pedagojik ispatı
+          </div>
+        </div>
+        <div class="arrow-divider">→</div>
+
+        <div class="step-box highlight-5">
+          <span class="step-num">Adım 4</span>
+          <span class="step-title">Notlar & Stüdyo</span>
+          <div class="step-desc">
+            • TYMM formül & kazanım özeti<br>
+            • Serbest Geometri Stüdyosuna geçiş
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. SİSTEM VE KATMANLI VERİ MİMARİSİ -->
+    <div class="section-title">🏗️ 2. Katmanlı Sistem ve Veri Akış Mimarisi</div>
+    <div class="arch-grid">
+
+      <!-- KATMAN 1 -->
+      <div class="arch-layer">
+        <div class="layer-header">
+          <div class="layer-title" style="color: #1e40af;">🖥️ 1. Sunum & Kullanıcı Arayüz Katmanı (Presentation Layer)</div>
+          <span class="layer-tag pill-blue">React 18 + Next.js 14 App Router</span>
+        </div>
+        <div class="layer-pills">
+          <span class="arch-pill">DiscoveryModal (Kart Galerisi)</span>
+          <span class="arch-pill">MissionView (4 Adımlı Laboratuvar)</span>
+          <span class="arch-pill">Canvas (2D Geometri & SVG Çizim)</span>
+          <span class="arch-pill">MeasurementInstruments (İletki / Pergel / Cetvel)</span>
+          <span class="arch-pill">Toolbar & Stüdyo Kontrolleri</span>
+        </div>
+      </div>
+
+      <!-- KATMAN 2 -->
+      <div class="arch-layer">
+        <div class="layer-header">
+          <div class="layer-title" style="color: #065f46;">🧠 2. Durum ve Mantık Katmanı (State & Domain Layer)</div>
+          <span class="layer-tag pill-emerald">Custom Hooks & React Context API</span>
+        </div>
+        <div class="layer-pills">
+          <span class="arch-pill">CurriculumContext (Müfredat Ağacı & İlerleme)</span>
+          <span class="arch-pill">WorkspaceContext (Geometrik Şekil Veritabanı)</span>
+          <span class="arch-pill">Web Speech API (Türkçe Ses Motoru)</span>
+          <span class="arch-pill">Confetti & Kutlama Motoru</span>
+        </div>
+      </div>
+
+      <!-- KATMAN 3 -->
+      <div class="arch-layer">
+        <div class="layer-header">
+          <div class="layer-title" style="color: #6b21a8;">⚙️ 3. Pedagojik Hesaplama & Simülasyon Motorları (Math Core)</div>
+          <span class="layer-tag pill-purple">Dinamik Matematik Algoritmaları</span>
+        </div>
+        <div class="layer-pills">
+          <span class="arch-pill">Asal Çarpan Ağacı Motoru ($O(\sqrt{n})$)</span>
+          <span class="arch-pill">Eratosthenes Kalbur Algoritması</span>
+          <span class="arch-pill">EBOB / EKOK Fayans Bölücü</span>
+          <span class="arch-pill">Bölünebilme Kural Denetleyicisi</span>
+          <span class="arch-pill">Pisagor & Fonksiyon ($y=mx+n$) Motoru</span>
+        </div>
+      </div>
+
+      <!-- KATMAN 4 -->
+      <div class="arch-layer">
+        <div class="layer-header">
+          <div class="layer-title" style="color: #92400e;">📦 4. Entegrasyon ve Dağıtım Katmanı (LMS & Offline Core)</div>
+          <span class="layer-tag pill-amber">SCORM 1.2 / 2004 + PWA + Offline First</span>
+        </div>
+        <div class="layer-pills">
+          <span class="arch-pill">MEB EBA LMS API Wrapper</span>
+          <span class="arch-pill">cmi.core.lesson_status & score.raw Takibi</span>
+          <span class="arch-pill">Fatih Projesi Akıllı Tahta Çevrimdışı Desteği</span>
+          <span class="arch-pill">PNG / SVG Dışa Aktarma Motoru</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. KURALLI ÇALIŞMA VE KALİTE PRENSİPLERİ -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🛡️ Mimari Standartlar ve Kurallar</div>
+        <ul>
+          <li><strong>Strict TypeScript:</strong> Tüm veri modelleri (Curriculum, Mission, Shape) katı arayüzlerle (interface) tip güvencesindedir.</li>
+          <li><strong>Zero Memory Leaks:</strong> ResizeObserver ve Web Speech API bileşen unmount olduğunda temizlenir (garbage collection).</li>
+          <li><strong>60 FPS Donanım İvmesi:</strong> SVG `<g>` dönüşümleri ve Canvas çizimleri GPU hızlandırmalı çalışır.</li>
+          <li><strong>Tam Bağımsızlık:</strong> Dış CDN bağımlılığı yoktur; okul interneti kopsa dahi tam çevrimdışı çalışır.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 LMS & SCORM Veri Eşleme Matrisi</div>
+        <table>
+          <thead>
+            <tr>
+              <th>GeoEBA Olayı</th>
+              <th>SCORM 1.2 Veri Alanı</th>
+              <th>Değer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Göreve Başlama</td>
+              <td><code>cmi.core.lesson_status</code></td>
+              <td><code>incomplete</code></td>
+            </tr>
+            <tr>
+              <td>Adım 2 (Karar Ver)</td>
+              <td><code>cmi.core.score.raw</code></td>
+              <td><code>100</code></td>
+            </tr>
+            <tr>
+              <td>Özet & Tamamlama</td>
+              <td><code>cmi.core.lesson_status</code></td>
+              <td><code>completed</code></td>
+            </tr>
+            <tr>
+              <td>Kazanım Süresi</td>
+              <td><code>cmi.core.session_time</code></td>
+              <td><code>HH:MM:SS</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-bar">
+      <div><strong>Belge:</strong> GeoEBA Sistem Mimarisi & Kullanıcı Akış Dokümanı | <strong>Kurum:</strong> Matematik Eğitimi & Teknoloji Zümresi</div>
+      <div><strong>Tarih:</strong> Eylül 2026 | Sayfa 1 / 1</div>
+    </div>
+
+  </div>
+</body>
+</html>

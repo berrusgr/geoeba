@@ -93,159 +93,160 @@ const CATEGORY_TABS: {
   },
 ];
 
-// Kategori ve Tema Eşleme Yardımcısı
-function isThemeMatchingCategory(theme: TYMMTheme, selectedCategory: MathCategory): boolean {
-  if (selectedCategory === 'hepsi') return true;
+// Kategori Eşdeğerlik Kontrolü
+function isCategoryMatch(rawCat: string | undefined, targetCat: MathCategory): boolean {
+  if (!rawCat) return false;
+  const c = rawCat.toLowerCase().trim();
+  if (c === targetCat) return true;
+  if (targetCat === 'istatistik' && (c === 'olasilik' || c === 'veri' || c === 'istatistik')) return true;
+  if (targetCat === 'cebir' && (c === 'fonksiyon' || c === 'cebir' || c === 'denklem')) return true;
+  if (targetCat === 'geometri' && (c === 'trigonometri' || c === 'geometri' || c === 'uzamsal')) return true;
+  if (targetCat === 'sayi' && (c === 'islemler' || c === 'sayi' || c === 'aritmetik')) return true;
+  if (targetCat === 'olcme' && (c === 'olcme' || c === 'hacim' || c === 'alan')) return true;
+  return false;
+}
 
-  // 1. Doğrudan temanın category alanı
-  if (theme.category) {
-    if (theme.category === selectedCategory) return true;
-    if (selectedCategory === 'istatistik' && (theme.category === 'olasilik' || theme.category === 'veri')) return true;
-    if (selectedCategory === 'cebir' && theme.category === 'fonksiyon') return true;
-    if (selectedCategory === 'geometri' && theme.category === 'trigonometri') return true;
-    if (selectedCategory === 'sayi' && theme.category === 'islemler') return true;
-  }
+// Konu Düzeyinde Alana Uygunluk Değerlendirmesi
+function doesTopicMatchCategory(topic: Topic, targetCat: MathCategory): boolean {
+  // 1. Doğrudan konu kategorisi
+  if (isCategoryMatch(topic.category, targetCat)) return true;
 
-  // 2. Alt konuların kategori alanları
-  const hasMatchingTopic = theme.topics.some((t) => {
-    if (t.category === selectedCategory) return true;
-    if (selectedCategory === 'istatistik' && (t.category === 'olasilik' || t.category === 'veri')) return true;
-    if (selectedCategory === 'cebir' && t.category === 'fonksiyon') return true;
-    if (selectedCategory === 'geometri' && t.category === 'trigonometri') return true;
-    if (selectedCategory === 'sayi' && t.category === 'islemler') return true;
-    return false;
-  });
-  if (hasMatchingTopic) return true;
-
-  // 3. MEB TYMM Kodlarına göre akıllı eşleme
-  const code = (theme.code || '').toUpperCase();
-  if (selectedCategory === 'sayi') {
-    if (code.includes('.1') || code.includes('SAYI')) return true;
-  }
-  if (selectedCategory === 'cebir') {
-    if (code.includes('.2') || code.includes('CEBİR') || code.includes('CEBIR') || code.includes('FONK')) return true;
-  }
-  if (selectedCategory === 'geometri') {
-    if (code.includes('.3') || code.includes('GEO') || code.includes('TRİG') || code.includes('TRIG')) return true;
-  }
-  if (selectedCategory === 'olcme') {
-    if (code.includes('.4') && !code.includes('OLASILIK') && !code.includes('VERİ') && !code.includes('VERI')) return true;
-  }
-  if (selectedCategory === 'istatistik') {
-    if (
-      code.includes('.4') ||
-      code.includes('.5') ||
-      code.includes('.6') ||
-      code.includes('VERİ') ||
-      code.includes('VERI') ||
-      code.includes('OLASILIK') ||
-      code.includes('İSTATİSTİK') ||
-      code.includes('ISTATISTIK')
-    )
-      return true;
+  // 2. Konu etkinliklerinin çoğunluğu
+  if (topic.activities && topic.activities.length > 0) {
+    const matchingActs = topic.activities.filter((a) => isCategoryMatch(a.category, targetCat)).length;
+    if (matchingActs / topic.activities.length >= 0.5) return true;
   }
 
-  // 4. Semantik metin analizi (Başlık ve açıklamalar)
-  const text = `${theme.themeName} ${theme.fullTitle} ${theme.description || ''}`.toLowerCase();
-  if (selectedCategory === 'istatistik') {
+  // 3. Konu başlığı ve kazanım metninde anahtar kavram ağırlığı
+  const text = `${topic.title || ''} ${topic.badge || ''} ${topic.description || ''} ${(topic.learningOutcomes || []).join(' ')}`.toLowerCase();
+  
+  if (targetCat === 'geometri') {
     return (
-      text.includes('olasılık') ||
-      text.includes('olasilik') ||
-      text.includes('istatistik') ||
-      text.includes('veri') ||
-      text.includes('grafik') ||
-      text.includes('çetele') ||
-      text.includes('cetele') ||
-      text.includes('araştırma') ||
-      text.includes('arastirma') ||
-      text.includes('örneklem') ||
-      text.includes('korelasyon') ||
-      text.includes('saçılım') ||
-      text.includes('kombinasyon') ||
-      text.includes('permütasyon') ||
-      text.includes('binom') ||
-      text.includes('bayes') ||
-      text.includes('çark')
+      text.includes('geometri') ||
+      text.includes('şekil') ||
+      text.includes('üçgen') ||
+      text.includes('dörtgen') ||
+      text.includes('çokgen') ||
+      text.includes('çember') ||
+      text.includes('daire') ||
+      text.includes('prizma') ||
+      text.includes('piramit') ||
+      text.includes('katı cisim') ||
+      text.includes('simetri') ||
+      text.includes('dönüşüm') ||
+      text.includes('pisagor') ||
+      text.includes('trigonometri') ||
+      text.includes('açı') ||
+      text.includes('analitik')
     );
   }
-  if (selectedCategory === 'sayi') {
+
+  if (targetCat === 'sayi') {
     return (
       text.includes('sayı') ||
-      text.includes('sayi') ||
-      text.includes('nicelik') ||
-      text.includes('kesir') ||
-      text.includes('bölük') ||
       text.includes('basamak') ||
+      text.includes('kesir') ||
       text.includes('ondalık') ||
       text.includes('tam sayı') ||
       text.includes('rasyonel') ||
-      text.includes('gerçek sayı') ||
       text.includes('üslü') ||
       text.includes('köklü') ||
       text.includes('çarpan') ||
       text.includes('katlar') ||
       text.includes('ebob') ||
-      text.includes('ekok') ||
       text.includes('oran') ||
       text.includes('yüzde') ||
-      text.includes('küme')
+      text.includes('küme') ||
+      text.includes('toplama') ||
+      text.includes('çıkarma') ||
+      text.includes('çarpma') ||
+      text.includes('bölme')
     );
   }
-  if (selectedCategory === 'cebir') {
+
+  if (targetCat === 'olcme') {
+    return (
+      text.includes('ölçme') ||
+      text.includes('hacim') ||
+      text.includes('alan') ||
+      text.includes('çevre') ||
+      text.includes('uzunluk') ||
+      text.includes('zaman') ||
+      text.includes('saat') ||
+      text.includes('para') ||
+      text.includes('lira') ||
+      text.includes('kütle') ||
+      text.includes('sıvı') ||
+      text.includes('litre') ||
+      text.includes('kapasite')
+    );
+  }
+
+  if (targetCat === 'cebir') {
     return (
       text.includes('cebir') ||
       text.includes('denklem') ||
       text.includes('eşitlik') ||
       text.includes('fonksiyon') ||
       text.includes('özdeşlik') ||
-      text.includes('eşitsizlik') ||
       text.includes('polinom') ||
       text.includes('logaritma') ||
       text.includes('dizi') ||
       text.includes('türev') ||
       text.includes('limit') ||
-      text.includes('algoritma') ||
-      text.includes('çizge') ||
-      text.includes('terazi')
+      text.includes('terazi') ||
+      text.includes('örüntü') ||
+      text.includes('parabol') ||
+      text.includes('eğim')
     );
   }
-  if (selectedCategory === 'geometri') {
+
+  if (targetCat === 'istatistik') {
     return (
-      text.includes('geometri') ||
-      text.includes('şekil') ||
-      text.includes('sekil') ||
-      text.includes('açı') ||
-      text.includes('aci') ||
-      text.includes('üçgen') ||
-      text.includes('dörtgen') ||
-      text.includes('çokgen') ||
-      text.includes('çember') ||
-      text.includes('daire') ||
-      text.includes('katı cisim') ||
-      text.includes('simetri') ||
-      text.includes('dönüşüm') ||
-      text.includes('pisagor') ||
-      text.includes('trigonometri') ||
-      text.includes('analitik') ||
-      text.includes('açınım')
+      text.includes('olasılık') ||
+      text.includes('istatistik') ||
+      text.includes('veri') ||
+      text.includes('grafik') ||
+      text.includes('çetele') ||
+      text.includes('sıklık') ||
+      text.includes('ortalama') ||
+      text.includes('medyan') ||
+      text.includes('kombinasyon') ||
+      text.includes('permütasyon') ||
+      text.includes('binom') ||
+      text.includes('örneklem')
     );
   }
-  if (selectedCategory === 'olcme') {
-    return (
-      text.includes('ölçme') ||
-      text.includes('olcme') ||
-      text.includes('hacim') ||
-      text.includes('alan') ||
-      text.includes('çevre') ||
-      text.includes('zaman') ||
-      text.includes('saat') ||
-      text.includes('para') ||
-      text.includes('lira') ||
-      text.includes('sıvı') ||
-      text.includes('kütle') ||
-      text.includes('ağırlık') ||
-      text.includes('uzunluk')
-    );
+
+  return false;
+}
+
+// Kategori ve Tema Eşleme Yardımcısı (En Az %60 Uygunluk Eşiği Kuralı)
+function isThemeMatchingCategory(theme: TYMMTheme, selectedCategory: MathCategory): boolean {
+  if (selectedCategory === 'hepsi') return true;
+
+  // 1. Temanın Birincil Alanı (100% Eşleşme)
+  if (isCategoryMatch(theme.category, selectedCategory)) {
+    return true;
+  }
+
+  // 2. MEB Resmî Kod Eşlemesi (100% Eşleşme)
+  const code = (theme.code || '').toUpperCase();
+  if (selectedCategory === 'sayi' && (code.includes('SAYI') || code.includes('.1'))) return true;
+  if (selectedCategory === 'cebir' && (code.includes('CEB') || code.includes('FONK') || code.includes('.2'))) return true;
+  if (selectedCategory === 'geometri' && (code.includes('GEO') || code.includes('UZAM') || code.includes('TRIG') || code.includes('TRİG') || code.includes('.3'))) return true;
+  if (selectedCategory === 'olcme' && (code.includes('OLC') || code.includes('ÖLÇ') || code.includes('HAC') || code.includes('.4'))) return true;
+  if (selectedCategory === 'istatistik' && (code.includes('VERI') || code.includes('VERİ') || code.includes('IST') || code.includes('İST') || code.includes('OLA') || code.includes('.5') || code.includes('.6'))) return true;
+
+  // 3. İkincil / Çapraz Alan Eşleşmesi İçin En Az %60 (0.60) Uygunluk Eşiği
+  if (theme.topics && theme.topics.length > 0) {
+    const matchingTopics = theme.topics.filter((topic) => doesTopicMatchCategory(topic, selectedCategory));
+    const relevanceRatio = matchingTopics.length / theme.topics.length;
+
+    // Kullanıcının kuralı: İkinci bir başlığa girmesi için temanın en az %60'ı o alanla ilgili olmalıdır!
+    if (relevanceRatio >= 0.60) {
+      return true;
+    }
   }
 
   return false;
@@ -255,17 +256,19 @@ export function TeachingPortal() {
   const {
     selectedLevel,
     selectedGrade,
+    selectLevel,
     selectGrade,
     selectedCategory,
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
     selectActivity,
+    activeModalTopic,
+    setActiveModalTopic,
     completedActivityIds,
     goBack,
   } = useCurriculum();
 
-  const [activeModalTopic, setActiveModalTopic] = useState<Topic | null>(null);
   const [expandedThemeId, setExpandedThemeId] = useState<string | null>(null);
 
   // Kademeye göre mevcut sınıflar
@@ -320,7 +323,7 @@ export function TeachingPortal() {
   const progressPercent = Math.round((completedCount / totalActivitiesCount) * 100) || 5;
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#faf8f5] dark:bg-[#121316] relative overflow-hidden py-4 sm:py-6 select-none">
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#faf8f5] dark:bg-[#121316] relative overflow-hidden py-4 sm:py-6 select-none flex flex-col items-center justify-start">
       {/* Yumuşak Kil ve Kademe Işıkları */}
       {selectedLevel?.id === 'ilkokul' && (
         <>
@@ -341,45 +344,47 @@ export function TeachingPortal() {
         </>
       )}
 
-      <div className="w-full px-4 sm:px-10 lg:px-16 space-y-6 animate-in fade-in duration-300 relative z-10">
-        {/* 1. ÜST PASTEL HERO BANNER (Seçilen Sınıfa Özel Başlık) */}
-        <div className="relative rounded-3xl p-6 sm:p-8 gradient-mesh-hero border-2 border-border/80 shadow-soft overflow-hidden">
-          <div className="relative z-10 space-y-3 max-w-3xl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={goBack}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-foreground text-xs font-bold shadow-xs hover:bg-white transition-all cursor-pointer border border-border/60"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>← Sınıf Seçimine Dön</span>
-              </button>
-
-              <span className="text-xs text-muted-foreground font-semibold">
+      <div className="w-full max-w-6xl space-y-6 animate-in fade-in duration-300 relative z-10 px-4 sm:px-6 lg:px-8">
+        {/* 1. ÜST BAŞLIK ALANI & SINIF GEÇİŞ ŞERİDİ */}
+        <div className="bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-4 sm:p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goBack}
+              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer"
+              title="Geri Dön"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
                 {selectedLevel?.title} &gt; {selectedGrade?.title}
               </span>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                {selectedGrade ? selectedGrade.title : '5. Sınıf'} Matematik
+              </h1>
             </div>
+          </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight">
-              {selectedGrade ? selectedGrade.title : '5. Sınıf'} Matematik
-            </h1>
-
-            <p className="text-xs sm:text-sm text-foreground/80 font-medium">
-              {selectedGrade?.description || 'Resmî TYMM temaları, öğrenme çıktıları ve interaktif animasyonlu görev kartları.'}
-            </p>
-
-            <div className="flex items-center gap-3 pt-1 flex-wrap">
-              <span className="px-3.5 py-1 rounded-full bg-primary text-primary-foreground text-xs font-extrabold shadow-sm">
-                {totalActivitiesCount} Görev Kartı • {currentThemes.length} TYMM Teması
-              </span>
-              <span className="px-3 py-1 rounded-full bg-white/70 dark:bg-slate-800/70 text-foreground text-xs font-bold border border-border/60">
-                MEB TYMM 2026 Resmî Müfredatı
-              </span>
-            </div>
+          {/* Sınıf Seçim Butonları */}
+          <div className="flex items-center gap-1 p-1 bg-white/75 dark:bg-slate-800/75 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            {availableGrades.map((gNum) => (
+              <button
+                key={gNum}
+                onClick={() => selectGrade(gNum)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  selectedGrade?.gradeNumber === gNum
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                {gNum}. Sınıf
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* 3. KATEGORİ FİLTRE ŞERİDİ */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none select-none">
+        {/* 3. KATEGORİ FİLTRE ŞERİDİ (Sığacak Şekilde Kompakt & Scrollsuz) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full select-none">
           {CATEGORY_TABS.map((tab) => {
             const isActive = selectedCategory === tab.id;
             const count = categoryCounts[tab.id] ?? 0;
@@ -388,19 +393,21 @@ export function TeachingPortal() {
               <button
                 key={tab.id}
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-black whitespace-nowrap transition-all shadow-xs cursor-pointer ${
+                className={`flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer ${
                   isActive
-                    ? `bg-card text-foreground border-2 ${tab.activeBorder} shadow-md scale-102`
+                    ? `bg-card text-foreground border-2 ${tab.activeBorder} shadow-sm ring-1 ring-primary/20 scale-102`
                     : 'bg-card text-muted-foreground hover:text-foreground border border-border/80 hover:border-border'
                 }`}
               >
-                <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${tab.badgeBg} shadow-2xs shrink-0 text-xs`}>
-                  {tab.icon}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${tab.badgeBg} shadow-2xs shrink-0 text-[10px]`}>
+                    {tab.icon}
+                  </div>
+                  <span className="truncate">{tab.label}</span>
                 </div>
-                <span>{tab.label}</span>
                 {count > 0 && (
                   <span
-                    className={`px-2 py-0.5 text-xs rounded-full font-black ${
+                    className={`px-1.5 py-0.5 text-[10px] rounded-md font-black shrink-0 ${
                       isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                     }`}
                   >

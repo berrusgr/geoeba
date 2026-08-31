@@ -21,11 +21,11 @@ export function TopicSelector() {
   if (!selectedGrade) return null;
 
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#faf8f5] dark:bg-[#121316] relative overflow-hidden py-4 sm:py-6 select-none">
+    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#faf8f5] dark:bg-[#121316] relative overflow-hidden py-4 sm:py-6 select-none flex flex-col items-center justify-start">
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-200/30 dark:bg-amber-500/10 rounded-full blur-[120px] pointer-events-none -z-10 animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-200/30 dark:bg-blue-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
-      <div className="max-w-6xl mx-auto p-6 lg:p-10 space-y-8 animate-in fade-in duration-300 relative z-10">
+      <div className="w-full max-w-6xl space-y-6 animate-in fade-in duration-300 relative z-10 px-4 sm:px-6 lg:px-8">
         {/* Üst Başlık ve Geri Dön Butonu */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div className="space-y-1">

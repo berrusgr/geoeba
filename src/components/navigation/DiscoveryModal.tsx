@@ -23,7 +23,26 @@ interface DiscoveryModalProps {
 }
 
 export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryModalProps) {
+  React.useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    };
+  }, []);
+
   if (!topic) return null;
+
+  const handleClose = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
@@ -45,10 +64,8 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
           </div>
 
           <div className="flex items-center gap-2">
-
-
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-black/10 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -443,6 +460,123 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                         </svg>
                         <div className="font-mono text-[9px] font-bold text-blue-700 dark:text-blue-300">
                           (x + 2)(x + 3) = x² + 5x + 6
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 19b. Eratosthenes Kalburu (1-100 Asal Sayılar) */}
+                    {activity.previewType === 'eratosthenes_sieve' && (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <div className="grid grid-cols-5 gap-1 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">2</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">3</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">4</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">5</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">6</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">7</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">8</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">9</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">10</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">11</span>
+                        </div>
+                        <div className="font-mono text-[9px] font-bold text-rose-600 dark:text-rose-400 mt-1">
+                          1-100 Asal Sayı Kalburu (25 Asal)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 19c. Bölünebilme Kuralları (2, 3, 4, 5, 6, 9, 10) */}
+                    {activity.previewType === 'divisibility_rules' && (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1.5 p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-500/20">
+                          <span className="px-2 py-1 rounded bg-white dark:bg-slate-800 font-mono font-black text-xs text-foreground shadow-xs border">
+                            24<span className="text-emerald-600 underline">0</span>
+                          </span>
+                          <div className="flex flex-col gap-0.5 text-[8px] font-black text-emerald-700 dark:text-emerald-300">
+                            <span>✓ 2, 5, 10'a tam bölünür</span>
+                            <span>✓ 2+4+0=6 (3'e bölünür)</span>
+                          </div>
+                        </div>
+                        <div className="font-mono text-[9px] font-bold text-emerald-700 dark:text-emerald-300 mt-1">
+                          Bölünebilme Kural Testi
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 19d. İki Sayının Ortak Bölenleri (Venn Şeması) */}
+                    {activity.previewType === 'venn_divisors' && (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <svg viewBox="0 0 140 80" className="w-32 h-18">
+                          <circle cx="52" cy="40" r="28" fill="#f472b6" fillOpacity="0.3" stroke="#db2777" strokeWidth="1.5" />
+                          <circle cx="88" cy="40" r="28" fill="#60a5fa" fillOpacity="0.3" stroke="#2563eb" strokeWidth="1.5" />
+                          <text x="36" y="42" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#be185d">9, 18</text>
+                          <text x="70" y="36" textAnchor="middle" fontSize="8" fontWeight="black" fill="#4338ca">1, 2</text>
+                          <text x="70" y="48" textAnchor="middle" fontSize="8" fontWeight="black" fill="#4338ca">3, 6</text>
+                          <text x="104" y="42" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#1d4ed8">4, 8, 12, 24</text>
+                        </svg>
+                        <div className="font-mono text-[9px] font-bold text-pink-700 dark:text-pink-300">
+                          EBOB(18, 24) = 6
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 19e. İki Sayının Ortak Katları (Ritim Modeli & EKOK) */}
+                    {activity.previewType === 'rhythmic_multiples' && (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <svg viewBox="0 0 140 80" className="w-32 h-18">
+                          <line x1="10" y1="40" x2="130" y2="40" stroke="#94a3b8" strokeWidth="1.5" />
+                          {/* 4'er ritim yayları */}
+                          <path d="M 10 40 Q 30 20, 50 40 Q 70 20, 90 40" fill="none" stroke="#06b6d4" strokeWidth="1.5" />
+                          {/* 6'şar ritim yayları */}
+                          <path d="M 10 40 Q 50 10, 90 40" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3,2" />
+                          <circle cx="90" cy="40" r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5" />
+                          <text x="90" y="60" textAnchor="middle" fontSize="8" fontWeight="black" fill="#ef4444">12 (EKOK)</text>
+                          <text x="25" y="70" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#06b6d4">4'er</text>
+                          <text x="50" y="70" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#f59e0b">6'şar</text>
+                        </svg>
+                        <div className="font-mono text-[9px] font-bold text-cyan-700 dark:text-cyan-300">
+                          EKOK(4, 6) = 12
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 19f. Alan Modeli ile Çarpanları Bulma */}
+                    {activity.previewType === 'area_rectangles' && (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <svg viewBox="0 0 140 80" className="w-32 h-18">
+                          <rect x="15" y="20" width="30" height="30" fill="#fef3c7" stroke="#d97706" strokeWidth="1.5" />
+                          <text x="30" y="38" textAnchor="middle" fontSize="8" fontWeight="black" fill="#b45309">6×6</text>
+                          <rect x="55" y="25" width="45" height="20" fill="#ecfdf5" stroke="#059669" strokeWidth="1.5" />
+                          <text x="77" y="38" textAnchor="middle" fontSize="8" fontWeight="black" fill="#047857">9×4</text>
+                          <rect x="105" y="15" width="20" height="45" fill="#e0e7ff" stroke="#4f46e5" strokeWidth="1.5" />
+                          <text x="115" y="40" textAnchor="middle" fontSize="7" fontWeight="black" fill="#3730a3">3×12</text>
+                        </svg>
+                        <div className="font-mono text-[9px] font-bold text-amber-700 dark:text-amber-300">
+                          Alan = 36 br² (Tüm Çarpanlar)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 19g. Bölen Listesi (Asal Çarpan Algoritması) */}
+                    {activity.previewType === 'division_ladder' && (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg border font-mono text-[9px] font-black">
+                          <div className="flex flex-col text-right text-foreground pr-2 border-r-2 border-indigo-600">
+                            <span>24</span>
+                            <span>12</span>
+                            <span>6</span>
+                            <span>3</span>
+                            <span>1</span>
+                          </div>
+                          <div className="flex flex-col text-left text-indigo-600 dark:text-indigo-400">
+                            <span>2</span>
+                            <span>2</span>
+                            <span>2</span>
+                            <span>3</span>
+                          </div>
+                        </div>
+                        <div className="font-mono text-[9px] font-bold text-indigo-700 dark:text-indigo-300 mt-1">
+                          24 = 2³ × 3
                         </div>
                       </div>
                     )}

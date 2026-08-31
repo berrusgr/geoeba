@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoEBA - Brifing, Sunum ve Soru-Cevap Savunma Kılavuzu</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      font-size: 8pt;
+      line-height: 1.32;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #4f46e5;
+      padding-bottom: 5px;
+      margin-bottom: 6px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #4338ca, #6366f1);
+      color: white;
+      font-size: 13pt;
+      font-weight: 900;
+      padding: 5px 10px;
+      border-radius: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .title-area h1 {
+      font-size: 12pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+    }
+
+    .title-area p {
+      font-size: 7.2pt;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 7pt;
+      color: #334155;
+    }
+
+    .badge-pitch {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #c7d2fe;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 8.5pt;
+      font-weight: 800;
+      color: #3730a3;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 2px;
+      margin-top: 5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* CALLOUT BOX */
+    .callout {
+      background: #f8fafc;
+      border-left: 3.5px solid #4f46e5;
+      border-radius: 5px;
+      padding: 5px 8px;
+      margin-bottom: 6px;
+      font-size: 7.8pt;
+      color: #334155;
+    }
+
+    /* GRID 2 */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 5px 7px;
+      background: #ffffff;
+    }
+
+    .card-title {
+      font-size: 7.8pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    .card ul li {
+      position: relative;
+      padding-left: 9px;
+      font-size: 7.1pt;
+      color: #334155;
+      margin-bottom: 1.5px;
+    }
+
+    .card ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #4f46e5;
+      font-weight: bold;
+    }
+
+    /* Q&A BOXES */
+    .qa-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 5px 7px;
+      margin-bottom: 4px;
+      background: #ffffff;
+    }
+
+    .qa-question {
+      font-size: 7.6pt;
+      font-weight: 800;
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .qa-answer {
+      font-size: 7.1pt;
+      color: #334155;
+      line-height: 1.28;
+      background: #f8fafc;
+      padding: 3.5px 6px;
+      border-radius: 4px;
+      border-left: 2.5px solid #10b981;
+    }
+
+    .qa-answer strong {
+      color: #065f46;
+    }
+
+    /* BANNER */
+    .tips-banner {
+      background: linear-gradient(135deg, #312e81, #4338ca);
+      color: white;
+      border-radius: 5px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .tips-banner h3 {
+      font-size: 8pt;
+      font-weight: 800;
+    }
+
+    .tips-banner p {
+      font-size: 6.8pt;
+      color: #c7d2fe;
+    }
+
+    .footer-bar {
+      border-top: 1px solid #cbd5e1;
+      padding-top: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 6.5pt;
+      color: #64748b;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo-badge">GeoEBA</div>
+        <div class="title-area">
+          <h1>Brifing, Sunum & Soru-Cevap Savunma Kılavuzu</h1>
+          <p>Yönetici Brifingleri, Komisyon Sunumları ve Teknik Savunma Rehberi</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div><strong>Hedef Kitle:</strong> MEB Yöneticileri & Zümre Başkanları</div>
+        <div><strong>Doküman Türü:</strong> Pitch & Q&A Defense Guide</div>
+        <div><span class="badge-pitch">★ SUNUM VE SAVUNMA REHBERİ</span></div>
+      </div>
+    </div>
+
+    <!-- 30 SANİYELİK ASANSÖR KONUŞMASI -->
+    <div class="callout">
+      <strong>🎯 30 Saniyelik Asansör Cümlesi (Açılış Konuşması):</strong> "GeoEBA; MEB'in Türkiye Yüzyılı Maarif Modeli (TYMM 2026) vizyonuyla tam uyumlu, K-12 düzeyindeki tüm öğrencilere matematiği formül ezberinden çıkarıp 4 adımlı pedagojik simülasyonlarla somutlaştıran, Fatih Projesi Akıllı Tahtalarında sıfır internet bağımlılığıyla 60 FPS hızda çalışan, %100 yerli ve milli dijital matematik laboratuvarıdır."
+    </div>
+
+    <!-- 1. BRİFİNGDE MUTLAKA BAHSEDİLMESİ GEREKEN 4 ANA SÜTUN -->
+    <div class="section-title">📢 1. Brifingde Vurgulanacak 4 Ana Sütun (Key Talking Points)</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">1. Pedagojik Derinlik (TYMM 2026 Döngüsü)</div>
+        <ul>
+          <li><strong>1. Keşfet:</strong> Canlı parametrelerle simülasyonu deneyimleme.</li>
+          <li><strong>2. Karar Ver:</strong> Anında geri bildirimli çoktan seçmeli model sorusu.</li>
+          <li><strong>3. Açıkla:</strong> "Neden bu sonuç çıktı?" kavramsal ispat metni.</li>
+          <li><strong>4. Notlar ve Özet:</strong> Formül, kazanım özeti ve stüdyoya geçiş.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">2. K-12 Bütüncül Müfredat Kapsamı</div>
+        <ul>
+          <li><strong>İlkokul (1-4):</strong> Elma sayma, 10'luk kartlar, karışla ölçüm, kumbara.</li>
+          <li><strong>Ortaokul (5-8):</strong> Asal ağaç, Eratosthenes, EBOB-EKOK fayans, Pisagor.</li>
+          <li><strong>Lise (9-12):</strong> Eğim ($y=mx+n$), birim çember, parabol, türev teğeti.</li>
+          <li><strong>Serbest Stüdyo:</strong> Canlı pergel, iletki, cetvel ve LaTeX notları.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">3. Sıfır Maliyet & %100 Yerli Mimari</div>
+        <ul>
+          <li>Yabancı lisanslı yazılımlara bağımlılığı tamamen bitirir.</li>
+          <li>Next.js 14, Canvas 2D ve SVG ile modern, hafif altyapı.</li>
+          <li>Düşük sunucu kaynak tüketimi ve yüksek ölçeklenebilirlik.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title">4. Tam Erişilebilirlik & LMS Entegrasyonu</div>
+        <ul>
+          <li><strong>Web Speech API:</strong> Tüm yönergeleri Türkçe seslendirir.</li>
+          <li><strong>SCORM 1.2 / 2004:</strong> EBA portalı ders akışına doğrudan entegre.</li>
+          <li><strong>Offline PWA:</strong> İnternetsiz akıllı tahtalarda kesintisiz çalışır.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 2. GELEBİLECEK ZOR SORULAR VE HAZIR CEVAPLAR -->
+    <div class="section-title">❓ 2. Gelebilecek Kritik Sorular & Hazır Cevaplar (Q&A Defense)</div>
+
+    <div class="qa-box">
+      <div class="qa-question">❓ Soru 1: "GeoGebra veya PhET varken neden bu platformu geliştirdik/kullanalım?"</div>
+      <div class="qa-answer">
+        <strong>Cevap:</strong> "GeoGebra harika bir serbest çizim aracıdır ancak Türk müfredatına özel pedagojik görev kurgusu ve 4 adımlı öğrenme döngüsü içermez. GeoEBA ise MEB TYMM 2026 kazanımlarına birebir eşlenmiş hazır görevler, yerleşik Türkçe sesli yönergeler, seviyelere göre ayrılmış K-12 kartları ve EBA LMS SCORM entegrasyonu ile okullarda doğrudan ders işlenmeye hazır milli bir çözümdür."
+      </div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-question">❓ Soru 2: "Okullarda internet kesilirse veya Fatih Akıllı Tahtalar kasarsa ne olacak?"</div>
+      <div class="qa-answer">
+        <strong>Cevap:</strong> "GeoEBA 'Offline-First' mimarisiyle geliştirilmiştir. Dış kaynak veya CDN bağımlılığı yoktur; toplam paket boyutu sadece ~260 KB'tır. GPU hızlandırmalı Canvas ve hafif SVG motoru sayesinde en eski Faz-1/Faz-2 akıllı tahtalarda dahi 60 FPS akıcılıkla donmadan çalışır."
+      </div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-question">❓ Soru 3: "Milli Eğitim Bakanlığı EBA sistemine nasıl entegre edilecek?"</div>
+      <div class="qa-answer">
+        <strong>Cevap:</strong> "Sistem uluslararası SCORM 1.2 ve SCORM 2004 standartlarıyla tam uyumludur. Öğrencinin simülasyondaki ilerlemesi, 'Karar Ver' test puanı (<code>cmi.core.score.raw</code>) ve tamamlanma durumu (<code>lesson_status: completed</code>) tek tıkla EBA ders akışına anlık aktarılır."
+      </div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-question">❓ Soru 4: "Öğretmenlerin ders anlatımına ve zamana ne katkı sağlar?"</div>
+      <div class="qa-answer">
+        <strong>Cevap:</strong> "Öğretmenlerin derste tahtaya karmaşık şekiller veya grafikler çizmek için vakit kaybetmesini önler. Tek tıkla hazır simülasyon açılır; öğrencilerle birlikte parametreler değiştirilerek ders interaktif bir laboratuvara dönüşür."
+      </div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-question">❓ Soru 5: "LGS ve YKS sınav başarısına ve yeni nesil sorulara nasıl katkı sunar?"</div>
+      <div class="qa-answer">
+        <strong>Cevap:</strong> "LGS ve YKS'deki yeni nesil sorular artık formül bilgisini değil, modelleme ve uzamsal muhakemeyi ölçmektedir. GeoEBA; alan modelleri, ritmik katlar ve eğim grafikleriyle soyut kavramları somutlaştırarak kavram yanılgılarını ortadan kaldırır."
+      </div>
+    </div>
+
+    <!-- 3. SUNUM VE BRİFİNG TÜYOLARI -->
+    <div class="tips-banner">
+      <div>
+        <h3>💡 Brifing Sunum İpucu (Golden Rules)</h3>
+        <p>1. Önce slayt değil, <strong>canlı demoyu (Asal Çarpan Ağacı veya Eratosthenes)</strong> 1 dakika gösterin.<br>
+           2. 'Bu sadece bir yazılım değil, TYMM 2026 dijital laboratuvarıdır' vurgusunu yapın.</p>
+      </div>
+      <div style="font-size: 7.5pt; font-weight: 800; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; text-align: right;">
+        DEMO: localhost:3000<br>
+        DURUM: ONAYA HAZIR
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-bar">
+      <div><strong>Belge:</strong> GeoEBA Brifing & Savunma Kılavuzu | <strong>Hazırlayan:</strong> Matematik Eğitimi & Teknoloji Zümresi</div>
+      <div><strong>Tarih:</strong> Eylül 2026 | Sayfa 1 / 1</div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -25,7 +25,7 @@ export const curriculumData: CurriculumData = {
         {
           gradeNumber: 5,
           title: '5. Sınıf',
-          subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+          subtitle: 'Etkileşimli Matematik',
           description: 'Geometrik Şekiller, Sayılar ve Nicelikler, Geometrik Nicelikler, İstatistiksel Araştırma, Cebirsel Düşünme ve Olasılık.',
           themes: [
             {
@@ -767,7 +767,7 @@ export const curriculumData: CurriculumData = {
         {
           gradeNumber: 6,
           title: '6. Sınıf',
-          subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+          subtitle: 'Etkileşimli Matematik',
           description: 'Çarpanlar ve Katlar, Kümeler ve Tam Sayılar, Kesirlerle İşlemler, Oran-Orantı, Açılar, Alan ve Hacim Ölçme.',
           themes: [
             {
@@ -810,7 +810,7 @@ export const curriculumData: CurriculumData = {
                       description: '2, 3, 5, 7 nin katlarını eleyerek 100 e kadar olan asal sayıları keşfedin.',
                       learningGoal: 'Asal sayıların dağılımını anlamak.',
                       folderColor: '#ef4444',
-                      previewType: 'number_line',
+                      previewType: 'eratosthenes_sieve',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Asalları işaretleyin.' }],
                       validationRules: [{ id: 'r-6-er', type: 'custom', expectedValue: 25, successMessage: 'Tebrikler!' }],
@@ -823,7 +823,7 @@ export const curriculumData: CurriculumData = {
                       description: 'Son basamağa bakarak bölünebilme mantığını basamak tablosu ile görün.',
                       learningGoal: 'Son basamak kurallarını kavramak.',
                       folderColor: '#10b981',
-                      previewType: 'number_line',
+                      previewType: 'divisibility_rules',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Bölünebilen sayıları seçin.' }],
                       validationRules: [{ id: 'r-6-b2', type: 'custom', expectedValue: 1, successMessage: 'Tebrikler!' }],
@@ -836,7 +836,7 @@ export const curriculumData: CurriculumData = {
                       description: 'Basamak değerlerini 9 a göre parçalayarak rakamlar toplamı kuralını ispatlayın.',
                       learningGoal: '3 ve 9 kuralının mantığını anlamak.',
                       folderColor: '#3b82f6',
-                      previewType: 'number_line',
+                      previewType: 'divisibility_rules',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Toplamı test edin.' }],
                       validationRules: [{ id: 'r-6-b3', type: 'custom', expectedValue: 1, successMessage: 'Tebrikler!' }],
@@ -849,7 +849,7 @@ export const curriculumData: CurriculumData = {
                       description: 'Son iki basamak ve (2 ile 3 e aynı anda bölünme) kurallarını test edin.',
                       learningGoal: 'Bileşik kuralları kavramak.',
                       folderColor: '#8b5cf6',
-                      previewType: 'number_line',
+                      previewType: 'divisibility_rules',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Sayıyı bulun.' }],
                       validationRules: [{ id: 'r-6-b4', type: 'custom', expectedValue: 1, successMessage: 'Tebrikler!' }],
@@ -862,7 +862,7 @@ export const curriculumData: CurriculumData = {
                       description: '18 ve 24 sayılarının tüm bölenlerini Venn şemasında kesiştirin.',
                       learningGoal: 'Ortak bölen kavramını görmek.',
                       folderColor: '#ec4899',
-                      previewType: 'prime_factor_tree',
+                      previewType: 'venn_divisors',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Ortak bölenleri bulun.' }],
                       validationRules: [{ id: 'r-6-ob', type: 'custom', expectedValue: 6, successMessage: 'Tebrikler!' }],
@@ -875,7 +875,7 @@ export const curriculumData: CurriculumData = {
                       description: '4 er ve 6 şar ritmik saymada buluşulan ilk ortak katı (12) sayı doğrusunda bulun.',
                       learningGoal: 'Ortak kat kavramını kavramak.',
                       folderColor: '#06b6d4',
-                      previewType: 'number_line',
+                      previewType: 'rhythmic_multiples',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Ortak katı işaretleyin.' }],
                       validationRules: [{ id: 'r-6-ok', type: 'custom', expectedValue: 12, successMessage: 'Tebrikler!' }],
@@ -888,7 +888,7 @@ export const curriculumData: CurriculumData = {
                       description: 'Alanı 36 br² olan tüm farklı dikdörtgen boyutlarını (1×36, 2×18, 3×12, 4×9, 6×6) çizin.',
                       learningGoal: 'Çarpanları geometrik alanla ilişkilendirmek.',
                       folderColor: '#d97706',
-                      previewType: 'polygon_shapes',
+                      previewType: 'area_rectangles',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Dikdörtgenleri oluşturun.' }],
                       validationRules: [{ id: 'r-6-cd', type: 'custom', expectedValue: 5, successMessage: 'Tebrikler!' }],
@@ -901,7 +901,7 @@ export const curriculumData: CurriculumData = {
                       description: 'Dikey çizgi çekerek en küçük asaldan bölme algoritmasını uygulayın.',
                       learningGoal: 'Asal çarpan listesi oluşturmak.',
                       folderColor: '#ef4444',
-                      previewType: 'prime_factor_tree',
+                      previewType: 'division_ladder',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Bölen listesini tamamlayın.' }],
                       validationRules: [{ id: 'r-6-ba', type: 'custom', expectedValue: 1, successMessage: 'Tebrikler!' }],
@@ -914,7 +914,7 @@ export const curriculumData: CurriculumData = {
                       description: 'Eşit aralıklı ağaç dikme ve nöbet tutma problemlerini simüle edin.',
                       learningGoal: 'Gerçek hayat problemlerinde çarpan/kat uygulamak.',
                       folderColor: '#10b981',
-                      previewType: 'number_line',
+                      previewType: 'ebob_ekok_tiles',
                       initialObjects: [],
                       steps: [{ stepNumber: 1, instruction: 'Aralığı hesaplayın.' }],
                       validationRules: [{ id: 'r-6-cp', type: 'custom', expectedValue: 1, successMessage: 'Tebrikler!' }],
@@ -1624,7 +1624,7 @@ export const curriculumData: CurriculumData = {
         {
           gradeNumber: 7,
           title: '7. Sınıf',
-          subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+          subtitle: 'Etkileşimli Matematik',
           description: 'Tam Sayılarla İşlemler, Rasyonel Sayılar, Cebirsel İfadeler ve Denklemler, Oran-Orantı ve Yüzdeler, Çokgenler ve Daire.',
           themes: [
             {
@@ -2405,7 +2405,7 @@ export const curriculumData: CurriculumData = {
         {
           gradeNumber: 8,
           title: '8. Sınıf',
-          subtitle: 'Türkiye Yüzyılı Maarif Modeli',
+          subtitle: 'Etkileşimli Matematik',
           description: 'Çarpanlar ve Katlar, Üslü ve Kareköklü İfadeler, Olasılık ve Cebirsel Özdeşlikler, Doğrusal Denklemler ve Eğim, Pisagor ve Geometrik Cisimler.',
           themes: [
             {
