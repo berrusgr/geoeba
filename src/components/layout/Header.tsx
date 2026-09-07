@@ -33,7 +33,7 @@ export function Header() {
     setSearchQuery,
   } = useCurriculum();
 
-  const { canUndo, canRedo, undo, redo, resetViewport, clearWorkspace } = useWorkspace();
+  const { canUndo, canRedo, undo, redo, resetViewport, requestClearAll } = useWorkspace();
   const { theme, setTheme } = useTheme();
 
   // State
@@ -158,9 +158,9 @@ export function Header() {
                 <Maximize2 className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={clearWorkspace}
-                className="p-1.5 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
-                title="Temizle"
+                onClick={() => requestClearAll()}
+                className="p-1.5 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer"
+                title="Tümünü Sil / Temizle"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>

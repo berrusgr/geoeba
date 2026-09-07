@@ -230,3 +230,32 @@ export function generateNextPointLabel(existingLabels: string[]): string {
     suffix++;
   }
 }
+
+/**
+ * Bir noktanın (pt), p1-p2 doğrusuna göre simetriğini (yansımasını) hesaplar.
+ */
+export function reflectPointAcrossLine(
+  pt: Point2D,
+  p1: Point2D,
+  p2: Point2D
+): Point2D {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+
+  // Doğrunun genel denklemi: a*x + b*y + c = 0
+  const a = -dy;
+  const b = dx;
+  const c = -(a * p1.x + b * p1.y);
+
+  const denom = a * a + b * b;
+  if (denom < 1e-10) {
+    return { x: pt.x, y: pt.y };
+  }
+
+  const dist = (a * pt.x + b * pt.y + c) / denom;
+  const nx = Number((pt.x - 2 * a * dist).toFixed(2));
+  const ny = Number((pt.y - 2 * b * dist).toFixed(2));
+
+  return { x: nx, y: ny };
+}
+

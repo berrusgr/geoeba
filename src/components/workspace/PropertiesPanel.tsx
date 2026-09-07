@@ -11,6 +11,7 @@ import {
   PolygonObject,
   FunctionObject,
   SliderObject,
+  FractionObject,
 } from '@/types/math';
 import {
   calculateDistance,
@@ -362,6 +363,157 @@ export function PropertiesPanel() {
             );
           })()}
 
+          {/* KESİR MODELİ ÖZELLİKLERİ */}
+          {selectedObject.type === 'fraction' && (() => {
+            const frac = selectedObject as FractionObject;
+            const num = frac.numerator ?? 1;
+            const den = frac.denominator ?? 1;
+            const decimalVal = den > 0 ? (num / den).toFixed(2) : '0.00';
+            const percentVal = den > 0 ? Math.round((num / den) * 100) : 0;
+
+            const getFracType = () => {
+              if (num === 1 && den > 1) return 'Birim Kesir';
+              if (num < den) return 'Basit Kesir';
+              if (num === den) return 'Tam Kesir (1 Tam)';
+              return 'Bileşik Kesir';
+            };
+
+            const updateFraction = (newNum: number, newDen: number) => {
+              const clampedNum = Math.max(0, Math.min(30, newNum));
+              const clampedDen = Math.max(1, Math.min(30, newDen));
+              updateObject(frac.id, {
+                numerator: clampedNum,
+                denominator: clampedDen,
+                label: `${clampedNum}/${clampedDen} Kesir Modeli`,
+              });
+            };
+
+            return (
+              <div className="space-y-4 text-xs">
+                {/* Kesir Kartı ve Matematiksel Değerler */}
+                <div className="p-3.5 bg-violet-500/10 dark:bg-violet-950/20 rounded-2xl border border-violet-500/20 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    {/* Görsel Kesir Çizgisi */}
+                    <div className="flex flex-col items-center justify-center font-mono font-black text-lg text-violet-700 dark:text-violet-300 leading-tight">
+                      <span>{num}</span>
+                      <div className="w-8 h-0.5 bg-violet-700 dark:bg-violet-300 my-0.5 rounded-full" />
+                      <span>{den}</span>
+                    </div>
+
+                    <div className="text-right space-y-1">
+                      <div className="font-bold text-xs text-foreground">
+                        = {decimalVal} <span className="text-muted-foreground font-normal">({percentVal}%)</span>
+                      </div>
+                      <div className="inline-block px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-700 dark:text-violet-300 text-[10px] font-bold">
+                        {getFracType()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pay ve Payda Sürgüleri */}
+                <div className="p-3 bg-muted/40 rounded-2xl space-y-4 border border-border/50">
+                  {/* PAY SÜRGÜSÜ */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-foreground">Pay (Taranan Parça):</span>
+                      <span className="font-mono font-black text-violet-600 dark:text-violet-400 text-sm">
+                        {num}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateFraction(num - 1, den)}
+                        className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center font-black hover:bg-muted cursor-pointer transition-colors shadow-xs"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max={Math.max(den, 20)}
+                        step="1"
+                        value={num}
+                        onChange={(e) => updateFraction(parseInt(e.target.value) || 0, den)}
+                        className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-violet-600"
+                      />
+                      <button
+                        onClick={() => updateFraction(num + 1, den)}
+                        className="w-7 h-7 rounded-lg bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center font-black cursor-pointer transition-colors shadow-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* PAYDA SÜRGÜSÜ */}
+                  <div className="space-y-1.5 pt-2 border-t border-border/40">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-foreground">Payda (Toplam Parça):</span>
+                      <span className="font-mono font-black text-violet-600 dark:text-violet-400 text-sm">
+                        {den}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateFraction(num, den - 1)}
+                        className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center font-black hover:bg-muted cursor-pointer transition-colors shadow-xs"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="range"
+                        min="1"
+                        max="24"
+                        step="1"
+                        value={den}
+                        onChange={(e) => updateFraction(num, parseInt(e.target.value) || 1)}
+                        className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-violet-600"
+                      />
+                      <button
+                        onClick={() => updateFraction(num, den + 1)}
+                        className="w-7 h-7 rounded-lg bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center font-black cursor-pointer transition-colors shadow-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sık Kullanılan Kesir Şablonları */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Hızlı Kesir Şablonları
+                  </label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { n: 1, d: 1 },
+                      { n: 1, d: 2 },
+                      { n: 1, d: 3 },
+                      { n: 2, d: 3 },
+                      { n: 1, d: 4 },
+                      { n: 3, d: 4 },
+                      { n: 2, d: 5 },
+                      { n: 5, d: 8 },
+                    ].map((item) => (
+                      <button
+                        key={`preset-${item.n}-${item.d}`}
+                        onClick={() => updateFraction(item.n, item.d)}
+                        className={`py-1 px-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                          num === item.n && den === item.d
+                            ? 'bg-violet-600 text-white border-violet-700 shadow-sm'
+                            : 'bg-muted/60 hover:bg-muted text-foreground border-border/80'
+                        }`}
+                      >
+                        {item.n}/{item.d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Renk Seçimi */}
           <div className="space-y-1.5 pt-2 border-t border-border/40">
             <label className="text-[11px] font-semibold text-muted-foreground">Renk</label>
@@ -465,6 +617,21 @@ export function PropertiesPanel() {
                 setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))
               }
               className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
+              <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={viewport.showQuadrants ?? false}
+              onChange={(e) =>
+                setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))
+              }
+              className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
             />
           </label>
 

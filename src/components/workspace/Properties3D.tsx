@@ -128,23 +128,58 @@ export function Properties3D({
       </div>
 
       {/* 3. AÇINIM / KATLAMA (UNFOLDING) KAYDIRICI */}
-      {(selectedSolid.type === 'cube' || selectedSolid.type === 'prism') && (
-        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+      {selectedSolid.type !== 'sphere' && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2.5">
           <div className="flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-300">
-            <span>📖 Açınım / 2D Katlama</span>
-            <span className="font-mono font-black">
-              %{Math.round(selectedSolid.unfoldProgress * 100)}
+            <span className="flex items-center gap-1.5">
+              <span>📖</span>
+              <span>Açınım / Yüzeyleri Ayır</span>
+            </span>
+            <span className="font-mono font-black text-sm text-amber-600 dark:text-amber-400">
+              %{Math.round((selectedSolid.unfoldProgress || 0) * 100)}
             </span>
           </div>
           <input
             type="range"
             min={0}
             max={1}
-            step={0.02}
-            value={selectedSolid.unfoldProgress}
+            step={0.01}
+            value={selectedSolid.unfoldProgress || 0}
             onChange={(e) => onUpdateSolid({ unfoldProgress: parseFloat(e.target.value) })}
-            className="w-full accent-amber-600 cursor-pointer"
+            className="w-full h-2 bg-amber-200 dark:bg-amber-950 rounded-lg appearance-none cursor-pointer accent-amber-600"
           />
+          <div className="flex items-center justify-between gap-1 pt-1">
+            <button
+              onClick={() => onUpdateSolid({ unfoldProgress: 0 })}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                (selectedSolid.unfoldProgress || 0) === 0
+                  ? 'bg-amber-600 text-white border-amber-700'
+                  : 'bg-card text-foreground border-border hover:bg-muted'
+              }`}
+            >
+              🔒 0% Kapalı
+            </button>
+            <button
+              onClick={() => onUpdateSolid({ unfoldProgress: 0.5 })}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                Math.abs((selectedSolid.unfoldProgress || 0) - 0.5) < 0.05
+                  ? 'bg-amber-600 text-white border-amber-700'
+                  : 'bg-card text-foreground border-border hover:bg-muted'
+              }`}
+            >
+              50% Yarı Açık
+            </button>
+            <button
+              onClick={() => onUpdateSolid({ unfoldProgress: 1 })}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                (selectedSolid.unfoldProgress || 0) >= 0.99
+                  ? 'bg-amber-600 text-white border-amber-700'
+                  : 'bg-card text-foreground border-border hover:bg-muted'
+              }`}
+            >
+              📖 100% Tam Açık
+            </button>
+          </div>
         </div>
       )}
 

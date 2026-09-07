@@ -29,13 +29,14 @@ import {
   calculateCircleCircumference,
   generateNextPointLabel,
 } from '@/math/geometry';
-import { snapToGridPoint } from '@/math/coordinates';
+import { snapToGridPoint, formatTurkishNumber } from '@/math/coordinates';
 import { useCurriculum } from './CurriculumContext';
 import confetti from 'canvas-confetti';
 
 interface WorkspaceContextType {
   objects: MathObject[];
   selectedObjectId: string | null;
+  selectedObjectIds: string[];
   activeTool: ToolMode;
   viewport: ViewportTransform;
   pendingPointIds: string[];
@@ -46,15 +47,27 @@ interface WorkspaceContextType {
   activityCompleted: boolean;
   activeSuccessMessage: string | null;
   studioDimension: '2D' | '3D';
+  isConfirmClearOpen: boolean;
+  confirmClearTargetDim: '2D' | '3D';
+  setIsConfirmClearOpen: (open: boolean) => void;
+  requestClearAll: (dimension?: '2D' | '3D') => void;
+  isRegularPolygonDialogOpen: boolean;
+  regularPolygonPos: Point2D;
+  setIsRegularPolygonDialogOpen: (open: boolean) => void;
+  openRegularPolygonDialog: (pos?: Point2D) => void;
 
   // Eylemler
+  setObjects: React.Dispatch<React.SetStateAction<MathObject[]>>;
   setStudioDimension: (dim: '2D' | '3D') => void;
   setActiveTool: (tool: ToolMode) => void;
   setSelectedObjectId: (id: string | null) => void;
+  setSelectedObjectIds: React.Dispatch<React.SetStateAction<string[]>>;
   setViewport: React.Dispatch<React.SetStateAction<ViewportTransform>>;
   addObject: (obj: MathObject, historyLabel?: string) => void;
   updateObject: (id: string, updates: Partial<MathObject>, recordHistory?: boolean) => void;
   deleteObject: (id: string) => void;
+  moveObject: (objectId: string, delta: Point2D, recordHistory?: boolean) => void;
+  moveObjects: (objectIds: string[], delta: Point2D, recordHistory?: boolean) => void;
   clearWorkspace: () => void;
   resetViewport: () => void;
   handlePointClick: (pointId: string) => void;
@@ -65,6 +78,7 @@ interface WorkspaceContextType {
   addSlider: (name: string, min: number, max: number, step: number, initialValue: number) => void;
   undo: () => void;
   redo: () => void;
+  recordHistory: (description: string) => void;
   cancelPendingAction: () => void;
   restartCurrentActivity: () => void;
 }
@@ -82,6 +96,7 @@ const DEFAULT_VIEWPORT: ViewportTransform = {
   showGrid: true,
   showAxes: true,
   showCoordinates: true,
+  showMeasurements: true,
   snapToGrid: false,
   gridStep: 1,
 };
@@ -90,7 +105,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const { selectedActivity } = useCurriculum();
 
   const [objects, setObjects] = useState<MathObject[]>([]);
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
+  const selectedObjectId = selectedObjectIds[0] || null;
+
+  const setSelectedObjectId = (id: string | null) => {
+    setSelectedObjectIds(id ? [id] : []);
+  };
+
   const [activeTool, setActiveTool] = useState<ToolMode>('select');
   const [viewport, setViewport] = useState<ViewportTransform>(DEFAULT_VIEWPORT);
   const [pendingPointIds, setPendingPointIds] = useState<string[]>([]);
@@ -99,6 +120,22 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [activityCompleted, setActivityCompleted] = useState<boolean>(false);
   const [activeSuccessMessage, setActiveSuccessMessage] = useState<string | null>(null);
   const [studioDimension, setStudioDimension] = useState<'2D' | '3D'>('2D');
+  const [isConfirmClearOpen, setIsConfirmClearOpen] = useState<boolean>(false);
+  const [confirmClearTargetDim, setConfirmClearTargetDim] = useState<'2D' | '3D'>('2D');
+  const [isRegularPolygonDialogOpen, setIsRegularPolygonDialogOpen] = useState<boolean>(false);
+  const [regularPolygonPos, setRegularPolygonPos] = useState<Point2D>({ x: 0, y: 0 });
+
+  const openRegularPolygonDialog = (pos?: Point2D) => {
+    if (pos) setRegularPolygonPos(pos);
+    else setRegularPolygonPos({ x: 0, y: 0 });
+    setIsRegularPolygonDialogOpen(true);
+  };
+
+  // Çalışma alanını onay ile temizleme isteği başlatma
+  const requestClearAll = (dim?: '2D' | '3D') => {
+    setConfirmClearTargetDim(dim || studioDimension);
+    setIsConfirmClearOpen(true);
+  };
 
   // Etkinlik değiştiğinde nesneleri yükle
   useEffect(() => {
@@ -328,6 +365,87 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  // Çoklu Nesne Taşıma (Seçim alanındaki tüm nesneleri birlikte kaydırma)
+  const moveObjects = (objectIds: string[], delta: Point2D, recordHistory = false) => {
+    if ((delta.x === 0 && delta.y === 0) || objectIds.length === 0) return;
+
+    setObjects((prev) => {
+      const objectIdSet = new Set(objectIds);
+      const pointIdsToShift = new Set<string>();
+
+      // Taşınacak tüm köşe ve nokta ID'lerini topla (çift kaydırmayı önler)
+      prev.forEach((o) => {
+        if (!objectIdSet.has(o.id)) return;
+
+        if (o.type === 'point') {
+          pointIdsToShift.add(o.id);
+        } else if (o.type === 'polygon') {
+          (o as PolygonObject).pointIds.forEach((pid) => pointIdsToShift.add(pid));
+        } else if (o.type === 'segment') {
+          const seg = o as SegmentObject;
+          pointIdsToShift.add(seg.startPointId);
+          pointIdsToShift.add(seg.endPointId);
+        } else if (o.type === 'line') {
+          const line = o as LineObject;
+          pointIdsToShift.add(line.point1Id);
+          pointIdsToShift.add(line.point2Id);
+        } else if (o.type === 'ray') {
+          const ray = o as RayObject;
+          pointIdsToShift.add(ray.startPointId);
+          pointIdsToShift.add(ray.throughPointId);
+        } else if (o.type === 'circle') {
+          const circ = o as CircleObject;
+          pointIdsToShift.add(circ.centerPointId);
+          if (circ.radiusPointId) pointIdsToShift.add(circ.radiusPointId);
+        }
+      });
+
+      const next = prev.map((o) => {
+        if (o.type === 'point' && pointIdsToShift.has(o.id)) {
+          const pt = o as PointObject;
+          return { ...pt, x: pt.x + delta.x, y: pt.y + delta.y };
+        }
+        if (objectIdSet.has(o.id)) {
+          if (o.type === 'text') {
+            const txt = o as TextObject;
+            return { ...txt, x: txt.x + delta.x, y: txt.y + delta.y };
+          }
+          if (o.type === 'fraction') {
+            const frac = o as FractionObject;
+            return { ...frac, x: frac.x + delta.x, y: frac.y + delta.y };
+          }
+          if (o.type === 'image') {
+            const img = o as ImageObject;
+            return { ...img, x: img.x + delta.x, y: img.y + delta.y };
+          }
+          if (o.type === 'pen') {
+            const pen = o as PenStrokeObject;
+            return {
+              ...pen,
+              points: pen.points.map((p) => ({ x: p.x + delta.x, y: p.y + delta.y })),
+            };
+          }
+        }
+        return o;
+      });
+
+      if (recordHistory) {
+        pushHistory(next, `${objectIds.length} nesne taşındı`);
+      }
+
+      return next;
+    });
+  };
+
+  // Tek Nesne Taşıma
+  const moveObject = (objectId: string, delta: Point2D, recordHistory = false) => {
+    moveObjects([objectId], delta, recordHistory);
+  };
+
+  const recordHistory = (description: string) => {
+    pushHistory(objects, description);
+  };
+
   // Kaydırıcı değişimi
   const handleSliderChange = (sliderId: string, value: number) => {
     setObjects((prev) =>
@@ -545,29 +663,37 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       }
     } else if (activeTool === 'measure_distance' || activeTool === 'unit_measure') {
       const nextPending = [...pendingPointIds, pointId];
+      const isCm = activeTool === 'measure_distance';
+      const unit = isCm ? 'cm' : 'br';
+
       if (nextPending.length === 1) {
         setPendingPointIds(nextPending);
       } else if (nextPending.length === 2) {
         if (nextPending[0] !== nextPending[1]) {
           const p1 = objects.find((o) => o.id === nextPending[0]) as PointObject;
           const p2 = objects.find((o) => o.id === nextPending[1]) as PointObject;
-          const dist = p1 && p2 ? calculateDistance(p1, p2).toFixed(2) : '0';
-          const label = p1 && p2 ? `|${p1.label}${p2.label}| = ${dist} br` : 'Ölçüm';
+          if (p1 && p2) {
+            const rawDist = calculateDistance(p1, p2);
+            const distStr = formatTurkishNumber(rawDist);
+            const segLabel = `|${p1.label}${p2.label}| = ${distStr} ${unit}`;
 
-          const newSegment: SegmentObject = {
-            id: `seg-${Date.now()}`,
-            type: 'segment',
-            label,
-            showLabel: true,
-            startPointId: nextPending[0],
-            endPointId: nextPending[1],
-            color: '#059669',
-            visible: true,
-            showLength: true,
-            thickness: 3,
-            createdAt: Date.now(),
-          };
-          addObject(newSegment, `${label} uzunluğu ölçüldü`);
+            const newSegment: SegmentObject = {
+              id: `seg-${Date.now()}`,
+              type: 'segment',
+              label: segLabel,
+              showLabel: true,
+              unit: isCm ? 'cm' : 'br',
+              startPointId: nextPending[0],
+              endPointId: nextPending[1],
+              color: isCm ? '#0284c7' : '#059669',
+              visible: true,
+              showLength: true,
+              thickness: 3,
+              createdAt: Date.now(),
+            };
+            addObject(newSegment, `${segLabel} ölçüldü`);
+            setActiveSuccessMessage(`📏 ${isCm ? 'Uzunluk' : 'Birim'} Ölçümü: ${distStr} ${unit} (|${p1.label}${p2.label}|)`);
+          }
         }
         setPendingPointIds([]);
       }
@@ -723,54 +849,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 4. DÜZGÜN ÇOKGEN (ALTIGEN)
+    // 4. DÜZGÜN ÇOKGEN (KULLANICI KENAR SAYISI GİRİŞİ DİYALOĞU)
     if (activeTool === 'regular_polygon') {
-      const sides = 6;
-      const radius = 3;
-      const pts: PointObject[] = [];
-      const ptIds: string[] = [];
-
-      for (let i = 0; i < sides; i++) {
-        const ang = (i * 2 * Math.PI) / sides - Math.PI / 2;
-        const px = Number((worldPos.x + radius * Math.cos(ang)).toFixed(2));
-        const py = Number((worldPos.y + radius * Math.sin(ang)).toFixed(2));
-        const pId = `pt-${Date.now() + i}`;
-        const p: PointObject = {
-          id: pId,
-          type: 'point',
-          label: String.fromCharCode(65 + i),
-          showLabel: true,
-          x: px,
-          y: py,
-          color: '#10b981',
-          visible: true,
-          isIndependent: true,
-          createdAt: Date.now() + i,
-        };
-        pts.push(p);
-        ptIds.push(pId);
-      }
-
-      const poly: PolygonObject = {
-        id: `poly-${Date.now() + sides}`,
-        type: 'polygon',
-        label: 'Düzgün Altıgen',
-        showLabel: true,
-        pointIds: ptIds,
-        color: '#10b981',
-        fillColor: '#10b981',
-        fillOpacity: 0.18,
-        visible: true,
-        showArea: true,
-        showPerimeter: true,
-        createdAt: Date.now() + sides,
-      };
-
-      setObjects((prev) => {
-        const next = [...prev, ...pts, poly];
-        pushHistory(next, 'Düzgün Çokgen oluşturuldu');
-        return next;
-      });
+      openRegularPolygonDialog(worldPos);
       return;
     }
 
@@ -779,10 +860,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       const fractionObj: FractionObject = {
         id: `frac-${Date.now()}`,
         type: 'fraction',
-        label: '3/4 Kesir Modeli',
+        label: '1/1 Kesir Modeli',
         showLabel: true,
-        numerator: 3,
-        denominator: 4,
+        numerator: 1,
+        denominator: 1,
         x: worldPos.x,
         y: worldPos.y,
         radius: 2.5,
@@ -791,7 +872,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         visible: true,
         createdAt: Date.now(),
       };
-      addObject(fractionObj, '3/4 Kesir modeli eklendi');
+      addObject(fractionObj, '1/1 Kesir modeli eklendi');
+      setSelectedObjectId(fractionObj.id);
       return;
     }
 
@@ -834,28 +916,62 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 8. CETVEL / UZUNLUK ÖLÇÜMÜ
-    if (activeTool === 'ruler' || activeTool === 'measure_distance' || activeTool === 'unit_measure') {
-      const p1: PointObject = { id: `pt-${Date.now()}`, type: 'point', label: 'A', showLabel: true, x: worldPos.x - 3, y: worldPos.y, color: '#059669', visible: true, isIndependent: true, createdAt: Date.now() };
-      const p2: PointObject = { id: `pt-${Date.now() + 1}`, type: 'point', label: 'B', showLabel: true, x: worldPos.x + 3, y: worldPos.y, color: '#059669', visible: true, isIndependent: true, createdAt: Date.now() + 1 };
-      const seg: SegmentObject = {
-        id: `seg-${Date.now() + 2}`,
-        type: 'segment',
-        label: 'Ölçüm Çizgisi (6 br)',
+    // 8. CETVEL / UZUNLUK VE BİRİM ÖLÇÜMÜ
+    if (activeTool === 'measure_distance' || activeTool === 'unit_measure' || activeTool === 'ruler') {
+      const isCm = activeTool === 'measure_distance' || activeTool === 'ruler';
+      const unit = isCm ? 'cm' : 'br';
+      const existingPoints = objects.filter((o) => o.type === 'point') as PointObject[];
+      const label = generateNextPointLabel(existingPoints.map((p) => p.label));
+
+      const newPt: PointObject = {
+        id: `pt-${Date.now()}`,
+        type: 'point',
+        label,
         showLabel: true,
-        startPointId: p1.id,
-        endPointId: p2.id,
-        color: '#059669',
+        x: worldPos.x,
+        y: worldPos.y,
+        color: isCm ? '#0284c7' : '#059669',
         visible: true,
-        showLength: true,
-        thickness: 3,
-        createdAt: Date.now() + 2,
+        isIndependent: true,
+        createdAt: Date.now(),
       };
-      setObjects((prev) => {
-        const next = [...prev, p1, p2, seg];
-        pushHistory(next, 'Ölçüm çizgisi eklendi');
-        return next;
-      });
+
+      const nextObjects = [...objects, newPt];
+      const nextPending = [...pendingPointIds, newPt.id];
+
+      if (nextPending.length === 1) {
+        setObjects(nextObjects);
+        setPendingPointIds(nextPending);
+      } else if (nextPending.length === 2) {
+        const p1 = nextObjects.find((o) => o.id === nextPending[0]) as PointObject;
+        const p2 = nextObjects.find((o) => o.id === nextPending[1]) as PointObject;
+        if (p1 && p2 && p1.id !== p2.id) {
+          const rawDist = calculateDistance(p1, p2);
+          const distStr = formatTurkishNumber(rawDist);
+          const segLabel = `|${p1.label}${p2.label}| = ${distStr} ${unit}`;
+
+          const newSegment: SegmentObject = {
+            id: `seg-${Date.now() + 1}`,
+            type: 'segment',
+            label: segLabel,
+            showLabel: true,
+            unit: isCm ? 'cm' : 'br',
+            startPointId: nextPending[0],
+            endPointId: nextPending[1],
+            color: isCm ? '#0284c7' : '#059669',
+            visible: true,
+            showLength: true,
+            thickness: 3,
+            createdAt: Date.now() + 1,
+          };
+
+          const finalObjects = [...nextObjects, newSegment];
+          setObjects(finalObjects);
+          pushHistory(finalObjects, `${segLabel} ölçüldü`);
+          setActiveSuccessMessage(`📏 ${isCm ? 'Uzunluk' : 'Birim'} Ölçümü: ${distStr} ${unit} (|${p1.label}${p2.label}|)`);
+        }
+        setPendingPointIds([]);
+      }
       return;
     }
 
@@ -1046,6 +1162,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       value={{
         objects,
         selectedObjectId,
+        selectedObjectIds,
         activeTool,
         viewport,
         pendingPointIds,
@@ -1055,17 +1172,29 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         canRedo: historyIndex < history.length - 1,
         activityCompleted,
         activeSuccessMessage,
+        setObjects,
         studioDimension,
         setStudioDimension,
+        isConfirmClearOpen,
+        confirmClearTargetDim,
+        setIsConfirmClearOpen,
+        requestClearAll,
+        isRegularPolygonDialogOpen,
+        regularPolygonPos,
+        setIsRegularPolygonDialogOpen,
+        openRegularPolygonDialog,
         setActiveTool: (tool) => {
           setActiveTool(tool);
           cancelPendingAction();
         },
         setSelectedObjectId,
+        setSelectedObjectIds,
         setViewport,
         addObject,
         updateObject,
         deleteObject,
+        moveObject,
+        moveObjects,
         clearWorkspace,
         resetViewport,
         handlePointClick,
@@ -1076,6 +1205,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         addSlider,
         undo,
         redo,
+        recordHistory,
         cancelPendingAction,
         restartCurrentActivity,
       }}

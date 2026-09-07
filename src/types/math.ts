@@ -53,6 +53,7 @@ export interface SegmentObject extends BaseMathObject {
   thickness?: number;
   style?: 'solid' | 'dashed' | 'dotted';
   showLength?: boolean;
+  unit?: 'cm' | 'br';
 }
 
 export interface LineObject extends BaseMathObject {
@@ -175,6 +176,8 @@ export interface ViewportTransform {
   showGrid: boolean;
   showAxes: boolean;
   showCoordinates: boolean;
+  showMeasurements?: boolean;
+  showQuadrants?: boolean;
   snapToGrid: boolean;
   gridStep: number;
 }

@@ -7,7 +7,9 @@ import { PropertiesPanel } from './PropertiesPanel';
 import { ActivityPanel } from './ActivityPanel';
 import { FunctionDialog } from './FunctionDialog';
 import { SliderDialog } from './SliderDialog';
+import { RegularPolygonDialog } from './RegularPolygonDialog';
 import { AddObjectModal } from './AddObjectModal';
+import { ConfirmClearModal } from './ConfirmClearModal';
 
 // 3D Bileşenleri
 import { Toolbar3D } from './Toolbar3D';
@@ -34,7 +36,19 @@ import { useWorkspace } from '@/state/WorkspaceContext';
 
 export function WorkspaceView() {
   // 2D & 3D Stüdyo Boyut Modu (Global Workspace State)
-  const { studioDimension, setStudioDimension } = useWorkspace();
+  const {
+    objects,
+    studioDimension,
+    setStudioDimension,
+    clearWorkspace,
+    isConfirmClearOpen,
+    confirmClearTargetDim,
+    setIsConfirmClearOpen,
+    requestClearAll,
+    isRegularPolygonDialogOpen,
+    regularPolygonPos,
+    setIsRegularPolygonDialogOpen,
+  } = useWorkspace();
 
   // 2D & 3D Dialog ve Panel Durumları
   const [isFunctionDialogOpen, setIsFunctionDialogOpen] = useState(false);
@@ -45,7 +59,13 @@ export function WorkspaceView() {
 
   // 3D Stüdyo Durumları
   const [solids, setSolids] = useState<Solid3DObject[]>(INITIAL_SOLIDS);
-  const [selectedSolidId, setSelectedSolidId] = useState<string | null>(null);
+  const [selectedSolidIds, setSelectedSolidIds] = useState<string[]>([]);
+  const selectedSolidId = selectedSolidIds[0] || null;
+
+  const setSelectedSolidId = (id: string | null) => {
+    setSelectedSolidIds(id ? [id] : []);
+  };
+
   const [active3DTool, setActive3DTool] = useState<Tool3DMode>('select_move');
   const [camera3D, setCamera3D] = useState<Camera3D>(DEFAULT_CAMERA_3D);
   const [showGlobalVertices, setShowGlobalVertices] = useState(true);
@@ -93,7 +113,7 @@ export function WorkspaceView() {
     };
 
     setSolids((prev) => [...prev, newSolid]);
-    setSelectedSolidId(newSolid.id);
+    setSelectedSolidIds([newSolid.id]);
   };
 
   const handleUpdateSolid = (updates: Partial<Solid3DObject>) => {
@@ -104,9 +124,40 @@ export function WorkspaceView() {
   };
 
   const handleDeleteSolid = () => {
-    if (!selectedSolidId) return;
-    setSolids((prev) => prev.filter((s) => s.id !== selectedSolidId));
-    setSelectedSolidId(null);
+    if (selectedSolidIds.length === 0) return;
+    setSolids((prev) => prev.filter((s) => !selectedSolidIds.includes(s.id)));
+    setSelectedSolidIds([]);
+  };
+
+  const handleUpdateSolidsPosition = (ids: string[], delta: Point3D) => {
+    setSolids((prev) =>
+      prev.map((s) =>
+        ids.includes(s.id)
+          ? {
+              ...s,
+              position: {
+                x: s.position.x + delta.x,
+                y: s.position.y + delta.y,
+                z: s.position.z + delta.z,
+              },
+            }
+          : s
+      )
+    );
+  };
+
+  const handleClearAllSolids = () => {
+    setSolids([]);
+    setSelectedSolidIds([]);
+  };
+
+  const handleConfirmClear = () => {
+    if (confirmClearTargetDim === '2D') {
+      clearWorkspace();
+    } else {
+      handleClearAllSolids();
+    }
+    setIsConfirmClearOpen(false);
   };
 
   const handleAutoArrange = () => {
@@ -180,6 +231,7 @@ export function WorkspaceView() {
               onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
               onAutoArrange={handleAutoArrange}
               onSetCameraPreset={handleSetCameraPreset}
+              onClearAll={() => requestClearAll('3D')}
             />
           )
         )}
@@ -201,6 +253,7 @@ export function WorkspaceView() {
           <Canvas3D
             solids={solids}
             selectedSolidId={selectedSolidId}
+            selectedSolidIds={selectedSolidIds}
             activeTool={active3DTool}
             camera={camera3D}
             showGlobalVertices={showGlobalVertices}
@@ -208,21 +261,30 @@ export function WorkspaceView() {
             showGlobalFaces={showGlobalFaces}
             setCamera={setCamera3D}
             onSelectSolid={setSelectedSolidId}
+            onSelectSolids={setSelectedSolidIds}
             onAddSolid={handleAddSolid}
             onDeleteSolid={(id) => {
               if (id) {
                 setSolids((prev) => prev.filter((s) => s.id !== id));
-                if (selectedSolidId === id) setSelectedSolidId(null);
+                setSelectedSolidIds((prev) => prev.filter((sid) => sid !== id));
               } else {
                 handleDeleteSolid();
               }
             }}
+            onDeleteSolids={handleDeleteSolid}
+            onClearAll={() => requestClearAll('3D')}
             setActive3DTool={setActive3DTool}
+            onUpdateSolid={(id, updates) => {
+              setSolids((prev) =>
+                prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+              );
+            }}
             onUpdateSolidPosition={(id, newPos) => {
               setSolids((prev) =>
                 prev.map((s) => (s.id === id ? { ...s, position: newPos } : s))
               );
             }}
+            onUpdateSolidsPosition={handleUpdateSolidsPosition}
             onSwitchTo2D={() => setStudioDimension('2D')}
           />
         )}
@@ -265,6 +327,18 @@ export function WorkspaceView() {
       <SliderDialog
         isOpen={isSliderDialogOpen}
         onClose={() => setIsSliderDialogOpen(false)}
+      />
+      <RegularPolygonDialog
+        isOpen={isRegularPolygonDialogOpen}
+        onClose={() => setIsRegularPolygonDialogOpen(false)}
+        targetPos={regularPolygonPos}
+      />
+      <ConfirmClearModal
+        isOpen={isConfirmClearOpen}
+        onClose={() => setIsConfirmClearOpen(false)}
+        onConfirm={handleConfirmClear}
+        targetDimension={confirmClearTargetDim}
+        objectCount={confirmClearTargetDim === '2D' ? objects.length : solids.length}
       />
     </div>
   );

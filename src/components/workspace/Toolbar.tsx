@@ -16,6 +16,7 @@ import {
   Trash2,
   Compass,
   Sigma,
+  Hexagon,
   RotateCw,
   FlipHorizontal,
   Sparkles,
@@ -55,7 +56,7 @@ interface ToolGroup {
 }
 
 const TOOL_GROUPS: ToolGroup[] = [
-  // 1. Temel Çizim Araçları (8) - Kırmızı / Mercan Pastel Arka Plan
+  // 1. Temel Çizim Araçları - Kırmızı / Mercan Pastel Arka Plan
   {
     groupName: 'Temel Çizim Araçları',
     emoji: '📐',
@@ -65,18 +66,16 @@ const TOOL_GROUPS: ToolGroup[] = [
     containerBorder: 'border-rose-200/90 dark:border-rose-900/50',
     headerTextColor: 'text-rose-800 dark:text-rose-200',
     tools: [
-      { id: 'select', name: 'Seç ve Taşı', description: 'Noktaları veya nesneleri seçip sürükleyin.', icon: <MousePointer className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
       { id: 'point', name: 'Nokta', description: 'Tuvale tıklayarak yeni nokta oluşturun.', icon: <Dot className="w-6 h-6" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
       { id: 'segment', name: 'Doğru Parçası', description: 'İki nokta arasına doğru parçası çizin.', icon: <Minus className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
       { id: 'line', name: 'Doğru', description: 'İki noktadan geçen sonsuz doğru çizin.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'square', name: 'Kare', description: 'Kare şekli oluşturun.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'polygon', name: 'Çokgen', description: 'Köşeleri belirleyerek çokgen çizin.', icon: <Triangle className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
       { id: 'circle', name: 'Çember', description: 'Merkez ve yarıçap noktasıyla çember çizin.', icon: <CircleIcon className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
+      { id: 'square', name: 'Kare', description: 'Kare şekli oluşturun.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
       { id: 'pen', name: 'Kalem', description: 'Serbest çizim kalemi.', icon: <PenTool className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
     ],
   },
 
-  // 2. Düzenleme Araçları (2) - Mavi Pastel Arka Plan
+  // 2. Düzenleme Araçları - Mavi Pastel Arka Plan
   {
     groupName: 'Düzenleme Araçları',
     emoji: '✂️',
@@ -86,12 +85,12 @@ const TOOL_GROUPS: ToolGroup[] = [
     containerBorder: 'border-blue-200/90 dark:border-blue-900/50',
     headerTextColor: 'text-blue-800 dark:text-blue-200',
     tools: [
-      { id: 'select', name: 'Nesneleri Seç', description: 'Çoklu nesne seçimi.', icon: <MousePointer className="w-4 h-4" />, iconBg: 'bg-blue-500/10 dark:bg-blue-500/20', iconColor: 'text-blue-600 dark:text-blue-400' },
+      { id: 'select', name: 'Seç ve Taşı', description: 'Noktaları veya nesneleri seçip sürükleyin.', icon: <MousePointer className="w-4 h-4" />, iconBg: 'bg-blue-500/10 dark:bg-blue-500/20', iconColor: 'text-blue-600 dark:text-blue-400' },
       { id: 'delete', name: 'Sil', description: 'Silmek istediğiniz nesneye dokunun.', icon: <Trash2 className="w-4 h-4" />, iconBg: 'bg-red-500/10 dark:bg-red-500/20', iconColor: 'text-red-600 dark:text-red-400' },
     ],
   },
 
-  // 3. Ölçme Araçları (9) - Nane / Zümrüt Yeşili Pastel Arka Plan
+  // 3. Ölçme Araçları - Nane / Zümrüt Yeşili Pastel Arka Plan
   {
     groupName: 'Ölçme Araçları',
     emoji: '📏',
@@ -101,11 +100,11 @@ const TOOL_GROUPS: ToolGroup[] = [
     containerBorder: 'border-emerald-200/90 dark:border-emerald-900/50',
     headerTextColor: 'text-emerald-800 dark:text-emerald-200',
     tools: [
+      { id: 'measure_distance', name: 'Uzunluk Ölç (cm)', description: 'Mesafe ve uzunluk ölçün.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
+      { id: 'unit_measure', name: 'Birimle Ölç (br)', description: 'Birim karelerle ölçüm yapın.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
       { id: 'measure_angle', name: 'Açıölçer', description: 'Açı ölçümü yapın.', icon: <Compass className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
       { id: 'angle', name: 'Açı Oluştur', description: '3 nokta ile açı oluşturun.', icon: <Sigma className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'measure_distance', name: 'Uzunluk Ölç', description: 'Mesafe ve uzunluk ölçün.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
       { id: 'measure_area', name: 'Alanı Bul', description: 'Kapalı şeklin alanını hesaplayın.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'unit_measure', name: 'Birimle Ölç', description: 'Birim karelerle ölçüm yapın.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
       { id: 'measure_perimeter', name: 'Çevre Tahmin', description: 'Şekil çevre hesabı.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
       { id: 'area_model', name: 'Alanı Modelle', description: 'Alan modelleme ızgarası.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
       { id: 'ruler', name: 'Cetvel', description: 'İnteraktif cetvel aracı.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
@@ -113,7 +112,7 @@ const TOOL_GROUPS: ToolGroup[] = [
     ],
   },
 
-  // 4. Çokgen & Şekil Araçları (3) - Sıcak Kehribar / Sarı Pastel Arka Plan
+  // 4. Çokgen Araçları - Sıcak Kehribar / Sarı Pastel Arka Plan
   {
     groupName: 'Çokgen Araçları',
     emoji: '⬡',
@@ -123,9 +122,9 @@ const TOOL_GROUPS: ToolGroup[] = [
     containerBorder: 'border-amber-200/90 dark:border-amber-900/50',
     headerTextColor: 'text-amber-800 dark:text-amber-200',
     tools: [
-      { id: 'polygon', name: 'Şekil Oluştur', description: 'Serbest çokgen çizin.', icon: <Triangle className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
+      { id: 'polygon', name: 'Çokgen', description: 'Köşeleri belirleyerek çokgen çizin.', icon: <Triangle className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
       { id: 'rectangle', name: 'Dikdörtgen', description: 'Dikdörtgen şekli ekleyin.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-      { id: 'regular_polygon', name: 'Düzgün Çokgen', description: 'Eşit kenarlı düzgün çokgen oluşturun.', icon: <Sigma className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
+      { id: 'regular_polygon', name: 'Düzgün Çokgen', description: 'Kenar sayısını girerek düzgün çokgen oluşturun.', icon: <Hexagon className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
     ],
   },
 
@@ -177,6 +176,8 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
     addObject,
     addFunction,
     pendingPointIds,
+    requestClearAll,
+    openRegularPolygonDialog,
   } = useWorkspace();
 
   const [toolSearch, setToolSearch] = useState('');
@@ -211,6 +212,11 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
     }
     if (toolId === 'slider') {
       if (onOpenSliderDialog) onOpenSliderDialog();
+      return;
+    }
+    if (toolId === 'regular_polygon') {
+      setActiveTool('regular_polygon');
+      openRegularPolygonDialog();
       return;
     }
     setActiveTool(toolId);
@@ -405,6 +411,16 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
             <div className="flex-1 flex flex-col min-h-0 bg-card">
               <div className="p-3.5 border-b border-border/80 flex items-center justify-between shrink-0">
                 <h3 className="text-xs font-black text-foreground">Cebir Girişleri</h3>
+                {objects.length > 0 && (
+                  <button
+                    onClick={() => requestClearAll('2D')}
+                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 flex items-center gap-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                    title="Tüm Girişleri ve Şekilleri Sil"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Tümünü Sil</span>
+                  </button>
+                )}
               </div>
 
               {/* Obje Listesi */}
@@ -485,6 +501,16 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
             <div className="flex-1 flex flex-col min-h-0">
               <div className="p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
                 <h3 className="text-xs font-black text-foreground tracking-tight">Geometri Araçları</h3>
+                {objects.length > 0 && (
+                  <button
+                    onClick={() => requestClearAll('2D')}
+                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 flex items-center gap-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                    title="Tüm Çizimleri ve Şekilleri Temizle"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Tümünü Sil</span>
+                  </button>
+                )}
               </div>
 
               {/* Arama Çubuğu */}
@@ -574,6 +600,16 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog }: ToolbarPro
                               </button>
                             );
                           })}
+                          {group.groupName === 'Düzenleme Araçları' && (
+                            <button
+                              onClick={() => requestClearAll('2D')}
+                              className="col-span-2 flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/60 shadow-2xs transition-all cursor-pointer hover:shadow-xs active:scale-98"
+                              title="Tüm 2D ekranı ve şekilleri temizle"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Tümünü Sil / Temizle</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

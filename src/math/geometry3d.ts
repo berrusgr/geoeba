@@ -88,34 +88,108 @@ export function generateSolidMesh(solid: Solid3DObject): {
       const hd = (type === 'cube' ? w : d) / 2;
       const zh = type === 'cube' ? w : h;
 
-      // 8 Köşe: 0-3 alt taban, 4-7 üst taban
-      baseVertices = [
-        { x: -hw, y: -hd, z: 0 }, // 0: Sol-Arka-Alt
-        { x: hw, y: -hd, z: 0 }, // 1: Sağ-Arka-Alt
-        { x: hw, y: hd, z: 0 }, // 2: Sağ-Ön-Alt
-        { x: -hw, y: hd, z: 0 }, // 3: Sol-Ön-Alt
-        { x: -hw, y: -hd, z: zh }, // 4: Sol-Arka-Üst
-        { x: hw, y: -hd, z: zh }, // 5: Sağ-Arka-Üst
-        { x: hw, y: hd, z: zh }, // 6: Sağ-Ön-Üst
-        { x: -hw, y: hd, z: zh }, // 7: Sol-Ön-Üst
-      ];
-
-      // Açınım (Unfolding) Animasyon Pozisyonları
       if (unfoldProgress > 0) {
         const u = Math.min(1, Math.max(0, unfoldProgress));
-        const unfoldAngle = (u * 90 * Math.PI) / 180;
-        // Alt taban (0,1,2,3) sabit kalır, yan yüzler dışa açılır
-        // Ön yüz (2,3,7,6): y = hd etrafında öne yatar
-        baseVertices[6] = { x: hw, y: hd + zh * Math.sin(unfoldAngle), z: zh * Math.cos(unfoldAngle) };
-        baseVertices[7] = { x: -hw, y: hd + zh * Math.sin(unfoldAngle), z: zh * Math.cos(unfoldAngle) };
-        // Arka yüz (0,1,5,4): y = -hd etrafında arkaya yatar
-        baseVertices[4] = { x: -hw, y: -hd - zh * Math.sin(unfoldAngle), z: zh * Math.cos(unfoldAngle) };
-        baseVertices[5] = { x: hw, y: -hd - zh * Math.sin(unfoldAngle), z: zh * Math.cos(unfoldAngle) };
-        // Sağ yüz (1,2,6,5): x = hw etrafında sağa yatar
-        baseVertices[1] = { x: hw + hd * (1 - Math.cos(unfoldAngle)), y: -hd, z: 0 };
+        const theta = (u * 90 * Math.PI) / 180;
+        const s = Math.sin(theta);
+        const c = Math.cos(theta);
+
+        // 6 Bağımsız Yüz Üretimi (Açınım / T-Net):
+        // 1. Alt Taban (Z=0 da sabit)
+        const faceBottom: Point3D[] = [
+          { x: -hw, y: -hd, z: 0 },
+          { x: hw, y: -hd, z: 0 },
+          { x: hw, y: hd, z: 0 },
+          { x: -hw, y: hd, z: 0 },
+        ];
+
+        // 2. Ön Yüz (y = hd menteşesi etrafında öne doğru katlanır)
+        const faceFront: Point3D[] = [
+          { x: -hw, y: hd, z: 0 },
+          { x: hw, y: hd, z: 0 },
+          { x: hw, y: hd + zh * s, z: zh * c },
+          { x: -hw, y: hd + zh * s, z: zh * c },
+        ];
+
+        // 3. Üst Taban (Ön Yüzün üst kenarına bağlı, 2*theta açısıyla düzleme yatar)
+        const topD = type === 'cube' ? w : d;
+        const s2 = Math.sin(2 * theta);
+        const c2 = Math.cos(2 * theta);
+        const faceTop: Point3D[] = [
+          { x: -hw, y: hd + zh * s, z: zh * c },
+          { x: hw, y: hd + zh * s, z: zh * c },
+          { x: hw, y: hd + zh * s + topD * s2, z: zh * c + topD * c2 },
+          { x: -hw, y: hd + zh * s + topD * s2, z: zh * c + topD * c2 },
+        ];
+
+        // 4. Arka Yüz (y = -hd menteşesi etrafında arkaya doğru katlanır)
+        const faceBack: Point3D[] = [
+          { x: hw, y: -hd, z: 0 },
+          { x: -hw, y: -hd, z: 0 },
+          { x: -hw, y: -hd - zh * s, z: zh * c },
+          { x: hw, y: -hd - zh * s, z: zh * c },
+        ];
+
+        // 5. Sol Yüz (x = -hw menteşesi etrafında sola doğru katlanır)
+        const faceLeft: Point3D[] = [
+          { x: -hw, y: -hd, z: 0 },
+          { x: -hw, y: hd, z: 0 },
+          { x: -hw - zh * s, y: hd, z: zh * c },
+          { x: -hw - zh * s, y: -hd, z: zh * c },
+        ];
+
+        // 6. Sağ Yüz (x = hw menteşesi etrafında sağa doğru katlanır)
+        const faceRight: Point3D[] = [
+          { x: hw, y: hd, z: 0 },
+          { x: hw, y: -hd, z: 0 },
+          { x: hw + zh * s, y: -hd, z: zh * c },
+          { x: hw + zh * s, y: hd, z: zh * c },
+        ];
+
+        const allFaceList = [
+          { name: 'Alt Taban', pts: faceBottom, normal: { x: 0, y: 0, z: -1 } },
+          { name: 'Ön Yüz', pts: faceFront, normal: { x: 0, y: c, z: s } },
+          { name: 'Üst Taban', pts: faceTop, normal: { x: 0, y: c2, z: s2 } },
+          { name: 'Arka Yüz', pts: faceBack, normal: { x: 0, y: -c, z: s } },
+          { name: 'Sol Yüz', pts: faceLeft, normal: { x: -c, y: 0, z: s } },
+          { name: 'Sağ Yüz', pts: faceRight, normal: { x: c, y: 0, z: s } },
+        ];
+
+        baseVertices = [];
+        faces = [];
+        edges = [];
+
+        allFaceList.forEach((f) => {
+          const startIndex = baseVertices.length;
+          baseVertices.push(...f.pts);
+          faces.push({
+            vertexIndices: [startIndex, startIndex + 1, startIndex + 2, startIndex + 3],
+            normal: f.normal,
+            label: f.name,
+          });
+          edges.push(
+            { startIdx: startIndex, endIdx: startIndex + 1 },
+            { startIdx: startIndex + 1, endIdx: startIndex + 2 },
+            { startIdx: startIndex + 2, endIdx: startIndex + 3 },
+            { startIdx: startIndex + 3, endIdx: startIndex }
+          );
+        });
+
+        break;
       }
 
-      // 6 Yüz
+      // Kapalı (u === 0) küp:
+      baseVertices = [
+        { x: -hw, y: -hd, z: 0 },
+        { x: hw, y: -hd, z: 0 },
+        { x: hw, y: hd, z: 0 },
+        { x: -hw, y: hd, z: 0 },
+        { x: -hw, y: -hd, z: zh },
+        { x: hw, y: -hd, z: zh },
+        { x: hw, y: hd, z: zh },
+        { x: -hw, y: hd, z: zh },
+      ];
+
       faces = [
         { vertexIndices: [3, 2, 1, 0], normal: { x: 0, y: 0, z: -1 }, label: 'Alt Taban' },
         { vertexIndices: [4, 5, 6, 7], normal: { x: 0, y: 0, z: 1 }, label: 'Üst Taban' },
@@ -125,7 +199,6 @@ export function generateSolidMesh(solid: Solid3DObject): {
         { vertexIndices: [1, 2, 6, 5], normal: { x: 1, y: 0, z: 0 }, label: 'Sağ Yüz' },
       ];
 
-      // 12 Ayrıt
       edges = [
         { startIdx: 0, endIdx: 1 },
         { startIdx: 1, endIdx: 2 },
@@ -146,15 +219,92 @@ export function generateSolidMesh(solid: Solid3DObject): {
     case 'pyramid': {
       const hw = w / 2;
       const hd = d / 2;
-      // 5 Köşe: 0-3 taban, 4 tepe noktası
+      const slantH = Math.hypot(h, Math.max(hw, hd));
+
+      if (unfoldProgress > 0) {
+        const u = Math.min(1, Math.max(0, unfoldProgress));
+        const theta = (u * 90 * Math.PI) / 180;
+        const s = Math.sin(theta);
+        const c = Math.cos(theta);
+
+        // 1. Taban
+        const ptsBase: Point3D[] = [
+          { x: -hw, y: -hd, z: 0 },
+          { x: hw, y: -hd, z: 0 },
+          { x: hw, y: hd, z: 0 },
+          { x: -hw, y: hd, z: 0 },
+        ];
+
+        // 2. Ön Üçgen Yüz
+        const ptsFront: Point3D[] = [
+          { x: -hw, y: hd, z: 0 },
+          { x: hw, y: hd, z: 0 },
+          { x: 0, y: hd + slantH * s, z: slantH * c },
+        ];
+
+        // 3. Arka Üçgen Yüz
+        const ptsBack: Point3D[] = [
+          { x: hw, y: -hd, z: 0 },
+          { x: -hw, y: -hd, z: 0 },
+          { x: 0, y: -hd - slantH * s, z: slantH * c },
+        ];
+
+        // 4. Sol Üçgen Yüz
+        const ptsLeft: Point3D[] = [
+          { x: -hw, y: -hd, z: 0 },
+          { x: -hw, y: hd, z: 0 },
+          { x: -hw - slantH * s, y: 0, z: slantH * c },
+        ];
+
+        // 5. Sağ Üçgen Yüz
+        const ptsRight: Point3D[] = [
+          { x: hw, y: hd, z: 0 },
+          { x: hw, y: -hd, z: 0 },
+          { x: hw + slantH * s, y: 0, z: slantH * c },
+        ];
+
+        baseVertices = [];
+        faces = [];
+        edges = [];
+
+        baseVertices.push(...ptsBase);
+        faces.push({ vertexIndices: [3, 2, 1, 0], normal: { x: 0, y: 0, z: -1 }, label: 'Kare Taban' });
+        edges.push(
+          { startIdx: 0, endIdx: 1 },
+          { startIdx: 1, endIdx: 2 },
+          { startIdx: 2, endIdx: 3 },
+          { startIdx: 3, endIdx: 0 }
+        );
+
+        const sideTris = [
+          { name: 'Ön Üçgen Yüz', pts: ptsFront, normal: { x: 0, y: c, z: s } },
+          { name: 'Arka Üçgen Yüz', pts: ptsBack, normal: { x: 0, y: -c, z: s } },
+          { name: 'Sol Üçgen Yüz', pts: ptsLeft, normal: { x: -c, y: 0, z: s } },
+          { name: 'Sağ Üçgen Yüz', pts: ptsRight, normal: { x: c, y: 0, z: s } },
+        ];
+
+        sideTris.forEach((t) => {
+          const sIdx = baseVertices.length;
+          baseVertices.push(...t.pts);
+          faces.push({ vertexIndices: [sIdx, sIdx + 1, sIdx + 2], normal: t.normal, label: t.name });
+          edges.push(
+            { startIdx: sIdx, endIdx: sIdx + 1 },
+            { startIdx: sIdx + 1, endIdx: sIdx + 2 },
+            { startIdx: sIdx + 2, endIdx: sIdx }
+          );
+        });
+
+        break;
+      }
+
+      // Kapalı piramit:
       baseVertices = [
         { x: -hw, y: -hd, z: 0 },
         { x: hw, y: -hd, z: 0 },
         { x: hw, y: hd, z: 0 },
         { x: -hw, y: hd, z: 0 },
-        { x: 0, y: 0, z: h }, // Tepe
+        { x: 0, y: 0, z: h },
       ];
-
       faces = [
         { vertexIndices: [3, 2, 1, 0], normal: { x: 0, y: 0, z: -1 }, label: 'Kare Taban' },
         { vertexIndices: [3, 2, 4], normal: { x: 0, y: 1, z: 0.5 }, label: 'Ön Üçgen Yüz' },
@@ -162,7 +312,6 @@ export function generateSolidMesh(solid: Solid3DObject): {
         { vertexIndices: [0, 3, 4], normal: { x: -1, y: 0, z: 0.5 }, label: 'Sol Üçgen Yüz' },
         { vertexIndices: [1, 2, 4], normal: { x: 1, y: 0, z: 0.5 }, label: 'Sağ Üçgen Yüz' },
       ];
-
       edges = [
         { startIdx: 0, endIdx: 1 },
         { startIdx: 1, endIdx: 2 },
@@ -176,82 +325,285 @@ export function generateSolidMesh(solid: Solid3DObject): {
       break;
     }
 
+    case 'triangular_prism': {
+      const hw = w / 2;
+      const hd = d / 2;
+
+      if (unfoldProgress > 0) {
+        const u = Math.min(1, Math.max(0, unfoldProgress));
+        const theta = (u * 90 * Math.PI) / 180;
+        const s = Math.sin(theta);
+        const c = Math.cos(theta);
+
+        // Orta Dikdörtgen Taban
+        const ptsMid: Point3D[] = [
+          { x: -hw, y: -hd, z: 0 },
+          { x: hw, y: -hd, z: 0 },
+          { x: hw, y: hd, z: 0 },
+          { x: -hw, y: hd, z: 0 },
+        ];
+
+        // Sol Dikdörtgen Yüz
+        const ptsLeft: Point3D[] = [
+          { x: -hw, y: -hd, z: 0 },
+          { x: -hw, y: hd, z: 0 },
+          { x: -hw - h * s, y: hd, z: h * c },
+          { x: -hw - h * s, y: -hd, z: h * c },
+        ];
+
+        // Sağ Dikdörtgen Yüz
+        const ptsRight: Point3D[] = [
+          { x: hw, y: hd, z: 0 },
+          { x: hw, y: -hd, z: 0 },
+          { x: hw + h * s, y: -hd, z: h * c },
+          { x: hw + h * s, y: hd, z: h * c },
+        ];
+
+        // Ön Üçgen Kapak
+        const ptsFront: Point3D[] = [
+          { x: -hw, y: hd, z: 0 },
+          { x: hw, y: hd, z: 0 },
+          { x: 0, y: hd + h * s, z: h * c },
+        ];
+
+        // Arka Üçgen Kapak
+        const ptsBack: Point3D[] = [
+          { x: hw, y: -hd, z: 0 },
+          { x: -hw, y: -hd, z: 0 },
+          { x: 0, y: -hd - h * s, z: h * c },
+        ];
+
+        baseVertices = [];
+        faces = [];
+        edges = [];
+
+        const allTriList = [
+          { name: 'Alt Dikdörtgen', pts: ptsMid, normal: { x: 0, y: 0, z: -1 }, isQuad: true },
+          { name: 'Sol Dikdörtgen', pts: ptsLeft, normal: { x: -c, y: 0, z: s }, isQuad: true },
+          { name: 'Sağ Dikdörtgen', pts: ptsRight, normal: { x: c, y: 0, z: s }, isQuad: true },
+          { name: 'Ön Üçgen Kapak', pts: ptsFront, normal: { x: 0, y: c, z: s }, isQuad: false },
+          { name: 'Arka Üçgen Kapak', pts: ptsBack, normal: { x: 0, y: -c, z: s }, isQuad: false },
+        ];
+
+        allTriList.forEach((f) => {
+          const sIdx = baseVertices.length;
+          baseVertices.push(...f.pts);
+          if (f.isQuad) {
+            faces.push({ vertexIndices: [sIdx, sIdx + 1, sIdx + 2, sIdx + 3], normal: f.normal, label: f.name });
+            edges.push(
+              { startIdx: sIdx, endIdx: sIdx + 1 },
+              { startIdx: sIdx + 1, endIdx: sIdx + 2 },
+              { startIdx: sIdx + 2, endIdx: sIdx + 3 },
+              { startIdx: sIdx + 3, endIdx: sIdx }
+            );
+          } else {
+            faces.push({ vertexIndices: [sIdx, sIdx + 1, sIdx + 2], normal: f.normal, label: f.name });
+            edges.push(
+              { startIdx: sIdx, endIdx: sIdx + 1 },
+              { startIdx: sIdx + 1, endIdx: sIdx + 2 },
+              { startIdx: sIdx + 2, endIdx: sIdx }
+            );
+          }
+        });
+
+        break;
+      }
+
+      // Kapalı üçgen prizma:
+      baseVertices = [
+        { x: -hw, y: -hd, z: 0 },
+        { x: hw, y: -hd, z: 0 },
+        { x: 0, y: -hd, z: h },
+        { x: -hw, y: hd, z: 0 },
+        { x: hw, y: hd, z: 0 },
+        { x: 0, y: hd, z: h },
+      ];
+      faces = [
+        { vertexIndices: [0, 1, 4, 3], normal: { x: 0, y: 0, z: -1 }, label: 'Alt Dikdörtgen' },
+        { vertexIndices: [1, 2, 5, 4], normal: { x: 0.7, y: 0, z: 0.7 }, label: 'Sağ Dikdörtgen' },
+        { vertexIndices: [2, 0, 3, 5], normal: { x: -0.7, y: 0, z: 0.7 }, label: 'Sol Dikdörtgen' },
+        { vertexIndices: [0, 1, 2], normal: { x: 0, y: -1, z: 0 }, label: 'Arka Üçgen' },
+        { vertexIndices: [3, 4, 5], normal: { x: 0, y: 1, z: 0 }, label: 'Ön Üçgen' },
+      ];
+      edges = [
+        { startIdx: 0, endIdx: 1 },
+        { startIdx: 1, endIdx: 2 },
+        { startIdx: 2, endIdx: 0 },
+        { startIdx: 3, endIdx: 4 },
+        { startIdx: 4, endIdx: 5 },
+        { startIdx: 5, endIdx: 3 },
+        { startIdx: 0, endIdx: 3 },
+        { startIdx: 1, endIdx: 4 },
+        { startIdx: 2, endIdx: 5 },
+      ];
+      break;
+    }
+
     case 'cone': {
-      const segments = 16;
+      const segments = 48;
       baseVertices = [];
-      // Taban çemberi noktaları: 0 .. segments-1
+      const u = Math.min(1, Math.max(0, unfoldProgress));
+      const theta = (u * 90 * Math.PI) / 180;
+      const s = Math.sin(theta);
+      const c = Math.cos(theta);
+
       for (let i = 0; i < segments; i++) {
         const ang = (i * 2 * Math.PI) / segments;
         baseVertices.push({ x: r * Math.cos(ang), y: r * Math.sin(ang), z: 0 });
       }
-      // Tepe noktası: index = segments
-      baseVertices.push({ x: 0, y: 0, z: h });
+      baseVertices.push({ x: 0, y: (h + r) * s, z: h * c });
       const apexIdx = segments;
 
-      // Taban yüzü
       faces.push({
         vertexIndices: Array.from({ length: segments }, (_, i) => segments - 1 - i),
         normal: { x: 0, y: 0, z: -1 },
         label: 'Daire Taban',
       });
 
-      // Yan üçgen yüzler
       for (let i = 0; i < segments; i++) {
         const next = (i + 1) % segments;
         faces.push({
           vertexIndices: [i, next, apexIdx],
           normal: { x: Math.cos(((i + 0.5) * 2 * Math.PI) / segments), y: Math.sin(((i + 0.5) * 2 * Math.PI) / segments), z: 0.3 },
+          label: 'Yan Yüzey',
         });
         edges.push({ startIdx: i, endIdx: next });
-        if (i % 2 === 0) edges.push({ startIdx: i, endIdx: apexIdx });
       }
       break;
     }
 
     case 'cylinder': {
-      const segments = 16;
+      const segments = 48;
       baseVertices = [];
-      // Alt taban: 0 .. segments-1
+      const u = Math.min(1, Math.max(0, unfoldProgress));
+
+      if (u > 0) {
+        const theta = (u * 90 * Math.PI) / 180;
+        const s = Math.sin(theta);
+        const c = Math.cos(theta);
+
+        // 1. Yan Yüzey (Açılmış Dikdörtgen Levha):
+        // 2*pi*r genişliğinde ve h yüksekliğinde
+        const sheetWidth = 2 * Math.PI * r;
+        const hwSheet = sheetWidth / 2;
+
+        for (let i = 0; i < segments; i++) {
+          const t = i / (segments - 1);
+          // silindirik yaydan düz çizgiye interpolasyon
+          const ang = (i * 2 * Math.PI) / segments - Math.PI / 2;
+          const curX = (1 - u) * (r * Math.cos(ang)) + u * (-hwSheet + t * sheetWidth);
+          const curY = (1 - u) * (r * Math.sin(ang)) + u * 0;
+          const curZ_bottom = 0;
+          const curZ_top = h * c;
+
+          baseVertices.push({ x: curX, y: curY, z: curZ_bottom });
+          baseVertices.push({ x: curX, y: curY + h * s, z: curZ_top });
+        }
+
+        // Alt Daire (Aşağıya doğru katlanır)
+        const botCenterIdx = baseVertices.length;
+        const botOffsetY = -r * s * 2;
+        for (let i = 0; i < segments; i++) {
+          const ang = (i * 2 * Math.PI) / segments;
+          baseVertices.push({
+            x: r * Math.cos(ang),
+            y: botOffsetY + r * Math.sin(ang) * (1 - u * 0.2),
+            z: 0,
+          });
+        }
+
+        // Üst Daire (Yukarıya doğru katlanır)
+        const topCenterIdx = baseVertices.length;
+        const topOffsetY = (h + r * 2) * s;
+        for (let i = 0; i < segments; i++) {
+          const ang = (i * 2 * Math.PI) / segments;
+          baseVertices.push({
+            x: r * Math.cos(ang),
+            y: topOffsetY + r * Math.sin(ang) * (1 - u * 0.2),
+            z: h * c,
+          });
+        }
+
+        faces = [];
+        edges = [];
+
+        // Yan yüzey şeritleri
+        for (let i = 0; i < segments - 1; i++) {
+          const p1 = i * 2;
+          const p2 = i * 2 + 1;
+          const p3 = (i + 1) * 2 + 1;
+          const p4 = (i + 1) * 2;
+          faces.push({
+            vertexIndices: [p1, p4, p3, p2],
+            normal: { x: 0, y: c, z: s },
+            label: 'Yan Yüzey',
+          });
+          edges.push({ startIdx: p1, endIdx: p4 });
+          edges.push({ startIdx: p2, endIdx: p3 });
+        }
+        edges.push({ startIdx: 0, endIdx: 1 });
+        edges.push({ startIdx: (segments - 1) * 2, endIdx: (segments - 1) * 2 + 1 });
+
+        // Alt Daire Yüzü
+        faces.push({
+          vertexIndices: Array.from({ length: segments }, (_, i) => botCenterIdx + i),
+          normal: { x: 0, y: 0, z: -1 },
+          label: 'Alt Daire',
+        });
+        for (let i = 0; i < segments; i++) {
+          edges.push({ startIdx: botCenterIdx + i, endIdx: botCenterIdx + ((i + 1) % segments) });
+        }
+
+        // Üst Daire Yüzü
+        faces.push({
+          vertexIndices: Array.from({ length: segments }, (_, i) => topCenterIdx + i),
+          normal: { x: 0, y: 0, z: 1 },
+          label: 'Üst Daire',
+        });
+        for (let i = 0; i < segments; i++) {
+          edges.push({ startIdx: topCenterIdx + i, endIdx: topCenterIdx + ((i + 1) % segments) });
+        }
+
+        break;
+      }
+
+      // Kapalı silindir:
       for (let i = 0; i < segments; i++) {
         const ang = (i * 2 * Math.PI) / segments;
         baseVertices.push({ x: r * Math.cos(ang), y: r * Math.sin(ang), z: 0 });
       }
-      // Üst taban: segments .. 2*segments-1
       for (let i = 0; i < segments; i++) {
         const ang = (i * 2 * Math.PI) / segments;
         baseVertices.push({ x: r * Math.cos(ang), y: r * Math.sin(ang), z: h });
       }
 
-      // Alt daire yüzü
       faces.push({
         vertexIndices: Array.from({ length: segments }, (_, i) => segments - 1 - i),
         normal: { x: 0, y: 0, z: -1 },
         label: 'Alt Daire',
       });
-      // Üst daire yüzü
       faces.push({
         vertexIndices: Array.from({ length: segments }, (_, i) => segments + i),
         normal: { x: 0, y: 0, z: 1 },
         label: 'Üst Daire',
       });
 
-      // Yan dikdörtgen yüzler
       for (let i = 0; i < segments; i++) {
         const next = (i + 1) % segments;
         faces.push({
           vertexIndices: [i, next, segments + next, segments + i],
           normal: { x: Math.cos(((i + 0.5) * 2 * Math.PI) / segments), y: Math.sin(((i + 0.5) * 2 * Math.PI) / segments), z: 0 },
+          label: 'Yan Yüzey',
         });
         edges.push({ startIdx: i, endIdx: next });
         edges.push({ startIdx: segments + i, endIdx: segments + next });
-        if (i % 4 === 0) edges.push({ startIdx: i, endIdx: segments + i });
       }
       break;
     }
 
     case 'sphere': {
-      const latCount = 8;
-      const lonCount = 14;
+      const latCount = 18;
+      const lonCount = 32;
       baseVertices = [];
 
       for (let i = 0; i <= latCount; i++) {
@@ -279,14 +631,8 @@ export function generateSolidMesh(solid: Solid3DObject): {
           faces.push({
             vertexIndices: [first, firstNext, secondNext, second],
             normal: { x: baseVertices[first].x / r, y: baseVertices[first].y / r, z: (baseVertices[first].z - r) / r },
+            label: 'Küre Yüzeyi',
           });
-
-          if (i % 2 === 0) {
-            edges.push({ startIdx: first, endIdx: firstNext });
-          }
-          if (j % 2 === 0) {
-            edges.push({ startIdx: first, endIdx: second });
-          }
         }
       }
       break;

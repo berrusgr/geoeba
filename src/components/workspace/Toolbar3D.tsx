@@ -37,6 +37,7 @@ interface Toolbar3DProps {
   showEdges: boolean;
   showFaces: boolean;
   onDeleteSelected: () => void;
+  onClearAll?: () => void;
   onOpenAddObjectDialog?: () => void;
 }
 
@@ -53,6 +54,7 @@ export function Toolbar3D({
   showEdges,
   showFaces,
   onDeleteSelected,
+  onClearAll,
   onOpenAddObjectDialog,
 }: Toolbar3DProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -170,6 +172,16 @@ export function Toolbar3D({
           >
             <Layers className="w-4 h-4" />
           </button>
+
+          <div className="w-6 h-px bg-border my-1" />
+
+          <button
+            onClick={onClearAll}
+            title="Tüm Cisimleri Sil (Sahneyi Temizle)"
+            className="w-9 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 flex items-center justify-center transition-all cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       </div>
     );
@@ -185,13 +197,22 @@ export function Toolbar3D({
           <h3 className="text-xs font-black text-foreground tracking-tight">3D Katı Cisimler Stüdyosu</h3>
         </div>
 
-        <button
-          onClick={() => setIsCollapsed(true)}
-          title="Paneli Daralt (3D Uzayı Genişlet)"
-          className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-        >
-          <PanelLeftClose className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onClearAll}
+            title="Tüm Cisimleri Sil (Sahneyi Temizle)"
+            className="p-1.5 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setIsCollapsed(true)}
+            title="Paneli Daralt (3D Uzayı Genişlet)"
+            className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3.5 scrollbar-thin">
@@ -298,6 +319,17 @@ export function Toolbar3D({
                 <Trash2 className={`w-4 h-4 shrink-0 ${activeTool === 'delete' ? 'text-white' : 'text-red-500'}`} />
                 <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">
                   {activeTool === 'delete' ? 'Silme Modu Aktif (Cisme Tıkla)' : 'Sil'}
+                </span>
+              </button>
+
+              <button
+                onClick={onClearAll}
+                className="flex items-center gap-2 p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border col-span-2 bg-rose-50/80 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 shadow-2xs hover:shadow-xs active:scale-98"
+                title="Sahnedeki tüm 3D cisimleri sil"
+              >
+                <Trash2 className="w-4 h-4 shrink-0 text-rose-500" />
+                <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">
+                  Tüm Cisimleri Sil / Temizle
                 </span>
               </button>
             </div>
