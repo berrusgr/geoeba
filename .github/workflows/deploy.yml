@@ -31,6 +31,9 @@ jobs:
       - name: Pages ayarlarini oku
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          # Repo ayarlarinda Pages kapaliysa is akisi kendisi acar.
+          enablement: true
 
       - run: npm ci
 
