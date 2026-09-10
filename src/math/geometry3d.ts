@@ -1,5 +1,5 @@
 // 3D Geometri, Projeksiyon ve Katı Cisim Motoru
-import { Point3D, Face3D, Edge3D, Solid3DObject, Solid3DType, Camera3D } from '@/types/workspace3d';
+import { Point3D, Face3D, Edge3D, Solid3DObject, Solid3DType } from '@/types/workspace3d';
 
 /**
  * 3D Noktayı X, Y, Z eksenlerinde derece cinsinden döndürür
@@ -25,42 +25,6 @@ export function rotatePoint3D(p: Point3D, rotDeg: Point3D): Point3D {
   const z3 = z2;
 
   return { x: x3, y: y3, z: z3 };
-}
-
-export function project3DToScreen(
-  worldP: Point3D,
-  camera: Camera3D,
-  screenWidth: number,
-  screenHeight: number
-): { x: number; y: number; zDepth: number; visible: boolean } {
-  // 1. Kamera Rotasyonu: Yaw (Z ekseni) ve Pitch (Kamera eğimi)
-  const radPitch = (camera.rotX * Math.PI) / 180; // Dikey bakış açısı
-  const radYaw = (camera.rotY * Math.PI) / 180; // Yatay bakış açısı
-
-  // Z ekseni (Yaw) etrafında döndür
-  const x1 = worldP.x * Math.cos(radYaw) - worldP.y * Math.sin(radYaw);
-  const y1 = worldP.x * Math.sin(radYaw) + worldP.y * Math.cos(radYaw);
-  const z1 = worldP.z;
-
-  // Kamera eğimi (Pitch): Derinlik ve Dikey Yükseklik hesaplama
-  const xCam = x1;
-  const depthCam = y1 * Math.cos(radPitch) + z1 * Math.sin(radPitch);
-  const upCam = z1 * Math.cos(radPitch) - y1 * Math.sin(radPitch);
-
-  // 2. Perspektif Projeksiyon
-  const fov = camera.perspective || 700;
-  const dist = fov + depthCam * camera.zoom * 0.04;
-  const scale = (fov / Math.max(20, dist)) * camera.zoom;
-
-  const screenX = screenWidth / 2 + camera.panX + xCam * scale;
-  const screenY = screenHeight / 2 + camera.panY - upCam * scale;
-
-  return {
-    x: screenX,
-    y: screenY,
-    zDepth: depthCam, // Çizim sıralaması (Z-sort) için kamera yönündeki derinlik
-    visible: dist > 0,
-  };
 }
 
 /**
@@ -103,27 +67,31 @@ export function generateSolidMesh(solid: Solid3DObject): {
           { x: -hw, y: hd, z: 0 },
         ];
 
-        // 2. Ön Yüz (y = hd menteşesi etrafında öne doğru katlanır)
-        const faceFront: Point3D[] = [
+        // 2. Arka Yüz (y = +hd menteşesi etrafında dışa doğru katlanır)
+        // NOT: ViewCube'ün "ÖN" ön ayarında kamera -y tarafında durur; bu yüzden
+        // y = +hd yüzü ARKA, y = -hd yüzü ÖN olarak etiketlenir.
+        const faceBack: Point3D[] = [
           { x: -hw, y: hd, z: 0 },
           { x: hw, y: hd, z: 0 },
           { x: hw, y: hd + zh * s, z: zh * c },
           { x: -hw, y: hd + zh * s, z: zh * c },
         ];
 
-        // 3. Üst Taban (Ön Yüzün üst kenarına bağlı, 2*theta açısıyla düzleme yatar)
+        // 3. Üst Taban (Arka Yüzün üst kenarına bağlı, 2*theta açısıyla düzleme yatar)
         const topD = type === 'cube' ? w : d;
         const s2 = Math.sin(2 * theta);
         const c2 = Math.cos(2 * theta);
+        // Üst taban, arka yüzün üst kenarına menteşelidir; theta=0'da o yüzle dik (içe doğru),
+        // theta=90°'de onun devamı olarak düzleme yatar.
         const faceTop: Point3D[] = [
           { x: -hw, y: hd + zh * s, z: zh * c },
           { x: hw, y: hd + zh * s, z: zh * c },
-          { x: hw, y: hd + zh * s + topD * s2, z: zh * c + topD * c2 },
-          { x: -hw, y: hd + zh * s + topD * s2, z: zh * c + topD * c2 },
+          { x: hw, y: hd + zh * s - topD * c2, z: zh * c + topD * s2 },
+          { x: -hw, y: hd + zh * s - topD * c2, z: zh * c + topD * s2 },
         ];
 
-        // 4. Arka Yüz (y = -hd menteşesi etrafında arkaya doğru katlanır)
-        const faceBack: Point3D[] = [
+        // 4. Ön Yüz (y = -hd menteşesi etrafında dışa doğru katlanır)
+        const faceFront: Point3D[] = [
           { x: hw, y: -hd, z: 0 },
           { x: -hw, y: -hd, z: 0 },
           { x: -hw, y: -hd - zh * s, z: zh * c },
@@ -148,9 +116,9 @@ export function generateSolidMesh(solid: Solid3DObject): {
 
         const allFaceList = [
           { name: 'Alt Taban', pts: faceBottom, normal: { x: 0, y: 0, z: -1 } },
-          { name: 'Ön Yüz', pts: faceFront, normal: { x: 0, y: c, z: s } },
-          { name: 'Üst Taban', pts: faceTop, normal: { x: 0, y: c2, z: s2 } },
-          { name: 'Arka Yüz', pts: faceBack, normal: { x: 0, y: -c, z: s } },
+          { name: 'Arka Yüz', pts: faceBack, normal: { x: 0, y: c, z: s } },
+          { name: 'Üst Taban', pts: faceTop, normal: { x: 0, y: s2, z: c2 } },
+          { name: 'Ön Yüz', pts: faceFront, normal: { x: 0, y: -c, z: s } },
           { name: 'Sol Yüz', pts: faceLeft, normal: { x: -c, y: 0, z: s } },
           { name: 'Sağ Yüz', pts: faceRight, normal: { x: c, y: 0, z: s } },
         ];
@@ -193,8 +161,8 @@ export function generateSolidMesh(solid: Solid3DObject): {
       faces = [
         { vertexIndices: [3, 2, 1, 0], normal: { x: 0, y: 0, z: -1 }, label: 'Alt Taban' },
         { vertexIndices: [4, 5, 6, 7], normal: { x: 0, y: 0, z: 1 }, label: 'Üst Taban' },
-        { vertexIndices: [3, 2, 6, 7], normal: { x: 0, y: 1, z: 0 }, label: 'Ön Yüz' },
-        { vertexIndices: [0, 1, 5, 4], normal: { x: 0, y: -1, z: 0 }, label: 'Arka Yüz' },
+        { vertexIndices: [3, 2, 6, 7], normal: { x: 0, y: 1, z: 0 }, label: 'Arka Yüz' },
+        { vertexIndices: [0, 1, 5, 4], normal: { x: 0, y: -1, z: 0 }, label: 'Ön Yüz' },
         { vertexIndices: [0, 3, 7, 4], normal: { x: -1, y: 0, z: 0 }, label: 'Sol Yüz' },
         { vertexIndices: [1, 2, 6, 5], normal: { x: 1, y: 0, z: 0 }, label: 'Sağ Yüz' },
       ];
@@ -219,13 +187,26 @@ export function generateSolidMesh(solid: Solid3DObject): {
     case 'pyramid': {
       const hw = w / 2;
       const hd = d / 2;
-      const slantH = Math.hypot(h, Math.max(hw, hd));
 
       if (unfoldProgress > 0) {
         const u = Math.min(1, Math.max(0, unfoldProgress));
-        const theta = (u * 90 * Math.PI) / 180;
-        const s = Math.sin(theta);
-        const c = Math.cos(theta);
+
+        // İZOMETRİK AÇILMA: Her üçgen kendi taban kenarı (menteşe) etrafında, KAPALI durumdaki
+        // iki yüzlü açıdan başlayarak düzleme kadar döner. Böylece u=0'da dört tepe de (0,0,h)'de
+        // birleşir (sıçrama olmaz) ve u=1'de gerçek, katlanabilir açınım elde edilir.
+        // Eğik yükseklikler yüz başına farklıdır: taban kenarı w olan yüzler d/2'ye,
+        // taban kenarı d olan yüzler w/2'ye bağlıdır (bkz. calculate3DSurfaceArea).
+        const slantW = Math.hypot(h, hd); // y = ±hd menteşeli üçgenler (taban kenarı w)
+        const slantD = Math.hypot(h, hw); // x = ±hw menteşeli üçgenler (taban kenarı d)
+        const tiltW = Math.atan2(hd, h);
+        const tiltD = Math.atan2(hw, h);
+        // phi: menteşeden tepeye giden doğrultunun düşeyle (z ekseniyle) yaptığı açı
+        const phiW = -tiltW + u * (Math.PI / 2 + tiltW);
+        const phiD = -tiltD + u * (Math.PI / 2 + tiltD);
+        const sW = Math.sin(phiW);
+        const cW = Math.cos(phiW);
+        const sD = Math.sin(phiD);
+        const cD = Math.cos(phiD);
 
         // 1. Taban
         const ptsBase: Point3D[] = [
@@ -235,32 +216,34 @@ export function generateSolidMesh(solid: Solid3DObject): {
           { x: -hw, y: hd, z: 0 },
         ];
 
-        // 2. Ön Üçgen Yüz
-        const ptsFront: Point3D[] = [
+        // 2. Arka Üçgen Yüz (y = +hd menteşesi)
+        // NOT: ViewCube'ün "ÖN" ön ayarında kamera -y tarafında durur; bu yüzden
+        // y = +hd yüzü ARKA, y = -hd yüzü ÖN olarak etiketlenir.
+        const ptsBack: Point3D[] = [
           { x: -hw, y: hd, z: 0 },
           { x: hw, y: hd, z: 0 },
-          { x: 0, y: hd + slantH * s, z: slantH * c },
+          { x: 0, y: hd + slantW * sW, z: slantW * cW },
         ];
 
-        // 3. Arka Üçgen Yüz
-        const ptsBack: Point3D[] = [
+        // 3. Ön Üçgen Yüz (y = -hd menteşesi)
+        const ptsFront: Point3D[] = [
           { x: hw, y: -hd, z: 0 },
           { x: -hw, y: -hd, z: 0 },
-          { x: 0, y: -hd - slantH * s, z: slantH * c },
+          { x: 0, y: -hd - slantW * sW, z: slantW * cW },
         ];
 
-        // 4. Sol Üçgen Yüz
+        // 4. Sol Üçgen Yüz (x = -hw menteşesi)
         const ptsLeft: Point3D[] = [
           { x: -hw, y: -hd, z: 0 },
           { x: -hw, y: hd, z: 0 },
-          { x: -hw - slantH * s, y: 0, z: slantH * c },
+          { x: -hw - slantD * sD, y: 0, z: slantD * cD },
         ];
 
-        // 5. Sağ Üçgen Yüz
+        // 5. Sağ Üçgen Yüz (x = +hw menteşesi)
         const ptsRight: Point3D[] = [
           { x: hw, y: hd, z: 0 },
           { x: hw, y: -hd, z: 0 },
-          { x: hw + slantH * s, y: 0, z: slantH * c },
+          { x: hw + slantD * sD, y: 0, z: slantD * cD },
         ];
 
         baseVertices = [];
@@ -277,10 +260,10 @@ export function generateSolidMesh(solid: Solid3DObject): {
         );
 
         const sideTris = [
-          { name: 'Ön Üçgen Yüz', pts: ptsFront, normal: { x: 0, y: c, z: s } },
-          { name: 'Arka Üçgen Yüz', pts: ptsBack, normal: { x: 0, y: -c, z: s } },
-          { name: 'Sol Üçgen Yüz', pts: ptsLeft, normal: { x: -c, y: 0, z: s } },
-          { name: 'Sağ Üçgen Yüz', pts: ptsRight, normal: { x: c, y: 0, z: s } },
+          { name: 'Arka Üçgen Yüz', pts: ptsBack, normal: { x: 0, y: cW, z: -sW } },
+          { name: 'Ön Üçgen Yüz', pts: ptsFront, normal: { x: 0, y: -cW, z: -sW } },
+          { name: 'Sol Üçgen Yüz', pts: ptsLeft, normal: { x: -cD, y: 0, z: -sD } },
+          { name: 'Sağ Üçgen Yüz', pts: ptsRight, normal: { x: cD, y: 0, z: -sD } },
         ];
 
         sideTris.forEach((t) => {
@@ -307,8 +290,8 @@ export function generateSolidMesh(solid: Solid3DObject): {
       ];
       faces = [
         { vertexIndices: [3, 2, 1, 0], normal: { x: 0, y: 0, z: -1 }, label: 'Kare Taban' },
-        { vertexIndices: [3, 2, 4], normal: { x: 0, y: 1, z: 0.5 }, label: 'Ön Üçgen Yüz' },
-        { vertexIndices: [0, 1, 4], normal: { x: 0, y: -1, z: 0.5 }, label: 'Arka Üçgen Yüz' },
+        { vertexIndices: [3, 2, 4], normal: { x: 0, y: 1, z: 0.5 }, label: 'Arka Üçgen Yüz' },
+        { vertexIndices: [0, 1, 4], normal: { x: 0, y: -1, z: 0.5 }, label: 'Ön Üçgen Yüz' },
         { vertexIndices: [0, 3, 4], normal: { x: -1, y: 0, z: 0.5 }, label: 'Sol Üçgen Yüz' },
         { vertexIndices: [1, 2, 4], normal: { x: 1, y: 0, z: 0.5 }, label: 'Sağ Üçgen Yüz' },
       ];
@@ -343,31 +326,42 @@ export function generateSolidMesh(solid: Solid3DObject): {
           { x: -hw, y: hd, z: 0 },
         ];
 
-        // Sol Dikdörtgen Yüz
+        // Yan (eğik) yüzlerin genişliği prizmanın eğik kenar uzunluğudur: hypot(w/2, h).
+        // Menteşe dönüşü kapalı iki yüzlü açıdan başlar (u=0'da tepe kenarı x=0, z=h),
+        // u=1'de yüzler tabanla aynı düzleme yatar; böylece yanal alan her aşamada korunur.
+        const slant = Math.hypot(hw, h);
+        const a0 = Math.atan2(h, hw);
+        const phi = a0 + u * (Math.PI - a0);
+        const sPhi = Math.sin(phi);
+        const cPhi = Math.cos(phi);
+
+        // Sol Dikdörtgen Yüz (x = -hw menteşesi)
         const ptsLeft: Point3D[] = [
           { x: -hw, y: -hd, z: 0 },
           { x: -hw, y: hd, z: 0 },
-          { x: -hw - h * s, y: hd, z: h * c },
-          { x: -hw - h * s, y: -hd, z: h * c },
+          { x: -hw + slant * cPhi, y: hd, z: slant * sPhi },
+          { x: -hw + slant * cPhi, y: -hd, z: slant * sPhi },
         ];
 
-        // Sağ Dikdörtgen Yüz
+        // Sağ Dikdörtgen Yüz (x = +hw menteşesi)
         const ptsRight: Point3D[] = [
           { x: hw, y: hd, z: 0 },
           { x: hw, y: -hd, z: 0 },
-          { x: hw + h * s, y: -hd, z: h * c },
-          { x: hw + h * s, y: hd, z: h * c },
+          { x: hw - slant * cPhi, y: -hd, z: slant * sPhi },
+          { x: hw - slant * cPhi, y: hd, z: slant * sPhi },
         ];
 
-        // Ön Üçgen Kapak
-        const ptsFront: Point3D[] = [
+        // Arka Üçgen Kapak (y = +hd menteşesi)
+        // NOT: ViewCube'ün "ÖN" ön ayarında kamera -y tarafında durur; bu yüzden
+        // y = +hd kapağı ARKA, y = -hd kapağı ÖN olarak etiketlenir.
+        const ptsBack: Point3D[] = [
           { x: -hw, y: hd, z: 0 },
           { x: hw, y: hd, z: 0 },
           { x: 0, y: hd + h * s, z: h * c },
         ];
 
-        // Arka Üçgen Kapak
-        const ptsBack: Point3D[] = [
+        // Ön Üçgen Kapak (y = -hd menteşesi)
+        const ptsFront: Point3D[] = [
           { x: hw, y: -hd, z: 0 },
           { x: -hw, y: -hd, z: 0 },
           { x: 0, y: -hd - h * s, z: h * c },
@@ -379,10 +373,10 @@ export function generateSolidMesh(solid: Solid3DObject): {
 
         const allTriList = [
           { name: 'Alt Dikdörtgen', pts: ptsMid, normal: { x: 0, y: 0, z: -1 }, isQuad: true },
-          { name: 'Sol Dikdörtgen', pts: ptsLeft, normal: { x: -c, y: 0, z: s }, isQuad: true },
-          { name: 'Sağ Dikdörtgen', pts: ptsRight, normal: { x: c, y: 0, z: s }, isQuad: true },
-          { name: 'Ön Üçgen Kapak', pts: ptsFront, normal: { x: 0, y: c, z: s }, isQuad: false },
-          { name: 'Arka Üçgen Kapak', pts: ptsBack, normal: { x: 0, y: -c, z: s }, isQuad: false },
+          { name: 'Sol Dikdörtgen', pts: ptsLeft, normal: { x: -sPhi, y: 0, z: cPhi }, isQuad: true },
+          { name: 'Sağ Dikdörtgen', pts: ptsRight, normal: { x: sPhi, y: 0, z: cPhi }, isQuad: true },
+          { name: 'Arka Üçgen Kapak', pts: ptsBack, normal: { x: 0, y: c, z: s }, isQuad: false },
+          { name: 'Ön Üçgen Kapak', pts: ptsFront, normal: { x: 0, y: -c, z: s }, isQuad: false },
         ];
 
         allTriList.forEach((f) => {
@@ -422,8 +416,8 @@ export function generateSolidMesh(solid: Solid3DObject): {
         { vertexIndices: [0, 1, 4, 3], normal: { x: 0, y: 0, z: -1 }, label: 'Alt Dikdörtgen' },
         { vertexIndices: [1, 2, 5, 4], normal: { x: 0.7, y: 0, z: 0.7 }, label: 'Sağ Dikdörtgen' },
         { vertexIndices: [2, 0, 3, 5], normal: { x: -0.7, y: 0, z: 0.7 }, label: 'Sol Dikdörtgen' },
-        { vertexIndices: [0, 1, 2], normal: { x: 0, y: -1, z: 0 }, label: 'Arka Üçgen' },
-        { vertexIndices: [3, 4, 5], normal: { x: 0, y: 1, z: 0 }, label: 'Ön Üçgen' },
+        { vertexIndices: [0, 1, 2], normal: { x: 0, y: -1, z: 0 }, label: 'Ön Üçgen' },
+        { vertexIndices: [3, 4, 5], normal: { x: 0, y: 1, z: 0 }, label: 'Arka Üçgen' },
       ];
       edges = [
         { startIdx: 0, endIdx: 1 },
@@ -441,18 +435,89 @@ export function generateSolidMesh(solid: Solid3DObject): {
 
     case 'cone': {
       const segments = 48;
-      baseVertices = [];
       const u = Math.min(1, Math.max(0, unfoldProgress));
-      const theta = (u * 90 * Math.PI) / 180;
-      const s = Math.sin(theta);
-      const c = Math.cos(theta);
+      // Yanal (eğik) yükseklik: koninin açınımındaki daire diliminin yarıçapı
+      const slant = Math.hypot(r, h);
 
+      baseVertices = [];
+      faces = [];
+      edges = [];
+
+      if (u > 0) {
+        // AÇINIM (NET) - İZOMETRİK AÇILMA:
+        // Yan yüzey, tıpkı kağıt bir koniyi bir ayrıtından kesip düzleştirmek gibi açılır.
+        // Her aşamada uzunluklar korunur: tepe noktasına uzaklık daima 'slant', yay uzunluğu daima 2*pi*r.
+        // Ara aşamada yüzey, taban yarıçapı rho(u) olan kısmi bir konidir:
+        //   rho: r -> slant,  yükseklik: h -> 0,  merkez açı: 2*pi -> 2*pi*r/slant
+        // Sonuçta düzlemde yarıçapı 'slant', merkez açısı 2*pi*r/slant olan bir DAİRE DİLİMİ kalır.
+        const rho = r + (slant - r) * u;
+        const apexZ = Math.sqrt(Math.max(0, slant * slant - rho * rho));
+        // Açılan yüzeyi taban dairesinin yanına kaydır (üst üste binmesin, dikişte teğet olsun)
+        const shiftY = -u * (r + slant);
+        const alpha0 = Math.PI / 2; // yay, tepe noktasından +y yönünde açılır
+
+        baseVertices = [];
+        faces = [];
+        edges = [];
+
+        // 1) Taban dairesi (yerinde kalır)
+        const baseStart = baseVertices.length;
+        for (let i = 0; i < segments; i++) {
+          const ang = (i * 2 * Math.PI) / segments;
+          baseVertices.push({ x: r * Math.cos(ang), y: r * Math.sin(ang), z: 0 });
+        }
+        faces.push({
+          vertexIndices: Array.from({ length: segments }, (_, i) => baseStart + segments - 1 - i),
+          normal: { x: 0, y: 0, z: -1 },
+          label: 'Daire Taban',
+        });
+        for (let i = 0; i < segments; i++) {
+          edges.push({ startIdx: baseStart + i, endIdx: baseStart + ((i + 1) % segments) });
+        }
+
+        // 2) Yan yüzey (kısmi koni -> daire dilimi)
+        const latStart = baseVertices.length;
+        // segments+1 nokta: dikiş iki kez yer alır, böylece yüzey kesik (açık) olur
+        for (let i = 0; i <= segments; i++) {
+          const delta = -Math.PI + (i * 2 * Math.PI) / segments; // dikişten işaretli açı farkı
+          const arcLen = r * delta; // korunan yay uzunluğu
+          const ang = alpha0 + arcLen / rho;
+          baseVertices.push({ x: rho * Math.cos(ang), y: rho * Math.sin(ang) + shiftY, z: 0 });
+        }
+
+        const apexIdx = baseVertices.length;
+        baseVertices.push({ x: 0, y: shiftY, z: apexZ });
+
+        for (let i = 0; i < segments; i++) {
+          const a = latStart + i;
+          const b = latStart + i + 1;
+          const midArc = r * (-Math.PI + ((i + 0.5) * 2 * Math.PI) / segments);
+          const midAng = alpha0 + midArc / rho;
+          faces.push({
+            vertexIndices: [a, b, apexIdx],
+            normal: {
+              x: Math.cos(midAng) * (apexZ / slant),
+              y: Math.sin(midAng) * (apexZ / slant),
+              z: rho / slant,
+            },
+            label: u >= 0.999 ? 'Yan Yüzey (Daire Dilimi)' : 'Yan Yüzey',
+          });
+          edges.push({ startIdx: a, endIdx: b });
+        }
+        // Dilimin iki düz kenarı (kesim çizgileri)
+        edges.push({ startIdx: latStart, endIdx: apexIdx });
+        edges.push({ startIdx: latStart + segments, endIdx: apexIdx });
+
+        break;
+      }
+
+      // Kapalı koni
       for (let i = 0; i < segments; i++) {
         const ang = (i * 2 * Math.PI) / segments;
         baseVertices.push({ x: r * Math.cos(ang), y: r * Math.sin(ang), z: 0 });
       }
-      baseVertices.push({ x: 0, y: (h + r) * s, z: h * c });
-      const apexIdx = segments;
+      const apexIdx = baseVertices.length;
+      baseVertices.push({ x: 0, y: 0, z: h });
 
       faces.push({
         vertexIndices: Array.from({ length: segments }, (_, i) => segments - 1 - i),
@@ -462,9 +527,14 @@ export function generateSolidMesh(solid: Solid3DObject): {
 
       for (let i = 0; i < segments; i++) {
         const next = (i + 1) % segments;
+        const midAng = ((i + 0.5) * 2 * Math.PI) / segments;
         faces.push({
           vertexIndices: [i, next, apexIdx],
-          normal: { x: Math.cos(((i + 0.5) * 2 * Math.PI) / segments), y: Math.sin(((i + 0.5) * 2 * Math.PI) / segments), z: 0.3 },
+          normal: {
+            x: Math.cos(midAng) * (h / Math.max(0.001, slant)),
+            y: Math.sin(midAng) * (h / Math.max(0.001, slant)),
+            z: r / Math.max(0.001, slant),
+          },
           label: 'Yan Yüzey',
         });
         edges.push({ startIdx: i, endIdx: next });
@@ -652,11 +722,92 @@ export function generateSolidMesh(solid: Solid3DObject): {
     };
   });
 
+  // Yüz normallerini gerçek geometriden hesapla (elle girilen yaklaşık normaller yerine)
+  const normalizedFaces = faces.map((f) => ({
+    ...f,
+    normal: computeFaceNormal(transformedVertices, f.vertexIndices) || f.normal,
+  }));
+
   return {
     vertices: transformedVertices,
-    faces,
+    faces: normalizedFaces,
     edges,
   };
+}
+
+/**
+ * Bir çokgen yüzün birim normalini (Newell yöntemi) hesaplar
+ */
+export function computeFaceNormal(vertices: Point3D[], indices: number[]): Point3D | null {
+  let nx = 0;
+  let ny = 0;
+  let nz = 0;
+  for (let i = 0; i < indices.length; i++) {
+    const a = vertices[indices[i]];
+    const b = vertices[indices[(i + 1) % indices.length]];
+    if (!a || !b) return null;
+    nx += (a.y - b.y) * (a.z + b.z);
+    ny += (a.z - b.z) * (a.x + b.x);
+    nz += (a.x - b.x) * (a.y + b.y);
+  }
+  const len = Math.hypot(nx, ny, nz);
+  if (len < 1e-9) return null;
+  return { x: nx / len, y: ny / len, z: nz / len };
+}
+
+/**
+ * Bir çokgen yüzün alanını hesaplar (3B'de Newell vektörünün yarısı)
+ */
+export function computeFaceArea(vertices: Point3D[], indices: number[]): number {
+  let nx = 0;
+  let ny = 0;
+  let nz = 0;
+  for (let i = 0; i < indices.length; i++) {
+    const a = vertices[indices[i]];
+    const b = vertices[indices[(i + 1) % indices.length]];
+    if (!a || !b) return 0;
+    nx += a.y * b.z - b.y * a.z;
+    ny += a.z * b.x - b.z * a.x;
+    nz += a.x * b.y - b.x * a.y;
+  }
+  return Math.hypot(nx, ny, nz) / 2;
+}
+
+/**
+ * Cismin en büyük boyutu (köşe işaretçisi, taşıma oku gibi yardımcıların ölçeklenmesi için)
+ */
+export function getSolidExtent(solid: Solid3DObject): number {
+  const { width, height, depth, radius } = solid.dimensions;
+  const r = radius ? radius * 2 : 0;
+  return Math.max(width || 0, height || 0, depth || 0, r, 1);
+}
+
+/** Köşe (pivot) işaretçisi yarıçapının cismin en büyük boyutuna oranı. */
+export const VERTEX_MARKER_RATIO = 0.04;
+/** İşaretçinin ekranda inebileceği en küçük yarıçap (piksel) — uzaklaşınca kaybolmasın. */
+export const VERTEX_MARKER_MIN_PX = 5;
+/** İşaretçinin ekranda çıkabileceği en büyük yarıçap (piksel) — yakınlaşınca cismi yutmasın. */
+export const VERTEX_MARKER_MAX_PX = 14;
+
+/**
+ * Köşe (pivot) işaretçisi yarıçapı: cismin boyutuyla orantılı, makul sınırlar içinde
+ */
+export function getVertexMarkerRadius(solid: Solid3DObject, zoom?: number): number {
+  const extent = getSolidExtent(solid);
+  // Temel kural: işaretçi cismin boyutuyla ORANTILI olsun.
+  const orantili = extent * VERTEX_MARKER_RATIO;
+
+  // zoom verilmezse yalnızca dünya birimi sınırlarıyla kırp (geriye dönük davranış).
+  if (!zoom || !(zoom > 0)) {
+    return Math.min(0.32, Math.max(0.07, orantili));
+  }
+
+  // Perspektif kamerada bir nesnenin ekran yarıçapı = dünyaYarıçapı * zoom olduğundan,
+  // piksel sınırlarını dünya birimine çevirip orantılı değeri o bandın içine kıstırıyoruz.
+  // Böylece uzaklaşınca işaretçiler kaybolmaz, yakınlaşınca cismi yutan lekelere dönüşmez.
+  const enAzDunya = VERTEX_MARKER_MIN_PX / zoom;
+  const enCokDunya = VERTEX_MARKER_MAX_PX / zoom;
+  return Math.min(enCokDunya, Math.max(enAzDunya, orantili));
 }
 
 /**
@@ -674,6 +825,9 @@ export function calculate3DVolume(solid: Solid3DObject): number {
       return Math.pow(w, 3);
     case 'prism':
       return w * h * d;
+    case 'triangular_prism':
+      // Taban üçgeni: taban w, yükseklik h; prizma uzunluğu d
+      return (w * h * d) / 2;
     case 'pyramid':
       return (w * d * h) / 3;
     case 'cone':
@@ -702,9 +856,16 @@ export function calculate3DSurfaceArea(solid: Solid3DObject): number {
       return 6 * Math.pow(w, 2);
     case 'prism':
       return 2 * (w * d + w * h + d * h);
+    case 'triangular_prism': {
+      // İki üçgen taban + alt dikdörtgen + iki eğik dikdörtgen
+      const slant = Math.hypot(h, w / 2);
+      return 2 * (w * h * 0.5) + w * d + 2 * (slant * d);
+    }
     case 'pyramid': {
-      const slantHeight = Math.sqrt(Math.pow(h, 2) + Math.pow(w / 2, 2));
-      return w * d + 2 * (w * slantHeight * 0.5) + 2 * (d * slantHeight * 0.5);
+      // w kenarlı yüzlerin eğik yüksekliği d/2'ye, d kenarlı yüzlerinki w/2'ye bağlıdır
+      const slantForW = Math.hypot(h, d / 2);
+      const slantForD = Math.hypot(h, w / 2);
+      return w * d + 2 * (w * slantForW * 0.5) + 2 * (d * slantForD * 0.5);
     }
     case 'cone': {
       const s = Math.sqrt(Math.pow(r, 2) + Math.pow(h, 2));

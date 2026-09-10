@@ -18,6 +18,12 @@ import {
   Target,
 } from 'lucide-react';
 
+/**
+ * public/ altindaki gorseller basePath ile otomatik prefixlenmedigi icin
+ * (GitHub Pages proje sayfalarinda '/repo-adi') el ile ekliyoruz.
+ */
+const ASSET_PREFIX = process.env.NEXT_PUBLIC_ASSET_PREFIX ?? '';
+
 const GRADE_VISUALS: Record<
   number,
   {
@@ -152,11 +158,11 @@ export function GradeSelector() {
       <div className="w-full max-w-6xl space-y-5 animate-in fade-in duration-200">
         
         {/* ÜST BAŞLIK ALANI */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={goBack}
-              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm transition-colors cursor-pointer"
               title="Geri Dön"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -199,13 +205,13 @@ export function GradeSelector() {
               <button
                 key={grade.gradeNumber}
                 onClick={() => selectGrade(grade.gradeNumber as GradeId)}
-                className={`group relative h-52 flex flex-col justify-between p-6 rounded-3xl ${visual.bgCard} border-2 ${visual.borderCard} shadow-2xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden text-left`}
+                className={`group relative h-52 flex flex-col justify-between p-6 rounded-3xl ${visual.bgCard} border-2 ${visual.borderCard} shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden text-left`}
               >
                 {/* Sağ Alt Silik Filigran Logo */}
                 {visual.imageSrc && (
                   <div className="absolute -bottom-4 -right-4 w-36 h-36 opacity-20 dark:opacity-15 pointer-events-none group-hover:scale-105 group-hover:opacity-35 transition-all duration-300">
                     <Image
-                      src={visual.imageSrc}
+                      src={`${ASSET_PREFIX}${visual.imageSrc}`}
                       alt=""
                       fill
                       sizes="144px"
@@ -216,14 +222,14 @@ export function GradeSelector() {
 
                 {/* Üst Rozet ve İkon Alanı */}
                 <div className="flex items-center justify-between w-full relative z-10">
-                  <div className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-xs border border-slate-200/60 dark:border-slate-700/60">
+                  <div className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-200/60 dark:border-slate-700/60">
                     {visual.icon}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-black border ${visual.badgeBg}`}>
                       {grade.themes.length} Tema
                     </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/80 dark:bg-slate-900/80 text-[11px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
+                    <span className="px-2.5 py-1 rounded-full bg-white/80 dark:bg-slate-900/80 text-[11px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
                       {totalActs || 18} Görev
                     </span>
                   </div>

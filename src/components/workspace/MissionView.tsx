@@ -48,6 +48,27 @@ const GloveSVG = ({ color }: { color: string }) => (
   </svg>
 );
 
+/* ---------------------------------------------------------------------------
+ * AYNA SİMETRİSİ IZGARA SABİTLERİ
+ * 6 sütun x 5 satır. Sol yarı (0-2. sütunlar) sabit model, sağ yarı (3-5) öğrenci alanı.
+ * Simetri ekseni 2. ve 3. sütunun arasındadır: (satır, sütun) -> (satır, 5 - sütun)
+ * ------------------------------------------------------------------------- */
+const SYMMETRY_COLS = 6;
+const SYMMETRY_ROWS = 5;
+const SYMMETRY_AXIS_COL = 3; // Bu sütundan itibaren sağ (öğrenci) yarısı başlar
+const SYMMETRY_MODEL_CELLS = [2, 7, 8, 12, 13, 14, 20, 26];
+const SYMMETRY_TARGET_CELLS = SYMMETRY_MODEL_CELLS.map((idx) => {
+  const row = Math.floor(idx / SYMMETRY_COLS);
+  const col = idx % SYMMETRY_COLS;
+  return row * SYMMETRY_COLS + (SYMMETRY_COLS - 1 - col);
+});
+
+/* ---------------------------------------------------------------------------
+ * SAYI DOĞRUSU SABİTLERİ (Ritmik Sayma / Yuvarlama)
+ * ------------------------------------------------------------------------- */
+const NUMBER_LINE_MAX = 100;
+const NUMBER_LINE_STEPS = [2, 3, 4, 5, 10];
+
 export function MissionView() {
   const { selectedActivity, selectedGrade, goBack, openStudioMode, markActivityCompleted } = useCurriculum();
 
@@ -257,8 +278,27 @@ export function MissionView() {
   const [spinnerVerified, setSpinnerVerified] = useState<boolean>(false);
 
   // 10. AYNA SİMETRİSİ
-  const [symmetryUserGrid, setSymmetryUserGrid] = useState<number[]>([1, 4, 7]);
+  const [symmetryUserGrid, setSymmetryUserGrid] = useState<number[]>([]);
   const [symmetryVerified, setSymmetryVerified] = useState<boolean>(false);
+
+  // Sağ yarıdaki bir kareyi boya / temizle
+  const toggleSymmetryCell = (index: number) => {
+    const col = index % SYMMETRY_COLS;
+    if (col < SYMMETRY_AXIS_COL) return; // Sol yarı sabit modeldir, değiştirilemez
+    setSymmetryUserGrid((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+    setSymmetryVerified(false);
+  };
+
+  const handleResetSymmetry = () => {
+    setSymmetryUserGrid([]);
+    setSymmetryVerified(false);
+  };
+
+  const symmetryMissingCount = SYMMETRY_TARGET_CELLS.filter((i) => !symmetryUserGrid.includes(i)).length;
+  const symmetryExtraCount = symmetryUserGrid.filter((i) => !SYMMETRY_TARGET_CELLS.includes(i)).length;
+  const isSymmetryCorrect = symmetryMissingCount === 0 && symmetryExtraCount === 0;
 
   // 11. TABAN BLOKLARI / BASAMAK TABLOSU
   const [placeHundreds, setPlaceHundreds] = useState<number>(4);
@@ -269,12 +309,92 @@ export function MissionView() {
   // 12. İNTERAKTİF AÇI ÖLÇER / GÖNYE
   const [angleDegree, setAngleDegree] = useState<number>(90);
   const [angleVerified, setAngleVerified] = useState<boolean>(false);
+  const [visitedAngleKinds, setVisitedAngleKinds] = useState<string[]>(['Dik Açı']);
+
+  const getAngleKind = (deg: number) => {
+    if (deg === 0) return 'Sıfır Açı';
+    if (deg < 90) return 'Dar Açı';
+    if (deg === 90) return 'Dik Açı';
+    if (deg < 180) return 'Geniş Açı';
+    if (deg === 180) return 'Doğru Açı';
+    if (deg < 360) return 'Yansıyan (Girinti) Açı';
+    return 'Tam Açı';
+  };
+
+  const angleKind = getAngleKind(angleDegree);
+
+  // Açıölçer SVG yardımcıları (merkez: 260, 240)
+  const anglePoint = (deg: number, radius: number) => ({
+    x: 260 + radius * Math.cos((deg * Math.PI) / 180),
+    y: 240 - radius * Math.sin((deg * Math.PI) / 180),
+  });
+
+  const handleSetAngle = (deg: number) => {
+    const clamped = Math.max(0, Math.min(360, Math.round(deg)));
+    setAngleDegree(clamped);
+    setAngleVerified(false);
+    const kind = getAngleKind(clamped);
+    setVisitedAngleKinds((prev) => (prev.includes(kind) ? prev : [...prev, kind]));
+  };
 
   // 13. SAYMA PULLARI & TAM SAYILAR (7. Sınıf Sayma Pulları ile Çıkarma/Toplama)
   const [tilePositives, setTilePositives] = useState<number>(2); // (+2)
   const [tileZeroPairs, setTileZeroPairs] = useState<number>(3); // 3 adet (+ / -) sıfır çifti
   const [tileRemovedNegatives, setTileRemovedNegatives] = useState<number>(3); // 3 adet (-) dışarı atıldı
   const [tilesVerified, setTilesVerified] = useState<boolean>(false);
+
+  // Modelin sonucu: (+p) - (-r) = +(p + r)
+  const tileResult = tilePositives + tileRemovedNegatives;
+
+  const changeTilePositives = (delta: number) => {
+    setTilePositives((p) => Math.max(1, Math.min(6, p + delta)));
+    setTilesVerified(false);
+  };
+
+  const changeTileZeroPairs = (delta: number) => {
+    setTileZeroPairs((z) => {
+      const next = Math.max(1, Math.min(6, z + delta));
+      // Çıkarılan negatif pul sayısı, eklenen sıfır çifti sayısını aşamaz
+      setTileRemovedNegatives((r) => Math.min(r, next));
+      return next;
+    });
+    setTilesVerified(false);
+  };
+
+  const changeTileRemovedNegatives = (delta: number) => {
+    setTileRemovedNegatives((r) => Math.max(1, Math.min(tileZeroPairs, r + delta)));
+    setTilesVerified(false);
+  };
+
+  // 13-B. SAYI DOĞRUSU & RİTMİK SAYMA (İlkokul: ritmik sayma, sayı doğrusu, yuvarlama)
+  const [numberLineStep, setNumberLineStep] = useState<number>(2);
+  const [numberLineHops, setNumberLineHops] = useState<number[]>([0]);
+  const [numberLineVerified, setNumberLineVerified] = useState<boolean>(false);
+  const numberLineTarget = Math.floor(NUMBER_LINE_MAX / numberLineStep) * numberLineStep;
+  const numberLineCurrent = numberLineHops[numberLineHops.length - 1] ?? 0;
+
+  const handleChangeNumberLineStep = (step: number) => {
+    setNumberLineStep(step);
+    setNumberLineHops([0]);
+    setNumberLineVerified(false);
+  };
+
+  const handleNumberLineHop = () => {
+    const next = numberLineCurrent + numberLineStep;
+    if (next > numberLineTarget) return;
+    setNumberLineHops((prev) => [...prev, next]);
+    speakText(`${next}`);
+  };
+
+  const handleNumberLineUndo = () => {
+    setNumberLineHops((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    setNumberLineVerified(false);
+  };
+
+  const handleResetNumberLine = () => {
+    setNumberLineHops([0]);
+    setNumberLineVerified(false);
+  };
 
   // 14. KARIŞ VE ADIM İLE UZUNLUK ÖLÇÜMÜ (1. Sınıf Standart Olmayan Ölçme)
   const [placedSpans, setPlacedSpans] = useState<number>(0);
@@ -312,6 +432,7 @@ export function MissionView() {
   const handleVerifySpans = () => {
     if (placedSpans === targetSpans) {
       setSpanVerified(true);
+      setActiveStep(2);
       speakText('Tebrikler! Sıranın uzunluğu 6 karış olarak doğru ölçüldü!');
       if (selectedActivity) markActivityCompleted(selectedActivity.id);
       try {
@@ -332,6 +453,7 @@ export function MissionView() {
 
   const handleVerifyPythagoras = () => {
     setPythVerified(true);
+    setActiveStep(2);
     speakText(`Harika! a kare artı b kare eşittir c kare. ${pythA} karesi artı ${pythB} karesi eşittir ${pythC} karesi.`);
     if (selectedActivity) markActivityCompleted(selectedActivity.id);
     try {
@@ -347,6 +469,7 @@ export function MissionView() {
 
   const handleVerifySqrt = () => {
     setSqrtVerified(true);
+    setActiveStep(2);
     if (isPerfectSquare) {
       speakText(`Tebrikler! Alanı ${sqrtArea} olan karenin bir kenarı tam karekök ${sqrtArea} yani ${sqrtVal} birimdir.`);
     } else {
@@ -381,6 +504,7 @@ export function MissionView() {
   const handleVerifyEBOB = () => {
     if (isTilePerfect) {
       setEbobVerified(true);
+      setActiveStep(2);
       speakText(`Mükemmel! ${tileSize} cmlik fayanslarla oda tam kaplandı. Toplam ${totalTilesCount} adet fayans gerekir.`);
       if (selectedActivity) markActivityCompleted(selectedActivity.id);
       try {
@@ -400,6 +524,7 @@ export function MissionView() {
 
   const handleVerifyRatio = () => {
     setRatioVerified(true);
+    setActiveStep(2);
     speakText(`Tebrikler! ${priceItem} TL lik ürüne yüzde ${discountPercent} indirim uygulandığında indirim tutarı ${discountAmount} TL ve yeni fiyat ${finalPrice} TL olur.`);
     if (selectedActivity) markActivityCompleted(selectedActivity.id);
     try {
@@ -663,6 +788,12 @@ export function MissionView() {
     const cat = selectedActivity?.category || '';
     const prev = selectedActivity?.previewType || '';
 
+    // "açı" sözcüğünü; "açınım", "açık", "açıklık", "saçılım" gibi alakasız kelimelerden ayırt eder.
+    // (Türkçe harflerde JS \b sınırı güvenilir çalışmadığı için başlık kelimelere bölünür.)
+    const hasAngleWord = title
+      .split(/[^a-zçğıöşü]+/)
+      .some((word) => /^açı(?!k|nım)/.test(word));
+
     // Sayma Pulları & Tam Sayılar Modeli (7. Sınıf)
     if (
       prev === 'algebraic_tiles' ||
@@ -706,7 +837,7 @@ export function MissionView() {
     }
 
     // Açı Ölçer / Gönye
-    if (prev === 'angle_explorer' || prev === 'angle_arc' || title.includes('açı') || title.includes('gönye') || title.includes('dönme')) {
+    if (prev === 'angle_explorer' || prev === 'angle_arc' || hasAngleWord || title.includes('gönye') || title.includes('dönme')) {
       return 'angle_explorer';
     }
 
@@ -931,6 +1062,38 @@ export function MissionView() {
     return 'data_barchart';
   }, [mission, selectedActivity]);
 
+  // Adım 1 (Ayarla ve Keşfet) herhangi bir görev türü için tamamlandı mı?
+  const step1Verified =
+    prismVerified ||
+    slopeVerified ||
+    pizzaVerified ||
+    quadrantVerified ||
+    balanceVerified ||
+    circleVerified ||
+    tilesVerified ||
+    countVerified ||
+    rabbitVerified ||
+    kittenVerified ||
+    trainVerified ||
+    compareVerified ||
+    frogVerified ||
+    patternVerified ||
+    estimationVerified ||
+    piggyVerified ||
+    barchartVerified ||
+    spinnerVerified ||
+    symmetryVerified ||
+    unitCubesVerified ||
+    angleVerified ||
+    numberLineVerified ||
+    spanVerified ||
+    pythVerified ||
+    sqrtVerified ||
+    ebobVerified ||
+    ratioVerified ||
+    treeVerified ||
+    sieveVerified;
+
   // Kapsamlı Pedagojik Veri (Karar Ver Soruları, Açıklamalar ve Notlar)
   const pedagogicalData = useMemo(() => {
     switch (missionType) {
@@ -1148,14 +1311,77 @@ export function MissionView() {
 
       case 'algebraic_tiles':
         return {
-          question: 'Sayma pulları modeline göre (+2) - (-3) çıkarma işleminin sonucu kaçtır?',
-          options: ['+5 (5 adet pozitif pul)', '-1', '-5', '+1'],
+          question: `Sayma pulları modeline göre (+${tilePositives}) - (-${tileRemovedNegatives}) çıkarma işleminin sonucu kaçtır?`,
+          options: [
+            `+${tilePositives + tileRemovedNegatives} (${tilePositives + tileRemovedNegatives} adet pozitif pul)`,
+            `${tilePositives - tileRemovedNegatives}`,
+            `-${tilePositives + tileRemovedNegatives}`,
+            `+${Math.abs(tilePositives - tileRemovedNegatives)}`,
+          ],
           correctIndex: 0,
-          explanation: 'Tebrikler! (+2) sayısından (-3) çıkarmak için modele 3 adet sıfır çifti (+ / -) eklenir ve 3 negatif pul dışarı atıldığında sonuçta +5 pozitif pul kaldığını ispatladınız: (+2) - (-3) = (+2) + (+3) = +5.',
+          explanation: `Tebrikler! (+${tilePositives}) sayısından (-${tileRemovedNegatives}) çıkarmak için modele ${tileRemovedNegatives} adet sıfır çifti (+ / -) eklenir ve ${tileRemovedNegatives} negatif pul dışarı atıldığında sonuçta +${tilePositives + tileRemovedNegatives} pozitif pul kaldığını ispatladınız: (+${tilePositives}) - (-${tileRemovedNegatives}) = (+${tilePositives}) + (+${tileRemovedNegatives}) = +${tilePositives + tileRemovedNegatives}.`,
           summaryNotes: [
             '• Tam Sayılarda Çıkarma: a - (-b) = a + (+b)',
             '• Sıfır Çifti: Bir (+) ve bir (-) pulun değeri 0 dır.',
             '• Çıkarma Modellemesi: Olmayan pullar yerine sıfır çifti eklenir.',
+          ],
+        };
+
+      case 'angle_explorer':
+        return {
+          question: `Açıölçerde okunan ${angleDegree}° lik açı aşağıdakilerden hangisidir?`,
+          options: [
+            `${angleKind} (${angleDegree}°)`,
+            angleKind === 'Dar Açı' ? 'Geniş Açı (90° ile 180° arası)' : 'Dar Açı (90° den küçük)',
+            angleKind === 'Dik Açı' ? 'Doğru Açı (180°)' : 'Dik Açı (tam 90°)',
+            angleKind === 'Tam Açı' ? 'Sıfır Açı (0°)' : 'Tam Açı (360°)',
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! Açıölçerin merkezi köşeye, sıfır çizgisi bir kenara yerleştirilir ve diğer kenarın gösterdiği değer okunur. ${angleDegree}° ölçüsündeki bu açı bir ${angleKind}dır.`,
+          summaryNotes: [
+            '• Dar Açı: 0° < açı < 90°',
+            '• Dik Açı: Tam 90° (gönye ile kontrol edilir).',
+            '• Geniş Açı: 90° < açı < 180°',
+            '• Doğru Açı: Tam 180°, Tam Açı: 360° (bir tam dönme).',
+          ],
+        };
+
+      case 'transformation_symmetry':
+        return {
+          question: 'Bir şeklin simetri ekseni (ayna) etrafındaki yansıması için aşağıdakilerden hangisi DOĞRUDUR?',
+          options: [
+            'Her nokta, simetri eksenine kendi uzaklığı kadar karşı tarafta yer alır; şeklin boyutu değişmez.',
+            'Yansıyan şekil her zaman aslından daha küçük olur.',
+            'Simetri ekseni şeklin dışında olmak zorundadır.',
+            'Yansımada satırlar değişir, sütunlar aynı kalır.',
+          ],
+          correctIndex: 0,
+          explanation:
+            'Tebrikler! Ayna simetrisinde her boyalı kare, simetri eksenine olan uzaklığı korunarak karşı tarafa taşınır. Şeklin boyutu ve biçimi aynı kalır, yalnızca yönü ters çevrilir.',
+          summaryNotes: [
+            '• Simetri Ekseni: Şekli iki eş parçaya ayıran doğrudur.',
+            '• Yansıma (Öteleme değil): Uzaklıklar korunur, yön ters çevrilir.',
+            '• Eksene uzaklığı d olan nokta, karşı tarafta yine d uzaklıkta olur.',
+            '• Kilim, çini ve kelebek desenleri simetriye günlük hayattan örnektir.',
+          ],
+        };
+
+      case 'number_line':
+        return {
+          question: `Sayı doğrusunda 0 dan başlayarak ${numberLineStep} er ritmik sayıldığında aşağıdaki sayılardan hangisine BASILMAZ?`,
+          options: [
+            `${numberLineStep * 3 + 1}`,
+            `${numberLineStep * 3}`,
+            `${numberLineStep * 5}`,
+            `${numberLineStep * 10}`,
+          ],
+          correctIndex: 0,
+          explanation: `Tebrikler! ${numberLineStep} er ritmik saymada basılan sayıların hepsi ${numberLineStep} nin katıdır. ${numberLineStep * 3 + 1} sayısı ${numberLineStep} ye tam bölünmediği için sayı doğrusunda bu sayıya basılmaz.`,
+          summaryNotes: [
+            `• Ritmik Sayma: 0, ${numberLineStep}, ${numberLineStep * 2}, ${numberLineStep * 3}, ... biçiminde eşit adımlarla ilerlemektir.`,
+            '• Sayı Doğrusu: Sayıların büyüklük sırasına göre eşit aralıklarla gösterildiği doğrudur.',
+            `• ${numberLineStep} er sayarken basılan her sayı ${numberLineStep} nin katıdır.`,
+            '• Yuvarlama: Bir sayının hangi onluğa/yüzlüğe daha yakın olduğu sayı doğrusunda görülür.',
           ],
         };
 
@@ -1351,6 +1577,11 @@ export function MissionView() {
     discountPercent,
     discountAmount,
     finalPrice,
+    tilePositives,
+    tileRemovedNegatives,
+    angleDegree,
+    angleKind,
+    numberLineStep,
     selectedActivity,
   ]);
 
@@ -1662,6 +1893,17 @@ export function MissionView() {
 
   // Ayna Simetrisi Doğrulama
   const handleVerifySymmetry = () => {
+    if (!isSymmetryCorrect) {
+      const uyari =
+        symmetryMissingCount > 0 && symmetryExtraCount > 0
+          ? `Yansımada ${symmetryMissingCount} kare eksik, ${symmetryExtraCount} kare de fazla boyanmış. Aynanın karşısındaki kareleri tekrar kontrol et!`
+          : symmetryMissingCount > 0
+            ? `Yansımayı tamamlamak için ${symmetryMissingCount} kare daha boyaman gerekiyor.`
+            : `${symmetryExtraCount} kare fazladan boyanmış. Fazla kareleri tıklayarak temizle.`;
+      speakText(uyari);
+      alert(uyari);
+      return;
+    }
     setSymmetryVerified(true);
     setActiveStep(2);
     speakText('Harika! Simetri aynasındaki yansımayı doğru tamamladın!');
@@ -1684,9 +1926,33 @@ export function MissionView() {
 
   // Açı Ölçer Doğrulama
   const handleVerifyAngle = () => {
+    if (visitedAngleKinds.length < 2) {
+      const uyari =
+        'Açıölçeri kaydırarak en az iki farklı açı türünü (dar, dik, geniş, doğru) keşfet, sonra doğrula.';
+      speakText(uyari);
+      alert(uyari);
+      return;
+    }
     setAngleVerified(true);
     setActiveStep(2);
-    speakText(`Açı ölçüsü ${angleDegree} derece olarak ayarlandı.`);
+    speakText(`Açı ölçüsü ${angleDegree} derece: bu bir ${angleKind}.`);
+    if (selectedActivity) markActivityCompleted(selectedActivity.id);
+    try {
+      confetti({ particleCount: 90, spread: 90, origin: { y: 0.6 } });
+    } catch (e) { }
+  };
+
+  // Sayı Doğrusu / Ritmik Sayma Doğrulama
+  const handleVerifyNumberLine = () => {
+    if (numberLineCurrent !== numberLineTarget) {
+      const uyari = `${numberLineStep} er ritmik saymaya devam et: şu an ${numberLineCurrent} sayısındasın, hedef ${numberLineTarget}.`;
+      speakText(uyari);
+      alert(uyari);
+      return;
+    }
+    setNumberLineVerified(true);
+    setActiveStep(2);
+    speakText(`Tebrikler! Sayı doğrusunda ${numberLineStep} er ritmik sayarak ${numberLineTarget} sayısına ulaştın.`);
     if (selectedActivity) markActivityCompleted(selectedActivity.id);
     try {
       confetti({ particleCount: 90, spread: 90, origin: { y: 0.6 } });
@@ -1695,9 +1961,23 @@ export function MissionView() {
 
   // Sayma Pulları Doğrulama
   const handleVerifyTiles = () => {
+    if (tileRemovedNegatives > tileZeroPairs) {
+      const uyari = `Kutuda yalnızca ${tileZeroPairs} adet (-) pul var; ${tileRemovedNegatives} adet negatif pul çıkaramazsın. Önce yeterli sayıda sıfır çifti ekle.`;
+      speakText(uyari);
+      alert(uyari);
+      return;
+    }
+    if (tileRemovedNegatives < tileZeroPairs) {
+      const uyari = `Eklediğin ${tileZeroPairs} sıfır çiftinin ${tileZeroPairs - tileRemovedNegatives} tanesi kullanılmadı. (-${tileRemovedNegatives}) çıkarmak için tam ${tileRemovedNegatives} sıfır çifti eklemelisin.`;
+      speakText(uyari);
+      alert(uyari);
+      return;
+    }
     setTilesVerified(true);
     setActiveStep(2);
-    speakText('Tebrikler! (+2) sayısından (-3) çıkarmak için 3 adet sıfır çifti ekleyip negatif pulları başarıyla çıkardınız.');
+    speakText(
+      `Tebrikler! (+${tilePositives}) sayısından (-${tileRemovedNegatives}) çıkarmak için ${tileZeroPairs} adet sıfır çifti ekleyip negatif pulları başarıyla çıkardınız. Sonuç: +${tileResult}.`
+    );
     if (selectedActivity) markActivityCompleted(selectedActivity.id);
     try {
       confetti({ particleCount: 90, spread: 90, origin: { y: 0.6 } });
@@ -1776,7 +2056,7 @@ export function MissionView() {
   return (
     <div className="flex flex-col flex-1 h-[calc(100vh-4rem)] min-h-[500px] w-full overflow-hidden bg-background">
       {/* 1. ÜST SARI / VURGULU BAŞLIK ŞERİDİ */}
-      <div className="h-14 bg-amber-400 dark:bg-amber-500 text-slate-900 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-xs z-20">
+      <div className="h-14 bg-amber-400 dark:bg-amber-500 text-slate-900 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm z-20">
         <div className="flex items-center gap-3">
           <button
             onClick={goBack}
@@ -1805,9 +2085,9 @@ export function MissionView() {
         {/* SOL: SİMÜLASYON ALANI */}
         <div className="flex-1 flex flex-col min-h-0 min-w-0 h-full relative bg-background border-r border-border">
           {/* Üst Yönerge / Görev Kutusu (Büyük Punto & Vurgulu) */}
-          <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-transparent dark:from-emerald-950/40 dark:via-slate-900/60 border-b border-border/80 flex items-center justify-between gap-4 select-none shadow-2xs">
+          <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-transparent dark:from-emerald-950/40 dark:via-slate-900/60 border-b border-border/80 flex items-center justify-between gap-4 select-none shadow-sm">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 dark:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+              <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 dark:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-sm uppercase tracking-wider flex items-center gap-1.5 shrink-0">
                 <Target className="w-4 h-4" />
                 <span>GÖREV</span>
               </span>
@@ -2045,7 +2325,7 @@ export function MissionView() {
                     y2={centerY}
                     stroke="#3b82f6"
                     strokeWidth={2.5}
-                    className="drop-shadow-xs"
+                    className="drop-shadow-sm"
                   />
                   {/* X Eksen Sağ Ok (+x) */}
                   <polygon
@@ -2059,14 +2339,14 @@ export function MissionView() {
                   />
                   {/* X Eksen Sağ Rozet (+x) */}
                   <g transform={`translate(${dimensions.width - 46}, ${Math.max(14, Math.min(dimensions.height - 30, centerY - 24))})`}>
-                    <rect width="36" height="20" rx="6" fill="#3b82f6" className="shadow-xs" />
+                    <rect width="36" height="20" rx="6" fill="#3b82f6" className="shadow-sm" />
                     <text x="18" y="14" textAnchor="middle" fill="#ffffff" className="font-black text-[11px] font-sans">
                       +x
                     </text>
                   </g>
                   {/* X Eksen Sol Rozet (-x) */}
                   <g transform={`translate(14, ${Math.max(14, Math.min(dimensions.height - 30, centerY - 24))})`}>
-                    <rect width="36" height="20" rx="6" fill="#3b82f6" className="shadow-xs" />
+                    <rect width="36" height="20" rx="6" fill="#3b82f6" className="shadow-sm" />
                     <text x="18" y="14" textAnchor="middle" fill="#ffffff" className="font-black text-[11px] font-sans">
                       -x
                     </text>
@@ -2080,7 +2360,7 @@ export function MissionView() {
                     y2={dimensions.height}
                     stroke="#06b6d4"
                     strokeWidth={2.5}
-                    className="drop-shadow-xs"
+                    className="drop-shadow-sm"
                   />
                   {/* Y Eksen Üst Ok (+y) */}
                   <polygon
@@ -2094,14 +2374,14 @@ export function MissionView() {
                   />
                   {/* Y Eksen Üst Rozet (+y) */}
                   <g transform={`translate(${Math.max(10, Math.min(dimensions.width - 46, centerX + 10))}, 10)`}>
-                    <rect width="36" height="20" rx="6" fill="#06b6d4" className="shadow-xs" />
+                    <rect width="36" height="20" rx="6" fill="#06b6d4" className="shadow-sm" />
                     <text x="18" y="14" textAnchor="middle" fill="#ffffff" className="font-black text-[11px] font-sans">
                       +y
                     </text>
                   </g>
                   {/* Y Eksen Alt Rozet (-y) */}
                   <g transform={`translate(${Math.max(10, Math.min(dimensions.width - 46, centerX + 10))}, ${dimensions.height - 30})`}>
-                    <rect width="36" height="20" rx="6" fill="#06b6d4" className="shadow-xs" />
+                    <rect width="36" height="20" rx="6" fill="#06b6d4" className="shadow-sm" />
                     <text x="18" y="14" textAnchor="middle" fill="#ffffff" className="font-black text-[11px] font-sans">
                       -y
                     </text>
@@ -2150,7 +2430,7 @@ export function MissionView() {
                     <circle cx="0" cy="0" r="14" fill="#3b82f6" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3,2" />
                     <circle cx="0" cy="0" r="4" fill="#2563eb" stroke="#ffffff" strokeWidth="1.5" />
                     <g transform="translate(8, 8)">
-                      <rect width="48" height="20" rx="6" fill="#ffffff" stroke="#3b82f6" strokeWidth="1.5" className="shadow-xs" />
+                      <rect width="48" height="20" rx="6" fill="#ffffff" stroke="#3b82f6" strokeWidth="1.5" className="shadow-sm" />
                       <text x="24" y="14" textAnchor="middle" fill="#2563eb" className="font-mono font-black text-[10px]">
                         (0; 0)
                       </text>
@@ -2182,7 +2462,7 @@ export function MissionView() {
                       {/* y-Kesen Noktası (0, n) */}
                       <circle cx={centerX} cy={centerY - interceptN * zoom} r={7} fill="#ef4444" stroke="#ffffff" strokeWidth={2} />
                       <g transform={`translate(${centerX + 12}, ${centerY - interceptN * zoom - 8})`}>
-                        <rect width="64" height="22" rx="6" fill="#ffffff" stroke="#ef4444" strokeWidth="1.5" className="shadow-xs" />
+                        <rect width="64" height="22" rx="6" fill="#ffffff" stroke="#ef4444" strokeWidth="1.5" className="shadow-sm" />
                         <text x="32" y="15" textAnchor="middle" className="fill-rose-600 font-black text-xs">
                           (0; {interceptN})
                         </text>
@@ -2232,7 +2512,7 @@ export function MissionView() {
                         className="drop-shadow-md cursor-pointer hover:scale-125 transition-transform"
                       />
                       <g transform={`translate(${centerX + userX * zoom + 10}, ${centerY - userY * zoom - 20})`}>
-                        <rect width="60" height="22" rx="6" fill="#8b5cf6" className="shadow-xs" />
+                        <rect width="60" height="22" rx="6" fill="#8b5cf6" className="shadow-sm" />
                         <text x="30" y="15" textAnchor="middle" fill="#ffffff" className="font-mono font-bold text-[11px]">
                           ({userX}; {userY})
                         </text>
@@ -2252,7 +2532,7 @@ export function MissionView() {
                     <button
                       onClick={() =>
                         speakText(
-                          '(+2) den (-3) çıkarmak için içeride 3 negatif pul olmadığından dışarıdan 3 adet sıfır çifti eklenir ve 3 negatif pul dışarı atılır!'
+                          `(+${tilePositives}) den (-${tileRemovedNegatives}) çıkarmak için içeride ${tileRemovedNegatives} negatif pul olmadığından dışarıdan ${tileZeroPairs} adet sıfır çifti eklenir ve ${tileRemovedNegatives} negatif pul dışarı atılır!`
                         )
                       }
                       className="p-1 rounded-md bg-blue-500 text-white hover:scale-110 transition-transform cursor-pointer"
@@ -2262,7 +2542,7 @@ export function MissionView() {
                     </button>
                   </div>
                   <div className="text-sm font-black font-mono text-foreground">
-                    İşlem: <span className="text-blue-600">(+2)</span> - <span className="text-rose-600">(-3)</span> = <span className="text-emerald-600 font-black">+5</span>
+                    İşlem: <span className="text-blue-600">(+{tilePositives})</span> - <span className="text-rose-600">(-{tileRemovedNegatives})</span> = <span className="text-emerald-600 font-black">+{tileResult}</span>
                   </div>
                 </div>
 
@@ -2270,18 +2550,17 @@ export function MissionView() {
                   {/* 1. Başlangıç Durumu */}
                   <div className="p-4 rounded-3xl bg-card border-2 border-border flex flex-col items-center space-y-3 shadow-md">
                     <span className="font-black text-xs text-foreground uppercase tracking-wide">
-                      1. Başlangıç (+2)
+                      1. Başlangıç (+{tilePositives})
                     </span>
-                    <div className="w-full h-32 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-500 text-white font-black text-lg flex items-center justify-center shadow-md">
-                        +
-                      </div>
-                      <div className="w-12 h-12 rounded-full bg-blue-500 text-white font-black text-lg flex items-center justify-center shadow-md">
-                        +
-                      </div>
+                    <div className="w-full h-32 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex flex-wrap items-center justify-center gap-2 p-2">
+                      {Array.from({ length: tilePositives }, (_, i) => (
+                        <div key={i} className="w-11 h-11 rounded-full bg-blue-500 text-white font-black text-lg flex items-center justify-center shadow-md animate-in zoom-in-50">
+                          +
+                        </div>
+                      ))}
                     </div>
                     <span className="text-[11px] text-muted-foreground font-semibold">
-                      Kutuda 2 adet (+) pul var.
+                      Kutuda {tilePositives} adet (+) pul var.
                     </span>
                   </div>
 
@@ -2291,38 +2570,51 @@ export function MissionView() {
                       2. Sıfır Çifti Ekle (+/-)
                     </span>
                     <div className="w-full h-32 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-2 flex flex-col justify-center items-center gap-1.5">
-                      <div className="flex gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center">+</div>
-                        <div className="w-7 h-7 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center">+</div>
+                      <div className="flex flex-wrap justify-center gap-1.5">
+                        {Array.from({ length: tilePositives }, (_, i) => (
+                          <div key={i} className="w-7 h-7 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center">+</div>
+                        ))}
                       </div>
-                      <div className="flex gap-1.5 p-1 rounded-xl bg-slate-200 dark:bg-slate-800 border border-dashed border-amber-500">
-                        {[1, 2, 3].map((i) => (
+                      <div className="flex flex-wrap justify-center gap-1.5 p-1 rounded-xl bg-slate-200 dark:bg-slate-800 border border-dashed border-amber-500">
+                        {Array.from({ length: tileZeroPairs }, (_, i) => (
                           <div key={i} className="flex flex-col items-center gap-0.5">
                             <div className="w-5 h-5 rounded-full bg-blue-500 text-white font-bold text-[9px] flex items-center justify-center">+</div>
-                            <div className="w-5 h-5 rounded-full bg-rose-500 text-white font-bold text-[9px] flex items-center justify-center">-</div>
+                            <div
+                              className={`w-5 h-5 rounded-full text-white font-bold text-[9px] flex items-center justify-center ${
+                                i < tileRemovedNegatives ? 'bg-rose-500 ring-2 ring-rose-700' : 'bg-rose-300 dark:bg-rose-900'
+                              }`}
+                            >
+                              -
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                     <span className="text-[10px] text-amber-700 dark:text-amber-300 font-bold text-center">
-                      3 sıfır çifti eklendi (Değer değişmedi)
+                      {tileZeroPairs} sıfır çifti eklendi (Değer değişmedi)
                     </span>
                   </div>
 
                   {/* 3. Negatifleri Çıkarma ve Sonuç */}
                   <div className="p-4 rounded-3xl bg-card border-2 border-emerald-500/60 flex flex-col items-center space-y-3 shadow-md">
                     <span className="font-black text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                      3. (-3)&apos;ü Çıkar &amp; Sonuç
+                      3. (-{tileRemovedNegatives})&apos;ü Çıkar &amp; Sonuç
                     </span>
-                    <div className="w-full h-32 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-2 flex flex-wrap items-center justify-center gap-2">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="w-9 h-9 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md animate-in zoom-in-50">
+                    <div className="w-full h-32 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-2 flex flex-wrap items-center justify-center gap-2 overflow-hidden">
+                      {Array.from({ length: tileResult }, (_, i) => (
+                        <div key={`p-${i}`} className="w-9 h-9 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md animate-in zoom-in-50">
                           +
+                        </div>
+                      ))}
+                      {Array.from({ length: Math.max(0, tileZeroPairs - tileRemovedNegatives) }, (_, i) => (
+                        <div key={`z-${i}`} className="flex flex-col items-center gap-0.5 opacity-60">
+                          <div className="w-5 h-5 rounded-full bg-blue-500 text-white font-bold text-[9px] flex items-center justify-center">+</div>
+                          <div className="w-5 h-5 rounded-full bg-rose-500 text-white font-bold text-[9px] flex items-center justify-center">-</div>
                         </div>
                       ))}
                     </div>
                     <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-black">
-                      Sonuç: Tam +5 pul kaldı!
+                      Sonuç: Tam +{tileResult} pul kaldı!
                     </span>
                   </div>
                 </div>
@@ -2404,7 +2696,7 @@ export function MissionView() {
                             ? 'bg-emerald-100/40 border-emerald-500 opacity-60 scale-95'
                             : isSelected
                             ? 'bg-primary/20 border-primary scale-105 animate-pulse'
-                            : 'bg-white hover:bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:scale-102'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800 hover:scale-105'
                         }`}
                       >
                         {item.type === 'sock' ? (
@@ -2428,7 +2720,7 @@ export function MissionView() {
                   {/* Sesli Yönergeyi Dinle Butonu */}
                   <button
                     onClick={() => speakText('Renk, boyut ve şekil yönünden aynı olan nesneleri bulup eşleştirin!')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -2517,7 +2809,7 @@ export function MissionView() {
                   {/* Sesli Yönergeyi Dinle Butonu */}
                   <button
                     onClick={() => speakText(`Elmaları sırayla toplayalım! Önce bir numaralı elmaya dokun! Sıradaki toplanacak elma ${nextAppleToCollect}`)}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -2608,7 +2900,7 @@ export function MissionView() {
 
                   <button
                     onClick={() => speakText('14 kediciğin 10 tanesini onluk kutusuna topla, 1 onluk ve 4 birlik keşfet!')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -2721,7 +3013,7 @@ export function MissionView() {
 
                   <button
                     onClick={() => speakText(`Vagonları birinci vagondan başlayarak sırayla diz! Sıradaki vagon ${placedWagons.length + 1}. vagon`)}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -2742,8 +3034,8 @@ export function MissionView() {
                 {/* İki Grup Karşılaştırma Alanı */}
                 <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-6 my-6">
                   {/* Sol Grup (7 Kırmızı Balon) */}
-                  <div className={`p-6 rounded-3xl border-3 transition-all flex flex-col items-center justify-center ${
-                    compareChoice === 'left' ? 'bg-rose-100/70 border-rose-500 dark:bg-rose-950/40 shadow-lg scale-102' : 'bg-card border-border shadow-md'
+                  <div className={`p-6 rounded-3xl border-[3px] transition-all flex flex-col items-center justify-center ${
+                    compareChoice === 'left' ? 'bg-rose-100/70 border-rose-500 dark:bg-rose-950/40 shadow-lg scale-105' : 'bg-card border-border shadow-md'
                   }`}>
                     <div className="text-sm font-black text-rose-600 mb-3">👈 Sol Grup</div>
                     <div className="flex flex-wrap items-center justify-center gap-2 text-3xl max-w-[200px]">
@@ -2755,8 +3047,8 @@ export function MissionView() {
                   </div>
 
                   {/* Sağ Grup (4 Mavi Balon) */}
-                  <div className={`p-6 rounded-3xl border-3 transition-all flex flex-col items-center justify-center ${
-                    compareChoice === 'right' ? 'bg-blue-100/70 border-blue-500 dark:bg-blue-950/40 shadow-lg scale-102' : 'bg-card border-border shadow-md'
+                  <div className={`p-6 rounded-3xl border-[3px] transition-all flex flex-col items-center justify-center ${
+                    compareChoice === 'right' ? 'bg-blue-100/70 border-blue-500 dark:bg-blue-950/40 shadow-lg scale-105' : 'bg-card border-border shadow-md'
                   }`}>
                     <div className="text-sm font-black text-blue-600 mb-3">👉 Sağ Grup</div>
                     <div className="flex flex-wrap items-center justify-center gap-2 text-3xl max-w-[200px]">
@@ -2813,7 +3105,7 @@ export function MissionView() {
                 <div className="w-full flex flex-col items-center gap-4 mt-auto pt-6">
                   <button
                     onClick={() => speakText('Hangi tarafta daha çok balon var? 7 mi çok, 4 mü çok? Daha çok olan tarafı seç!')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -2890,7 +3182,7 @@ export function MissionView() {
 
                   <button
                     onClick={() => speakText('Kurbağayı beşer beşer zıplat! 5, sonra 10, sonra 15, sonra 20!')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -2916,7 +3208,7 @@ export function MissionView() {
                     <span className="text-4xl animate-pulse">🔴</span>
                     <span className="text-4xl animate-pulse">🟦</span>
                     <span className="text-4xl animate-pulse">🔴</span>
-                    <div className="w-16 h-16 rounded-2xl border-3 border-dashed border-rose-500 bg-rose-500/10 flex items-center justify-center text-3xl font-black text-rose-600">
+                    <div className="w-16 h-16 rounded-2xl border-[3px] border-dashed border-rose-500 bg-rose-500/10 flex items-center justify-center text-3xl font-black text-rose-600">
                       {patternChoice === 'blue_square' ? '🟦' : '?'}
                     </div>
                   </div>
@@ -2970,7 +3262,7 @@ export function MissionView() {
                 <div className="w-full flex flex-col items-center gap-4 mt-auto pt-6">
                   <button
                     onClick={() => speakText('Örüntüyü takip et: Kırmızı Daire, Mavi Kare, Kırmızı Daire, Mavi Kare, Kırmızı Daire... Sırada ne gelmeli?')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -3042,7 +3334,7 @@ export function MissionView() {
                           setFruitEstimate(val);
                           speakText(`Tahminin: ${val} elma! Şimdi elmaları tek tek sayarak kontrol et!`);
                         }}
-                        className={`px-4 py-2 rounded-xl font-black text-xs border-2 shadow-xs transition-all cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl font-black text-xs border-2 shadow-sm transition-all cursor-pointer ${
                           fruitEstimate === val
                             ? 'bg-pink-500 text-white border-pink-600 scale-105'
                             : 'bg-white hover:bg-slate-50 text-foreground border-border dark:bg-slate-900'
@@ -3064,7 +3356,7 @@ export function MissionView() {
 
                   <button
                     onClick={() => speakText('Sepette sence kaç elma var? Bir sayı tahmin et, sonra elmalara tek tek dokunarak say!')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-pink-500 hover:bg-pink-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-pink-500 hover:bg-pink-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -3078,7 +3370,7 @@ export function MissionView() {
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
                 {/* Üst Bilgi Rozeti */}
                 <div className="text-center space-y-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20 shadow-2xs">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20 shadow-sm">
                     <span>🖐️ Masayı Karışla Ölçme Laboratuvarı</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -3182,7 +3474,7 @@ export function MissionView() {
                   <button
                     onClick={handleRemoveSpan}
                     disabled={placedSpans === 0}
-                    className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-800 dark:text-white font-black text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-800 dark:text-white font-black text-xs shadow-sm active:scale-95 transition-all cursor-pointer"
                   >
                     <span>↩️ Karış Çıkar</span>
                   </button>
@@ -3190,7 +3482,7 @@ export function MissionView() {
                   <button
                     onClick={handleResetSpans}
                     disabled={placedSpans === 0}
-                    className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 disabled:opacity-40 font-black text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 disabled:opacity-40 font-black text-xs shadow-sm active:scale-95 transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>Sıfırla</span>
@@ -3204,7 +3496,7 @@ export function MissionView() {
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
                 {/* Üst Başlık Rozeti */}
                 <div className="text-center space-y-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-black text-xs border border-emerald-500/20 shadow-2xs">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-black text-xs border border-emerald-500/20 shadow-sm">
                     <span>📐 Pisagor Teoremi &amp; Hipotenüs Alan Modeli (a² + b² = c²)</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -3332,7 +3624,7 @@ export function MissionView() {
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
                 {/* Üst Başlık Rozeti */}
                 <div className="text-center space-y-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-800 dark:text-rose-300 font-black text-xs border border-rose-500/20 shadow-2xs">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 text-rose-800 dark:text-rose-300 font-black text-xs border border-rose-500/20 shadow-sm">
                     <span>🟩 Tam Kare Sayılar &amp; Karekök Alan-Kenar Modeli</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -3453,7 +3745,7 @@ export function MissionView() {
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
                 {/* Üst Başlık Rozeti */}
                 <div className="text-center space-y-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-800 dark:text-blue-300 font-black text-xs border border-blue-500/20 shadow-2xs">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-800 dark:text-blue-300 font-black text-xs border border-blue-500/20 shadow-sm">
                     <span>🧱 EBOB &amp; EKOK / Fayans Döşeme &amp; Periyodik Olaylar Modeli</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -3557,7 +3849,7 @@ export function MissionView() {
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
                 {/* Üst Başlık Rozeti */}
                 <div className="text-center space-y-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20 shadow-2xs">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-black text-xs border border-amber-500/20 shadow-sm">
                     <span>🏷️ Yüzde, İndirim, KDV ve Kâr-Zarar Simülatörü (7. Sınıf)</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -3643,7 +3935,7 @@ export function MissionView() {
               <div className="w-full h-full relative flex flex-col items-center justify-between p-6 select-none min-h-[500px]">
                 {/* Üst Başlık Rozeti */}
                 <div className="text-center space-y-1">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 font-black text-xs border border-indigo-500/20 shadow-2xs">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 font-black text-xs border border-indigo-500/20 shadow-sm">
                     <span>🌳 Asal Çarpan Ağacı Modeli ({treeNumber} = {primeSummary.expString})</span>
                   </div>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -3807,7 +4099,7 @@ export function MissionView() {
                   <button
                     onClick={handleResetTree}
                     disabled={treeStep === 1}
-                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-foreground disabled:opacity-40 font-black text-xs shadow-xs active:scale-95 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-foreground disabled:opacity-40 font-black text-xs shadow-sm active:scale-95 transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>Baştan Başla</span>
@@ -3862,28 +4154,28 @@ export function MissionView() {
                   <button
                     onClick={() => handleSieveEliminate(2)}
                     disabled={sieveEliminated.includes(2)}
-                    className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-amber-950 font-black text-xs shadow-xs cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-amber-950 font-black text-xs shadow-sm cursor-pointer"
                   >
                     <span>🟠 2'nin Katlarını Ele</span>
                   </button>
                   <button
                     onClick={() => handleSieveEliminate(3)}
                     disabled={sieveEliminated.includes(3)}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-xs shadow-xs cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-xs shadow-sm cursor-pointer"
                   >
                     <span>🟢 3'ün Katlarını Ele</span>
                   </button>
                   <button
                     onClick={() => handleSieveEliminate(5)}
                     disabled={sieveEliminated.includes(5)}
-                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-black text-xs shadow-xs cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-black text-xs shadow-sm cursor-pointer"
                   >
                     <span>🔵 5'in Katlarını Ele</span>
                   </button>
                   <button
                     onClick={() => handleSieveEliminate(7)}
                     disabled={sieveEliminated.includes(7)}
-                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white font-black text-xs shadow-xs cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white font-black text-xs shadow-sm cursor-pointer"
                   >
                     <span>🟣 7'nin Katlarını Ele</span>
                   </button>
@@ -3943,7 +4235,7 @@ export function MissionView() {
                           key={val}
                           onClick={() => setDivNum(val)}
                           className={`px-3 py-1.5 rounded-xl font-mono font-black text-xs border transition-all cursor-pointer ${
-                            divNum === val ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs' : 'bg-muted/60 text-foreground'
+                            divNum === val ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm' : 'bg-muted/60 text-foreground'
                           }`}
                         >
                           {val}
@@ -4002,7 +4294,7 @@ export function MissionView() {
                         key={k.d}
                         className={`p-3 rounded-2xl border transition-all ${
                           k.pass
-                            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500/40 shadow-xs'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500/40 shadow-sm'
                             : 'bg-slate-50 dark:bg-slate-900 border-border opacity-70'
                         }`}
                       >
@@ -4282,7 +4574,7 @@ export function MissionView() {
                           width: `${Math.min(380, Math.max(60, areaFactorPairs[selectedPairIdx].w * 18))}px`,
                           height: `${Math.min(180, Math.max(40, areaFactorPairs[selectedPairIdx].h * 18))}px`,
                         }}
-                        className="bg-amber-100 dark:bg-amber-950/40 border-3 border-amber-600 rounded-2xl flex items-center justify-center font-black text-amber-900 dark:text-amber-200 text-sm shadow-md transition-all duration-300"
+                        className="bg-amber-100 dark:bg-amber-950/40 border-[3px] border-amber-600 rounded-2xl flex items-center justify-center font-black text-amber-900 dark:text-amber-200 text-sm shadow-md transition-all duration-300"
                       >
                         {areaFactorPairs[selectedPairIdx].w} × {areaFactorPairs[selectedPairIdx].h} = {areaTarget} br²
                       </div>
@@ -4433,7 +4725,7 @@ export function MissionView() {
                   {/* Sesli Yönergeyi Dinle Butonu */}
                   <button
                     onClick={() => speakText('Tavşanı havuca ulaştırmak için yön oklarına dokun! İleri, yukarı, aşağı ve sağa git!')}
-                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-md hover:scale-102 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-md hover:scale-105 transition-all cursor-pointer"
                   >
                     <Volume2 className="w-5 h-5 animate-pulse" />
                     <span>🔊 Sesli Yönergeyi Yeniden Dinle</span>
@@ -4674,7 +4966,7 @@ export function MissionView() {
                       {barchartData.map((item) => (
                         <div
                           key={item.label}
-                          className="flex items-center justify-between p-2 rounded-xl bg-card border border-border/80 shadow-2xs"
+                          className="flex items-center justify-between p-2 rounded-xl bg-card border border-border/80 shadow-sm"
                         >
                           <div className="flex items-center gap-2 font-bold text-foreground">
                             <span>{item.icon}</span>
@@ -4713,8 +5005,12 @@ export function MissionView() {
                 <div className="relative w-64 h-64 flex items-center justify-center">
                   <div className="absolute -top-3 z-20 text-3xl">🔻</div>
                   <div
-                    className="w-56 h-56 rounded-full border-4 border-slate-800 shadow-2xl overflow-hidden relative transition-transform duration-[2000ms] cubic-bezier(0.2, 0.8, 0.2, 1)"
-                    style={{ transform: `rotate(${spinnerAngle}deg)` }}
+                    className="w-56 h-56 rounded-full border-4 border-slate-800 shadow-2xl overflow-hidden relative transition-transform"
+                    style={{
+                      transform: `rotate(${spinnerAngle}deg)`,
+                      transitionDuration: '2000ms',
+                      transitionTimingFunction: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+                    }}
                   >
                     <div className="absolute inset-0 flex">
                       <div className="w-1/2 h-full bg-rose-500 flex items-center justify-center text-white font-black text-xs">
@@ -4823,6 +5119,329 @@ export function MissionView() {
               </div>
             )}
 
+            {/* M) İNTERAKTİF AÇIÖLÇER / GÖNYE */}
+            {missionType === 'angle_explorer' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-y-auto">
+                <div className="text-center space-y-2 mb-3">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300 font-black text-xs">
+                    <span>📐 İnteraktif Açıölçer</span>
+                    <button
+                      onClick={() =>
+                        speakText(
+                          `Açıölçerin merkezini köşeye, sıfır çizgisini bir kenara yerleştir. Şu anki açı ${angleDegree} derece, yani bir ${angleKind}.`
+                        )
+                      }
+                      className="p-1 rounded-md bg-violet-500 text-white hover:scale-110 transition-transform cursor-pointer"
+                      title="Sesli Dinle"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="text-sm font-black font-mono text-foreground">
+                    Ölçü: <span className="text-violet-600">{angleDegree}°</span>{' '}
+                    <span className="text-emerald-600">({angleKind})</span>
+                  </div>
+                </div>
+
+                <svg
+                  className="w-full h-full block max-w-3xl max-h-[480px]"
+                  viewBox="0 0 520 460"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  {/* Açıölçer kadranı */}
+                  <circle cx={260} cy={240} r={190} className="fill-violet-500/5 stroke-violet-500/40" strokeWidth={2} />
+                  <circle cx={260} cy={240} r={70} className="fill-none stroke-violet-500/20" strokeWidth={1.5} />
+
+                  {/* Derece çizgileri (15° aralıklarla) */}
+                  {Array.from({ length: 24 }, (_, i) => i * 15).map((deg) => {
+                    const isMajor = deg % 45 === 0;
+                    const inner = anglePoint(deg, isMajor ? 165 : 176);
+                    const outer = anglePoint(deg, 190);
+                    const label = anglePoint(deg, 148);
+                    return (
+                      <React.Fragment key={deg}>
+                        <line
+                          x1={inner.x}
+                          y1={inner.y}
+                          x2={outer.x}
+                          y2={outer.y}
+                          className="stroke-violet-500/50"
+                          strokeWidth={isMajor ? 2.5 : 1}
+                        />
+                        {isMajor && (
+                          <text
+                            x={label.x}
+                            y={label.y + 4}
+                            textAnchor="middle"
+                            className="fill-muted-foreground font-bold"
+                            fontSize={13}
+                          >
+                            {deg}°
+                          </text>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+
+                  {/* Açı bölgesi */}
+                  {angleDegree >= 360 ? (
+                    <circle cx={260} cy={240} r={70} className="fill-amber-400/40" />
+                  ) : (
+                    angleDegree > 0 && (
+                      <path
+                        d={`M 260 240 L 330 240 A 70 70 0 ${angleDegree > 180 ? 1 : 0} 0 ${anglePoint(angleDegree, 70).x} ${anglePoint(angleDegree, 70).y} Z`}
+                        className="fill-amber-400/40 stroke-amber-500"
+                        strokeWidth={2}
+                      />
+                    )
+                  )}
+
+                  {/* Sabit kenar (0°) */}
+                  <line x1={260} y1={240} x2={450} y2={240} className="stroke-slate-500" strokeWidth={5} strokeLinecap="round" />
+                  <text x={455} y={245} className="fill-muted-foreground font-black" fontSize={13}>
+                    0°
+                  </text>
+
+                  {/* Hareketli kenar */}
+                  <line
+                    x1={260}
+                    y1={240}
+                    x2={anglePoint(angleDegree, 190).x}
+                    y2={anglePoint(angleDegree, 190).y}
+                    className="stroke-violet-600"
+                    strokeWidth={5}
+                    strokeLinecap="round"
+                  />
+                  <circle
+                    cx={anglePoint(angleDegree, 190).x}
+                    cy={anglePoint(angleDegree, 190).y}
+                    r={9}
+                    className="fill-violet-600"
+                  />
+
+                  {/* Dik açı gönye işareti */}
+                  {angleDegree === 90 && (
+                    <rect x={260} y={212} width={28} height={28} className="fill-none stroke-emerald-500" strokeWidth={3} />
+                  )}
+
+                  {/* Köşe (tepe noktası) */}
+                  <circle cx={260} cy={240} r={7} className="fill-slate-800 dark:fill-slate-200" />
+                  <text x={238} y={262} className="fill-muted-foreground font-black" fontSize={14}>
+                    A
+                  </text>
+
+                  {/* Ölçü etiketi */}
+                  <text
+                    x={anglePoint(Math.min(angleDegree, 359) / 2, 100).x}
+                    y={anglePoint(Math.min(angleDegree, 359) / 2, 100).y + 5}
+                    textAnchor="middle"
+                    className="fill-amber-600 font-black"
+                    fontSize={20}
+                  >
+                    {angleDegree}°
+                  </text>
+                </svg>
+
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-bold">
+                  <span className="text-muted-foreground">Keşfedilen açı türleri:</span>
+                  {visitedAngleKinds.map((kind) => (
+                    <span key={kind} className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                      {kind}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* N) AYNA SİMETRİSİ (YANSIMA) IZGARASI */}
+            {missionType === 'transformation_symmetry' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-y-auto">
+                <div className="text-center space-y-2 mb-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 font-black text-xs">
+                    <span>🪞 Ayna Simetrisi: Yansımayı Tamamla</span>
+                    <button
+                      onClick={() =>
+                        speakText(
+                          'Kırmızı kesikli çizgi simetri ekseni yani aynadır. Solda duran şeklin aynadaki yansımasını sağ tarafta kareleri boyayarak oluştur.'
+                        )
+                      }
+                      className="p-1 rounded-md bg-fuchsia-500 text-white hover:scale-110 transition-transform cursor-pointer"
+                      title="Sesli Dinle"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="text-xs font-bold text-muted-foreground">
+                    Boyanan kare: {symmetryUserGrid.length} / {SYMMETRY_TARGET_CELLS.length}
+                  </div>
+                </div>
+
+                <div className="relative p-3 rounded-3xl bg-card border-2 border-border shadow-md">
+                  <div
+                    className="grid gap-1"
+                    style={{ gridTemplateColumns: `repeat(${SYMMETRY_COLS}, minmax(0, 1fr))` }}
+                  >
+                    {Array.from({ length: SYMMETRY_COLS * SYMMETRY_ROWS }, (_, idx) => {
+                      const col = idx % SYMMETRY_COLS;
+                      const isLeft = col < SYMMETRY_AXIS_COL;
+                      const isModel = SYMMETRY_MODEL_CELLS.includes(idx);
+                      const isPainted = symmetryUserGrid.includes(idx);
+
+                      if (isLeft) {
+                        return (
+                          <div
+                            key={idx}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border ${
+                              isModel
+                                ? 'bg-indigo-500 border-indigo-700'
+                                : 'bg-muted/40 border-border'
+                            }`}
+                          />
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => toggleSymmetryCell(idx)}
+                          aria-label={`Sağ yarı ${idx + 1}. kare`}
+                          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg border transition-all cursor-pointer hover:scale-105 ${
+                            isPainted
+                              ? 'bg-emerald-500 border-emerald-700'
+                              : 'bg-muted/40 border-dashed border-border hover:bg-fuchsia-500/20'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Simetri ekseni (ayna) */}
+                  <div className="absolute inset-y-2 left-1/2 w-0 border-l-4 border-dashed border-rose-500 -translate-x-1/2 pointer-events-none" />
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-[11px] font-bold text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-indigo-500 inline-block" /> Model (sabit)
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Senin yansıman
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded border-l-4 border-dashed border-rose-500 inline-block" /> Simetri ekseni
+                  </span>
+                </div>
+
+                {symmetryVerified && (
+                  <div className="mt-3 px-4 py-2 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-xs animate-in fade-in zoom-in-95">
+                    ✓ Yansıma doğru! Şekil simetri eksenine göre eş uzaklıkta.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* O) SAYI DOĞRUSU & RİTMİK SAYMA */}
+            {missionType === 'number_line' && (
+              <div className="w-full h-full relative flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-y-auto">
+                <div className="text-center space-y-2 mb-3">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 font-black text-xs">
+                    <span>🔢 Sayı Doğrusunda Ritmik Sayma</span>
+                    <button
+                      onClick={() =>
+                        speakText(
+                          `Sıfırdan başlayarak ${numberLineStep} er ritmik say. Şu an ${numberLineCurrent} sayısındasın, hedef ${numberLineTarget}.`
+                        )
+                      }
+                      className="p-1 rounded-md bg-teal-500 text-white hover:scale-110 transition-transform cursor-pointer"
+                      title="Sesli Dinle"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="text-sm font-black font-mono text-foreground">
+                    Adım: <span className="text-teal-600">{numberLineStep}</span> · Bulunduğun sayı:{' '}
+                    <span className="text-amber-600">{numberLineCurrent}</span> · Hedef:{' '}
+                    <span className="text-emerald-600">{numberLineTarget}</span>
+                  </div>
+                </div>
+
+                <svg
+                  className="w-full block max-w-5xl"
+                  viewBox="0 0 1040 240"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  {/* Zıplama yayları */}
+                  {numberLineHops.slice(1).map((value, i) => {
+                    const from = numberLineHops[i];
+                    const x1 = 20 + from * 10;
+                    const x2 = 20 + value * 10;
+                    return (
+                      <path
+                        key={`hop-${value}`}
+                        d={`M ${x1} 170 Q ${(x1 + x2) / 2} ${170 - Math.max(45, numberLineStep * 9)} ${x2} 170`}
+                        className="fill-none stroke-amber-500"
+                        strokeWidth={3}
+                      />
+                    );
+                  })}
+
+                  {/* Ana doğru */}
+                  <line x1={10} y1={170} x2={1030} y2={170} className="stroke-foreground" strokeWidth={3} />
+                  <polygon points="1030,170 1018,164 1018,176" className="fill-foreground" />
+
+                  {/* Bölme çizgileri */}
+                  {Array.from({ length: NUMBER_LINE_MAX + 1 }, (_, n) => n).map((n) => {
+                    const x = 20 + n * 10;
+                    const isTen = n % 10 === 0;
+                    const isFive = n % 5 === 0;
+                    return (
+                      <React.Fragment key={n}>
+                        <line
+                          x1={x}
+                          y1={170}
+                          x2={x}
+                          y2={isTen ? 188 : isFive ? 182 : 177}
+                          className="stroke-muted-foreground"
+                          strokeWidth={isTen ? 2.5 : 1}
+                        />
+                        {isTen && (
+                          <text x={x} y={210} textAnchor="middle" className="fill-muted-foreground font-bold" fontSize={16}>
+                            {n}
+                          </text>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+
+                  {/* Basılan sayılar */}
+                  {numberLineHops.map((value) => (
+                    <circle key={`dot-${value}`} cx={20 + value * 10} cy={170} r={7} className="fill-emerald-500" />
+                  ))}
+
+                  {/* Kurbağa / imleç */}
+                  <text x={20 + numberLineCurrent * 10} y={148} textAnchor="middle" fontSize={30}>
+                    🐸
+                  </text>
+                  <text
+                    x={20 + numberLineCurrent * 10}
+                    y={236}
+                    textAnchor="middle"
+                    className="fill-amber-600 font-black"
+                    fontSize={18}
+                  >
+                    {numberLineCurrent}
+                  </text>
+                </svg>
+
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-mono font-bold">
+                  {numberLineHops.map((value) => (
+                    <span key={`chip-${value}`} className="px-2 py-0.5 rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-300">
+                      {value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Sağ Alt Yüzen Kontroller (Zoom & Reset) */}
             <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-card/90 backdrop-blur-md border border-border p-1 rounded-2xl shadow-md z-10">
               <button
@@ -4866,7 +5485,15 @@ export function MissionView() {
           </div>
 
           {/* ADIM 1: AYARLA / EŞLEŞTİR */}
-          <div className={`p-4 rounded-3xl border-2 transition-all ${activeStep === 1 ? 'bg-primary/5 border-primary shadow-xs' : 'bg-muted/30 border-border opacity-85'}`}>
+          <div
+            className={`p-4 rounded-3xl border-2 transition-all ${
+              step1Verified
+                ? 'bg-emerald-500/10 border-emerald-500 shadow-sm'
+                : activeStep === 1
+                  ? 'bg-primary/5 border-primary shadow-sm'
+                  : 'bg-muted/30 border-border opacity-85'
+            }`}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground font-black flex items-center justify-center text-xs">
@@ -4874,14 +5501,18 @@ export function MissionView() {
                 </span>
                 <h3 className="font-extrabold text-sm text-foreground">Ayarla ve Keşfet</h3>
               </div>
-              {(prismVerified || slopeVerified || pizzaVerified || quadrantVerified || balanceVerified || circleVerified || tilesVerified) && (
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              )}
+              {step1Verified && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
             </div>
 
             <p className="text-xs text-muted-foreground mb-4 leading-relaxed font-medium">
               {missionType === 'algebraic_tiles' &&
-                '(+2) den (-3) çıkarmak için 3 adet sıfır çifti (+/-) ekleyip negatif pulları çıkarmayı keşfedin.'}
+                `(+${tilePositives}) den (-${tileRemovedNegatives}) çıkarmak için ${tileRemovedNegatives} adet sıfır çifti (+/-) ekleyip negatif pulları çıkarmayı keşfedin.`}
+              {missionType === 'angle_explorer' &&
+                'Açıölçerin hareketli kenarını kaydırarak dar, dik, geniş ve doğru açıları keşfedin; en az iki farklı açı türü görün.'}
+              {missionType === 'transformation_symmetry' &&
+                'Kırmızı kesikli çizgi simetri eksenidir (ayna). Soldaki modelin yansımasını sağ taraftaki kareleri tıklayarak oluşturun.'}
+              {missionType === 'number_line' &&
+                `Sayı doğrusunda 0 dan başlayarak ${numberLineStep} er ritmik sayın ve ${numberLineTarget} sayısına ulaşın.`}
               {missionType === 'data_barchart' &&
                 'Şekil grafiğindeki her yıldızın (⭐) 2 öğrenciyi temsil ettiğini dikkate alarak mevsim verilerini ve sıklık tablosunu inceleyin.'}
               {missionType === 'probability_spinner' &&
@@ -4908,7 +5539,7 @@ export function MissionView() {
                 <button
                   onClick={() =>
                     speakText(
-                      '(+2) sayısından (-3) çıkarmak için kutuda 3 negatif pul olmadığından dışarıdan 3 adet sıfır çifti eklenir ve 3 negatif pul dışarı atılır. Geriye 5 adet pozitif pul kalır!'
+                      `(+${tilePositives}) sayısından (-${tileRemovedNegatives}) çıkarmak için kutuda ${tileRemovedNegatives} negatif pul olmadığından dışarıdan ${tileZeroPairs} adet sıfır çifti eklenir ve ${tileRemovedNegatives} negatif pul dışarı atılır. Geriye ${tileResult} adet pozitif pul kalır!`
                     )
                   }
                   className="w-full py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
@@ -4917,18 +5548,72 @@ export function MissionView() {
                   <span>🔊 Sayma Pulları Kuralını Dinle</span>
                 </button>
 
-                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
-                  <div className="flex justify-between font-bold">
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-2.5 font-medium">
+                  <div className="flex items-center justify-between font-bold gap-2">
                     <span>İlk Durum:</span>
-                    <span className="font-mono text-blue-600">+2 (2 Pozitif Pul)</span>
+                    <span className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => changeTilePositives(-1)}
+                        className="w-6 h-6 rounded-lg bg-muted font-bold text-xs cursor-pointer"
+                        aria-label="Pozitif pulu azalt"
+                      >
+                        -
+                      </button>
+                      <span className="font-mono text-blue-600 w-20 text-center">+{tilePositives} Pozitif</span>
+                      <button
+                        onClick={() => changeTilePositives(1)}
+                        className="w-6 h-6 rounded-lg bg-muted font-bold text-xs cursor-pointer"
+                        aria-label="Pozitif pulu artır"
+                      >
+                        +
+                      </button>
+                    </span>
                   </div>
-                  <div className="flex justify-between font-bold">
-                    <span>Eklenen Sıfır Çifti:</span>
-                    <span className="font-mono text-amber-600">3 Adet (+ / -)</span>
+                  <div className="flex items-center justify-between font-bold gap-2">
+                    <span>Sıfır Çifti:</span>
+                    <span className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => changeTileZeroPairs(-1)}
+                        className="w-6 h-6 rounded-lg bg-muted font-bold text-xs cursor-pointer"
+                        aria-label="Sıfır çiftini azalt"
+                      >
+                        -
+                      </button>
+                      <span className="font-mono text-amber-600 w-20 text-center">{tileZeroPairs} Adet (+/-)</span>
+                      <button
+                        onClick={() => changeTileZeroPairs(1)}
+                        className="w-6 h-6 rounded-lg bg-muted font-bold text-xs cursor-pointer"
+                        aria-label="Sıfır çiftini artır"
+                      >
+                        +
+                      </button>
+                    </span>
                   </div>
-                  <div className="flex justify-between font-bold pt-1 border-t">
-                    <span>Çıkarılan Negatif Pul:</span>
-                    <span className="font-mono text-rose-600">-3 (3 Negatif Pul)</span>
+                  <div className="flex items-center justify-between font-bold gap-2 pt-1 border-t">
+                    <span>Çıkarılan (-):</span>
+                    <span className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => changeTileRemovedNegatives(-1)}
+                        className="w-6 h-6 rounded-lg bg-muted font-bold text-xs cursor-pointer"
+                        aria-label="Çıkarılan negatif pulu azalt"
+                      >
+                        -
+                      </button>
+                      <span className="font-mono text-rose-600 w-20 text-center">-{tileRemovedNegatives} Negatif</span>
+                      <button
+                        onClick={() => changeTileRemovedNegatives(1)}
+                        className="w-6 h-6 rounded-lg bg-muted font-bold text-xs cursor-pointer"
+                        aria-label="Çıkarılan negatif pulu artır"
+                      >
+                        +
+                      </button>
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-black pt-1 border-t text-emerald-600">
+                    <span>Sonuç:</span>
+                    <span className="font-mono">
+                      (+{tilePositives}) - (-{tileRemovedNegatives}) = +{tileResult}
+                    </span>
                   </div>
                 </div>
 
@@ -5299,7 +5984,7 @@ export function MissionView() {
                         }}
                         className={`px-3 py-1.5 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
                           treeNumber === num
-                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
                             : 'bg-muted/50 hover:bg-muted text-foreground border-border'
                         }`}
                       >
@@ -5550,7 +6235,7 @@ export function MissionView() {
                           setSelectedPairIdx(0);
                         }}
                         className={`px-3 py-1.5 rounded-xl font-bold text-xs border cursor-pointer ${
-                          areaTarget === num ? 'bg-amber-600 text-white border-amber-700 shadow-xs' : 'bg-muted/50'
+                          areaTarget === num ? 'bg-amber-600 text-white border-amber-700 shadow-sm' : 'bg-muted/50'
                         }`}
                       >
                         {num}
@@ -5607,7 +6292,7 @@ export function MissionView() {
                           setLadderStep(1);
                         }}
                         className={`px-3 py-1.5 rounded-xl font-bold text-xs border cursor-pointer ${
-                          ladderNum === num ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs' : 'bg-muted/50'
+                          ladderNum === num ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm' : 'bg-muted/50'
                         }`}
                       >
                         {num}
@@ -5735,7 +6420,7 @@ export function MissionView() {
 
                 <button
                   onClick={handleSavePrism}
-                  className="w-full py-2.5 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-black text-xs shadow-xs transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-black text-xs shadow-sm transition-all flex items-center justify-center gap-2"
                 >
                   <Box className="w-4 h-4" />
                   <span>Bu prizmayı kaydet (V = {currentVolume})</span>
@@ -6260,7 +6945,7 @@ export function MissionView() {
                           speakText(item.label);
                           setSelectedPatternShape(item.shape);
                         }}
-                        className={`py-3 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-xs transition-all cursor-pointer ${isSelected
+                        className={`py-3 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm transition-all cursor-pointer ${isSelected
                             ? 'bg-purple-500 text-white scale-105 shadow-md ring-2 ring-purple-300'
                             : 'bg-muted/70 hover:bg-muted text-foreground border border-border/80'
                           }`}
@@ -6304,12 +6989,176 @@ export function MissionView() {
                 </button>
               </div>
             )}
+
+            {/* 13. AÇIÖLÇER KONTROLLERİ */}
+            {missionType === 'angle_explorer' && (
+              <div className="space-y-4 mb-4">
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-2 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Açının Ölçüsü:</span>
+                    <span className="font-mono text-violet-600">{angleDegree}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={360}
+                    step={1}
+                    value={angleDegree}
+                    onChange={(e) => handleSetAngle(Number(e.target.value))}
+                    className="w-full accent-violet-600 cursor-pointer"
+                    aria-label="Açı ölçüsü"
+                  />
+                  <div className="flex justify-between font-bold pt-1 border-t">
+                    <span>Açı Türü:</span>
+                    <span className="font-mono text-emerald-600">{angleKind}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[30, 45, 60, 90, 120, 180].map((deg) => (
+                    <button
+                      key={deg}
+                      onClick={() => handleSetAngle(deg)}
+                      className={`py-2 rounded-xl font-black text-xs transition-all cursor-pointer border ${
+                        angleDegree === deg
+                          ? 'bg-violet-600 text-white border-violet-700'
+                          : 'bg-card text-foreground border-border hover:bg-muted'
+                      }`}
+                    >
+                      {deg}°
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() =>
+                    speakText(
+                      `Açıölçeri kaydır. Şu anki ölçü ${angleDegree} derece ve bu bir ${angleKind}. 90 dereceden küçük açılar dar, 90 derece dik, 90 ile 180 arası geniş açıdır.`
+                    )
+                  }
+                  className="w-full py-2.5 rounded-2xl bg-violet-500 hover:bg-violet-600 text-white font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  <span>🔊 Açı Türlerini Dinle</span>
+                </button>
+
+                <button
+                  onClick={handleVerifyAngle}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Açıyı Doğrula →
+                </button>
+              </div>
+            )}
+
+            {/* 14. AYNA SİMETRİSİ KONTROLLERİ */}
+            {missionType === 'transformation_symmetry' && (
+              <div className="space-y-4 mb-4">
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Modeldeki Kare:</span>
+                    <span className="font-mono text-indigo-600">{SYMMETRY_MODEL_CELLS.length}</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Boyadığın Kare:</span>
+                    <span className="font-mono text-emerald-600">{symmetryUserGrid.length}</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-1 border-t">
+                    <span>Durum:</span>
+                    <span className={`font-mono ${isSymmetryCorrect ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {isSymmetryCorrect ? 'Yansıma tamam' : 'Devam ediyor'}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleResetSymmetry}
+                  className="w-full py-2.5 rounded-2xl bg-muted hover:bg-muted/70 text-foreground font-black text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Izgarayı Temizle</span>
+                </button>
+
+                <button
+                  onClick={handleVerifySymmetry}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-rose-600 hover:from-fuchsia-700 hover:to-rose-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Simetriyi Doğrula →
+                </button>
+              </div>
+            )}
+
+            {/* 15. SAYI DOĞRUSU / RİTMİK SAYMA KONTROLLERİ */}
+            {missionType === 'number_line' && (
+              <div className="space-y-4 mb-4">
+                <div className="space-y-2">
+                  <span className="font-bold text-xs text-foreground">Ritmik Sayma Adımı</span>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {NUMBER_LINE_STEPS.map((step) => (
+                      <button
+                        key={step}
+                        onClick={() => handleChangeNumberLineStep(step)}
+                        className={`py-2 rounded-xl font-black text-xs transition-all cursor-pointer border ${
+                          numberLineStep === step
+                            ? 'bg-teal-600 text-white border-teal-700'
+                            : 'bg-card text-foreground border-border hover:bg-muted'
+                        }`}
+                      >
+                        {step}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/40 rounded-2xl border text-xs space-y-1.5 font-medium">
+                  <div className="flex justify-between font-bold">
+                    <span>Bulunduğun Sayı:</span>
+                    <span className="font-mono text-amber-600">{numberLineCurrent}</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-1 border-t">
+                    <span>Hedef Sayı:</span>
+                    <span className="font-mono text-emerald-600">{numberLineTarget}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleNumberLineHop}
+                  disabled={numberLineCurrent >= numberLineTarget}
+                  className="w-full py-3 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-black text-xs shadow-sm disabled:opacity-40 transition-all cursor-pointer"
+                >
+                  🐸 {numberLineStep} Zıpla ({numberLineCurrent} → {Math.min(numberLineCurrent + numberLineStep, numberLineTarget)})
+                </button>
+
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={handleNumberLineUndo}
+                    className="py-2.5 rounded-2xl bg-muted hover:bg-muted/70 text-foreground font-black text-xs cursor-pointer"
+                  >
+                    Geri Al
+                  </button>
+                  <button
+                    onClick={handleResetNumberLine}
+                    className="py-2.5 rounded-2xl bg-muted hover:bg-muted/70 text-foreground font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Sıfırla</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleVerifyNumberLine}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Ritmik Saymayı Doğrula →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ADIM 2: KARAR VER */}
           <div
             className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
-              activeStep === 2 ? 'bg-primary/5 border-primary shadow-xs' : 'bg-muted/30 border-border opacity-85 hover:opacity-100'
+              activeStep === 2 ? 'bg-primary/5 border-primary shadow-sm' : 'bg-muted/30 border-border opacity-85 hover:opacity-100'
             }`}
           >
             <div
@@ -6338,7 +7187,7 @@ export function MissionView() {
                       onClick={() => setSelectedOption(idx)}
                       className={`w-full p-2.5 rounded-2xl text-xs font-bold text-left transition-all border cursor-pointer ${
                         selectedOption === idx
-                          ? 'bg-primary/15 border-primary text-primary shadow-2xs scale-[1.01]'
+                          ? 'bg-primary/15 border-primary text-primary shadow-sm scale-[1.01]'
                           : 'bg-card border-border hover:bg-muted text-foreground'
                       }`}
                     >
@@ -6350,7 +7199,7 @@ export function MissionView() {
                 <button
                   onClick={handleVerifyStep2}
                   disabled={selectedOption === null}
-                  className="w-full py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs hover:opacity-90 disabled:opacity-40 transition-all shadow-xs cursor-pointer"
+                  className="w-full py-2.5 rounded-2xl bg-primary text-primary-foreground font-black text-xs hover:opacity-90 disabled:opacity-40 transition-all shadow-sm cursor-pointer"
                 >
                   Cevabı Kontrol Et →
                 </button>

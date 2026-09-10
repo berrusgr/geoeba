@@ -27,3 +27,6 @@ yarn-error.log*
 # IDE
 .vscode/
 .idea/
+
+# Dahili analiz ciktisi (yayinlanmaz)
+.geoeba-bulgular.json

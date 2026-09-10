@@ -1,9 +1,20 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useWorkspace } from '@/state/WorkspaceContext';
-import { PointObject, SegmentObject, CircleObject, PolygonObject } from '@/types/math';
-import { Solid3D, Solid3DType } from '@/types/workspace3d';
+import {
+  PointObject,
+  SegmentObject,
+  CircleObject,
+  PolygonObject,
+  AngleObject,
+} from '@/types/math';
+import { Point3D, Solid3DType } from '@/types/workspace3d';
+import { generateNextPointLabel } from '@/math/geometry';
+import { createId } from '@/state/ids';
+import { formatTurkishNumber } from '@/math/coordinates';
+import { validateMathExpression } from '@/math/parser';
+import { Modal } from '@/components/ui/Modal';
 import {
   X,
   Hash,
@@ -11,67 +22,83 @@ import {
   Circle as CircleIcon,
   Triangle,
   Square,
-  TrendingUp,
   Sigma,
   Box,
   Cylinder,
-  Sparkles,
+  Cone,
+  Pyramid,
+  AlertCircle,
 } from 'lucide-react';
+
+export interface SolidDimensions {
+  width?: number;
+  height?: number;
+  depth?: number;
+  radius?: number;
+}
 
 interface AddObjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   is3D?: boolean;
-  onAddSolid3D?: (type: Solid3DType) => void;
+  onAddSolid3D?: (type: SolidType, dims?: SolidDimensions, pos?: Point3D) => void;
 }
 
-type TabType =
-  | 'point'
-  | 'number'
-  | 'segment'
-  | 'circle'
-  | 'disk'
-  | 'triangle'
-  | 'square'
-  | 'rectangle'
-  | 'cube'
-  | 'sphere'
-  | 'cylinder'
-  | 'prism'
-  | 'function'
-  | 'angle';
+export type SolidType = Solid3DType;
+
+type Tab2D = 'point' | 'segment' | 'circle' | 'disk' | 'triangle' | 'square' | 'rectangle' | 'angle' | 'function';
+type Tab3D = 'cube' | 'sphere' | 'cylinder' | 'prism' | 'triangular_prism' | 'cone' | 'pyramid';
+type TabType = Tab2D | Tab3D;
 
 interface TabItem {
   id: TabType;
   label: string;
   icon: React.ReactNode;
-  is3DOnly?: boolean;
+  dimension: '2D' | '3D';
+  defaultName: string;
 }
 
 const TABS: TabItem[] = [
-  { id: 'point', label: 'Nokta', icon: <Hash className="w-4 h-4" /> },
-  { id: 'number', label: 'Sayı', icon: <Hash className="w-4 h-4" /> },
-  { id: 'segment', label: 'Doğru parçası', icon: <MoveRight className="w-4 h-4" /> },
-  { id: 'circle', label: 'Çember', icon: <CircleIcon className="w-4 h-4" /> },
-  { id: 'disk', label: 'Daire', icon: <CircleIcon className="w-4 h-4" /> },
-  { id: 'triangle', label: 'Üçgen', icon: <Triangle className="w-4 h-4" /> },
-  { id: 'square', label: 'Kare', icon: <Square className="w-4 h-4" /> },
-  { id: 'rectangle', label: 'Dikdörtgen', icon: <Square className="w-4 h-4" /> },
-  { id: 'cube', label: 'Küp (3D)', icon: <Box className="w-4 h-4" /> },
-  { id: 'sphere', label: 'Küre (3D)', icon: <CircleIcon className="w-4 h-4" /> },
-  { id: 'cylinder', label: 'Silindir (3D)', icon: <Cylinder className="w-4 h-4" /> },
-  { id: 'prism', label: 'Prizma (3D)', icon: <Box className="w-4 h-4" /> },
-  { id: 'function', label: 'Fonksiyon', icon: <span className="font-serif font-bold text-xs">f</span> },
-  { id: 'angle', label: 'Açı', icon: <Sigma className="w-4 h-4" /> },
+  { id: 'point', label: 'Nokta', icon: <Hash className="w-4 h-4" />, dimension: '2D', defaultName: 'A' },
+  { id: 'segment', label: 'Doğru parçası', icon: <MoveRight className="w-4 h-4" />, dimension: '2D', defaultName: 'd1' },
+  { id: 'circle', label: 'Çember', icon: <CircleIcon className="w-4 h-4" />, dimension: '2D', defaultName: 'cember1' },
+  { id: 'disk', label: 'Daire', icon: <CircleIcon className="w-4 h-4" />, dimension: '2D', defaultName: 'daire1' },
+  { id: 'triangle', label: 'Üçgen', icon: <Triangle className="w-4 h-4" />, dimension: '2D', defaultName: 'ucgen1' },
+  { id: 'square', label: 'Kare', icon: <Square className="w-4 h-4" />, dimension: '2D', defaultName: 'kare1' },
+  { id: 'rectangle', label: 'Dikdörtgen', icon: <Square className="w-4 h-4" />, dimension: '2D', defaultName: 'dikdortgen1' },
+  { id: 'angle', label: 'Açı', icon: <Sigma className="w-4 h-4" />, dimension: '2D', defaultName: 'alfa' },
+  { id: 'function', label: 'Fonksiyon', icon: <span className="font-serif font-bold text-xs">f</span>, dimension: '2D', defaultName: 'f' },
+  { id: 'cube', label: 'Küp', icon: <Box className="w-4 h-4" />, dimension: '3D', defaultName: 'kup1' },
+  { id: 'sphere', label: 'Küre', icon: <CircleIcon className="w-4 h-4" />, dimension: '3D', defaultName: 'kure1' },
+  { id: 'cylinder', label: 'Silindir', icon: <Cylinder className="w-4 h-4" />, dimension: '3D', defaultName: 'silindir1' },
+  { id: 'prism', label: 'Dikdörtgenler Prizması', icon: <Box className="w-4 h-4" />, dimension: '3D', defaultName: 'prizma1' },
+  { id: 'triangular_prism', label: 'Üçgen Prizma', icon: <Triangle className="w-4 h-4" />, dimension: '3D', defaultName: 'ucgenprizma1' },
+  { id: 'cone', label: 'Koni', icon: <Cone className="w-4 h-4" />, dimension: '3D', defaultName: 'koni1' },
+  { id: 'pyramid', label: 'Kare Piramit', icon: <Pyramid className="w-4 h-4" />, dimension: '3D', defaultName: 'piramit1' },
 ];
 
-export function AddObjectModal({ isOpen, onClose, is3D, onAddSolid3D }: AddObjectModalProps) {
-  const { addObject } = useWorkspace();
-  const [selectedTab, setSelectedTab] = useState<TabType>(is3D ? 'cube' : 'disk');
+const DEFAULT_TAB_2D: TabType = 'disk';
+const DEFAULT_TAB_3D: TabType = 'cube';
 
-  // Form Değerleri
+const INPUT_CLASS =
+  'w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none font-mono';
+
+const LABEL_CLASS = 'text-xs font-black text-slate-700 dark:text-slate-300';
+
+/** "-1,5" / "-1.5" gibi ham metni sayıya çevirir; geçersizse null. */
+function parseNumberInput(raw: string): number | null {
+  const n = parseFloat(raw.trim().replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+
+const fmt = (n: number) => formatTurkishNumber(n, 2);
+
+export function AddObjectModal({ isOpen, onClose, is3D = false, onAddSolid3D }: AddObjectModalProps) {
+  const { addObject, addObjects, addFunction, objects } = useWorkspace();
+  const [selectedTab, setSelectedTab] = useState<TabType>(is3D ? DEFAULT_TAB_3D : DEFAULT_TAB_2D);
+
+  // Form Değerleri (ham metin; gönderimde ayrıştırılır)
   const [name, setName] = useState('daire1');
-  const [creationMode, setCreationMode] = useState('Ölçü gir');
   const [startX, setStartX] = useState('1');
   const [startY, setStartY] = useState('1');
   const [startZ, setStartZ] = useState('0');
@@ -81,348 +108,463 @@ export function AddObjectModal({ isOpen, onClose, is3D, onAddSolid3D }: AddObjec
   const [depth, setDepth] = useState('3');
   const [angleVal, setAngleVal] = useState('60');
   const [funcExpr, setFuncExpr] = useState('2*x + 1');
+  const [error, setError] = useState<string | null>(null);
 
-  // Tab Değişiminde Varsayılan İsim Güncelleme
-  const handleTabChange = (tabId: TabType) => {
-    setSelectedTab(tabId);
-    switch (tabId) {
-      case 'point': setName('A'); break;
-      case 'number': setName('n1'); break;
-      case 'segment': setName('d1'); break;
-      case 'circle': setName('cember1'); break;
-      case 'disk': setName('daire1'); break;
-      case 'triangle': setName('ucgen1'); break;
-      case 'square': setName('kare1'); break;
-      case 'rectangle': setName('dikdortgen1'); break;
-      case 'cube': setName('kup1'); break;
-      case 'sphere': setName('kure1'); break;
-      case 'cylinder': setName('silindir1'); break;
-      case 'prism': setName('prizma1'); break;
-      case 'function': setName('f'); break;
-      case 'angle': setName('alfa'); break;
-    }
+  const visibleTabs = useMemo(() => TABS.filter((t) => t.dimension === (is3D ? '3D' : '2D')), [is3D]);
+
+  // Modal her açıldığında veya 2D/3D bağlamı değiştiğinde varsayılan sekmeye dön
+  useEffect(() => {
+    if (!isOpen) return;
+    const defaultTab = is3D ? DEFAULT_TAB_3D : DEFAULT_TAB_2D;
+    setSelectedTab(defaultTab);
+    setName(TABS.find((t) => t.id === defaultTab)?.defaultName ?? '');
+    setError(null);
+  }, [isOpen, is3D]);
+
+  const handleTabChange = (tab: TabItem) => {
+    setSelectedTab(tab.id);
+    setName(tab.defaultName);
+    setError(null);
   };
+
+  // Sayısal alanların "mevcut" değerleri (önizleme için, varsayılanlarla)
+  const x = parseNumberInput(startX) ?? 0;
+  const y = parseNumberInput(startY) ?? 0;
+  const z = parseNumberInput(startZ) ?? 0;
+  const r = parseNumberInput(radius) ?? 2;
+  const w = parseNumberInput(width) ?? 4;
+  const h = parseNumberInput(height) ?? 3;
+  const d = parseNumberInput(depth) ?? 3;
+  const ang = parseNumberInput(angleVal) ?? 60;
+
+  const showsPosition = selectedTab !== 'function';
+  const showsRadius = ['circle', 'disk', 'sphere', 'cylinder', 'cone'].includes(selectedTab);
+  const showsWidth = ['segment', 'triangle', 'square', 'rectangle', 'cube', 'prism', 'triangular_prism', 'pyramid', 'angle'].includes(selectedTab);
+  const showsHeight = ['segment', 'triangle', 'rectangle', 'cylinder', 'prism', 'triangular_prism', 'cone', 'pyramid'].includes(selectedTab);
+  const showsDepth = selectedTab === 'prism' || selectedTab === 'triangular_prism';
+  const widthLabel =
+    selectedTab === 'square' || selectedTab === 'cube' || selectedTab === 'pyramid'
+      ? 'Kenar'
+      : selectedTab === 'segment'
+        ? 'Δx (yatay uzunluk)'
+        : selectedTab === 'angle'
+          ? 'Kol Uzunluğu'
+          : 'Genişlik';
+  const heightLabel = selectedTab === 'segment' ? 'Δy (dikey uzunluk)' : 'Yükseklik';
 
   // Komut Önizlemesi
   const commandPreview = useMemo(() => {
-    const x = Number(startX) || 0;
-    const y = Number(startY) || 0;
-    const z = Number(startZ) || 0;
-    const r = Number(radius) || 2;
-    const w = Number(width) || 4;
-    const h = Number(height) || 3;
-    const d = Number(depth) || 3;
-
+    const p = (px: number, py: number) => `Nokta(${fmt(px)}; ${fmt(py)})`;
     switch (selectedTab) {
-      case 'disk':
-        return `${name}Merkez = Nokta(${x}, ${y})\n${name} = Daire(${name}Merkez, ${r})`;
-      case 'circle':
-        return `${name}Merkez = Nokta(${x}, ${y})\n${name} = Cember(${name}Merkez, ${r})`;
       case 'point':
-        return `${name} = Nokta(${x}, ${y}${is3D ? `, ${z}` : ''})`;
+        return `${name} = Nokta(${fmt(x)}; ${fmt(y)})`;
       case 'segment':
-        return `${name}A = Nokta(${x}, ${y})\n${name}B = Nokta(${x + w}, ${y + h})\n${name} = DogruParcasi(${name}A, ${name}B)`;
-      case 'square':
-        return `${name}Kose = Nokta(${x}, ${y})\n${name} = Kare(${name}Kose, Kenar=${w})`;
-      case 'rectangle':
-        return `${name}Kose = Nokta(${x}, ${y})\n${name} = Dikdortgen(${name}Kose, Genislik=${w}, Yukseklik=${h})`;
+        return `${name}A = ${p(x, y)}\n${name}B = ${p(x + w, y + h)}\n${name} = DoğruParçası(${name}A, ${name}B)`;
+      case 'circle':
+        return `${name}M = ${p(x, y)}\n${name} = Çember(${name}M, r=${fmt(r)})`;
+      case 'disk':
+        return `${name}M = ${p(x, y)}\n${name} = Daire(${name}M, r=${fmt(r)})`;
       case 'triangle':
-        return `${name}A = Nokta(${x}, ${y})\n${name}B = Nokta(${x + w}, ${y})\n${name}C = Nokta(${x + w / 2}, ${y + h})\n${name} = Ucgen(${name}A, ${name}B, ${name}C)`;
-      case 'cube':
-        return `${name} = Kup(Merkez=(${x}, ${y}, ${z}), Kenar=${w})`;
-      case 'sphere':
-        return `${name} = Kure(Merkez=(${x}, ${y}, ${z}), Yaricap=${r})`;
-      case 'cylinder':
-        return `${name} = Silindir(Merkez=(${x}, ${y}, ${z}), Yaricap=${r}, Yukseklik=${h})`;
-      case 'prism':
-        return `${name} = Prizma(Merkez=(${x}, ${y}, ${z}), a=${w}, b=${d}, h=${h})`;
+        return `${name} = Üçgen(${p(x, y)}, ${p(x + w, y)}, ${p(x + w / 2, y + h)})`;
+      case 'square':
+        return `${name} = Kare(Köşe=${p(x, y)}, Kenar=${fmt(w)})`;
+      case 'rectangle':
+        return `${name} = Dikdörtgen(Köşe=${p(x, y)}, Genişlik=${fmt(w)}, Yükseklik=${fmt(h)})`;
+      case 'angle':
+        return `${name} = Açı(Köşe=${p(x, y)}, ${fmt(ang)}°)`;
       case 'function':
         return `${name}(x) = ${funcExpr}`;
-      case 'angle':
-        return `${name} = Aci(${angleVal}°)`;
-      case 'number':
-        return `${name} = ${radius}`;
+      case 'cube':
+        return `${name} = Küp(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), Kenar=${fmt(w)})`;
+      case 'sphere':
+        return `${name} = Küre(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), Yarıçap=${fmt(r)})`;
+      case 'cylinder':
+        return `${name} = Silindir(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), Yarıçap=${fmt(r)}, Yükseklik=${fmt(h)})`;
+      case 'prism':
+        return `${name} = Prizma(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), a=${fmt(w)}, b=${fmt(d)}, h=${fmt(h)})`;
+      case 'triangular_prism':
+        return `${name} = ÜçgenPrizma(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), Taban=${fmt(w)}, Derinlik=${fmt(d)}, h=${fmt(h)})`;
+      case 'cone':
+        return `${name} = Koni(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), Yarıçap=${fmt(r)}, Yükseklik=${fmt(h)})`;
+      case 'pyramid':
+        return `${name} = KarePiramit(Merkez=(${fmt(x)}; ${fmt(y)}; ${fmt(z)}), Kenar=${fmt(w)}, Yükseklik=${fmt(h)})`;
       default:
         return `${name} = Nesne()`;
     }
-  }, [selectedTab, name, startX, startY, startZ, radius, width, height, depth, angleVal, funcExpr, is3D]);
-
-  if (!isOpen) return null;
+  }, [selectedTab, name, x, y, z, r, w, h, d, ang, funcExpr]);
 
   // Nesneyi Çalışma Alanına Ekle
   const handleAdd = () => {
-    const x = Number(startX) || 0;
-    const y = Number(startY) || 0;
-    const z = Number(startZ) || 0;
-    const r = Number(radius) || 2;
-    const w = Number(width) || 4;
-    const h = Number(height) || 3;
-    const d = Number(depth) || 3;
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('Ad boş olamaz.');
+      return;
+    }
 
-    // 3D Cisimler
-    if (selectedTab === 'cube' || selectedTab === 'sphere' || selectedTab === 'cylinder' || selectedTab === 'prism') {
-      const typeMap: Record<string, Solid3DType> = {
-        cube: 'cube',
-        sphere: 'sphere',
-        cylinder: 'cylinder',
-        prism: 'prism',
-      };
-      if (onAddSolid3D) {
-        onAddSolid3D(typeMap[selectedTab]);
+    // Girdi doğrulama
+    if (showsPosition) {
+      if (parseNumberInput(startX) === null || parseNumberInput(startY) === null || (is3D && parseNumberInput(startZ) === null)) {
+        setError('Konum değerleri geçerli birer sayı olmalıdır.');
+        return;
       }
+    }
+    if (showsRadius && (parseNumberInput(radius) === null || r <= 0)) {
+      setError('Yarıçap sıfırdan büyük bir sayı olmalıdır.');
+      return;
+    }
+    if (showsWidth && (parseNumberInput(width) === null || (selectedTab !== 'segment' && w <= 0))) {
+      setError(`${widthLabel} geçerli bir sayı olmalıdır${selectedTab !== 'segment' ? ' (sıfırdan büyük)' : ''}.`);
+      return;
+    }
+    if (showsHeight && (parseNumberInput(height) === null || (selectedTab !== 'segment' && h <= 0))) {
+      setError(`${heightLabel} geçerli bir sayı olmalıdır${selectedTab !== 'segment' ? ' (sıfırdan büyük)' : ''}.`);
+      return;
+    }
+    if (showsDepth && (parseNumberInput(depth) === null || d <= 0)) {
+      setError('Derinlik sıfırdan büyük bir sayı olmalıdır.');
+      return;
+    }
+    if (selectedTab === 'segment' && w === 0 && h === 0) {
+      setError('Doğru parçasının iki ucu aynı noktada olamaz (Δx ve Δy birlikte sıfır olamaz).');
+      return;
+    }
+
+    // 3D Cisimler: ölçüler üst bileşene iletilir
+    if (['cube', 'sphere', 'cylinder', 'prism', 'triangular_prism', 'cone', 'pyramid'].includes(selectedTab)) {
+      const dimsByType: Record<Tab3D, SolidDimensions> = {
+        cube: { width: w, height: w, depth: w },
+        sphere: { radius: r, width: r * 2, height: r * 2, depth: r * 2 },
+        cylinder: { radius: r, height: h, width: r * 2, depth: r * 2 },
+        prism: { width: w, height: h, depth: d },
+        triangular_prism: { width: w, height: h, depth: d },
+        cone: { radius: r, height: h, width: r * 2, depth: r * 2 },
+        pyramid: { width: w, height: h, depth: w },
+      };
+      // Kullanıcının girdiği merkez konumu da iletilir (aksi halde otomatik ızgara konumu kullanılır).
+      onAddSolid3D?.(selectedTab as Tab3D, dimsByType[selectedTab as Tab3D], { x, y, z });
+      setError(null);
       onClose();
       return;
     }
 
-    // 2D Geometri Nesneleri
-    if (selectedTab === 'point') {
-      const newPt: PointObject = {
-        id: `pt-${Date.now()}`,
-        type: 'point',
-        label: name,
-        showLabel: true,
-        isIndependent: true,
-        x,
-        y,
-        color: '#2563eb',
-        visible: true,
-        createdAt: Date.now(),
-      };
-      addObject(newPt, `${name} noktası eklendi`);
-    } else if (selectedTab === 'disk' || selectedTab === 'circle') {
-      const centerId = `pt-${Date.now()}`;
-      const centerPt: PointObject = {
-        id: centerId,
-        type: 'point',
-        label: `${name}M`,
-        showLabel: true,
-        isIndependent: true,
-        x,
-        y,
-        color: '#2563eb',
-        visible: true,
-        createdAt: Date.now(),
-      };
-      addObject(centerPt, `${name} merkez noktası eklendi`);
+    // 2D Nesneler
+    if (selectedTab === 'function') {
+      const expr = funcExpr.trim();
+      const validation = validateMathExpression(expr);
+      if (!validation.ok) {
+        setError(validation.error);
+        return;
+      }
+      addFunction(expr, `${trimmedName}(x) = ${expr}`);
+      setError(null);
+      onClose();
+      return;
+    }
 
-      const newCirc: CircleObject = {
-        id: `circ-${Date.now() + 1}`,
-        type: 'circle',
-        label: name,
+    const base = Date.now();
+    let seq = 0;
+    // createdAt sırası korunsun diye artan sayaç; kimlikler createId ile üretilir.
+    const nextCreatedAt = () => base + seq++;
+
+    // Otomatik nokta etiketleri: mevcut etiketlerle çakışmayan sıradaki harfler
+    const usedLabels = objects.filter((o) => o.type === 'point').map((o) => o.label);
+    const nextLabel = () => {
+      const label = generateNextPointLabel(usedLabels);
+      usedLabels.push(label);
+      return label;
+    };
+
+    const makePoint = (px: number, py: number, label: string, color: string): PointObject => ({
+      id: createId('pt'),
+      type: 'point',
+      label,
+      showLabel: true,
+      isIndependent: true,
+      x: Number(px.toFixed(2)),
+      y: Number(py.toFixed(2)),
+      color,
+      visible: true,
+      createdAt: nextCreatedAt(),
+    });
+
+    if (selectedTab === 'point') {
+      addObject(makePoint(x, y, trimmedName, '#2563eb'), `${trimmedName} noktası eklendi`);
+    } else if (selectedTab === 'segment') {
+      const a = makePoint(x, y, nextLabel(), '#2563eb');
+      const b = makePoint(x + w, y + h, nextLabel(), '#2563eb');
+      const seg: SegmentObject = {
+        id: createId('seg'),
+        type: 'segment',
+        label: trimmedName,
         showLabel: true,
-        centerPointId: centerId,
+        startPointId: a.id,
+        endPointId: b.id,
+        color: '#2563eb',
+        visible: true,
+        showLength: true,
+        createdAt: nextCreatedAt(),
+      };
+      addObjects([a, b, seg], `${trimmedName} doğru parçası eklendi`);
+    } else if (selectedTab === 'disk' || selectedTab === 'circle') {
+      const center = makePoint(x, y, nextLabel(), '#2563eb');
+      const circ: CircleObject = {
+        id: createId('circ'),
+        type: 'circle',
+        label: trimmedName,
+        showLabel: true,
+        centerPointId: center.id,
         fixedRadius: r,
         color: '#8b5cf6',
         fillOpacity: selectedTab === 'disk' ? 0.12 : 0,
         visible: true,
         showArea: selectedTab === 'disk',
-        createdAt: Date.now() + 1,
+        createdAt: nextCreatedAt(),
       };
-      addObject(newCirc, `${name} eklendi`);
-    } else if (selectedTab === 'square' || selectedTab === 'rectangle') {
-      const p1Id = `pt-${Date.now()}`;
-      const p2Id = `pt-${Date.now() + 1}`;
-      const p3Id = `pt-${Date.now() + 2}`;
-      const p4Id = `pt-${Date.now() + 3}`;
+      addObjects([center, circ], `${trimmedName} eklendi`);
+    } else if (selectedTab === 'triangle' || selectedTab === 'square' || selectedTab === 'rectangle') {
       const sideH = selectedTab === 'square' ? w : h;
-
-      const p1: PointObject = { id: p1Id, type: 'point', label: 'A', showLabel: true, isIndependent: true, x, y, color: '#3b82f6', visible: true, createdAt: Date.now() };
-      const p2: PointObject = { id: p2Id, type: 'point', label: 'B', showLabel: true, isIndependent: true, x: x + w, y, color: '#3b82f6', visible: true, createdAt: Date.now() };
-      const p3: PointObject = { id: p3Id, type: 'point', label: 'C', showLabel: true, isIndependent: true, x: x + w, y: y + sideH, color: '#3b82f6', visible: true, createdAt: Date.now() };
-      const p4: PointObject = { id: p4Id, type: 'point', label: 'D', showLabel: true, isIndependent: true, x, y: y + sideH, color: '#3b82f6', visible: true, createdAt: Date.now() };
-
-      addObject(p1);
-      addObject(p2);
-      addObject(p3);
-      addObject(p4);
-
+      const corners: [number, number][] =
+        selectedTab === 'triangle'
+          ? [
+              [x, y],
+              [x + w, y],
+              [x + w / 2, y + h],
+            ]
+          : [
+              [x, y],
+              [x + w, y],
+              [x + w, y + sideH],
+              [x, y + sideH],
+            ];
+      const pts = corners.map(([px, py]) => makePoint(px, py, nextLabel(), '#3b82f6'));
       const poly: PolygonObject = {
-        id: `poly-${Date.now() + 4}`,
+        id: createId('poly'),
         type: 'polygon',
-        label: name,
+        label: trimmedName,
         showLabel: true,
-        pointIds: [p1Id, p2Id, p3Id, p4Id],
+        pointIds: pts.map((p) => p.id),
         color: '#f59e0b',
-        fillColor: '#f59e0b25',
+        fillColor: '#f59e0b',
+        fillOpacity: 0.15,
         visible: true,
         showArea: true,
-        createdAt: Date.now() + 4,
+        showPerimeter: true,
+        createdAt: nextCreatedAt(),
       };
-      addObject(poly, `${name} eklendi`);
+      addObjects([...pts, poly], `${trimmedName} eklendi`);
+    } else if (selectedTab === 'angle') {
+      const arm = w;
+      const rad = (ang * Math.PI) / 180;
+      const vertex = makePoint(x, y, nextLabel(), '#0ea5e9');
+      const p1 = makePoint(x + arm, y, nextLabel(), '#0ea5e9');
+      const p3 = makePoint(x + arm * Math.cos(rad), y + arm * Math.sin(rad), nextLabel(), '#0ea5e9');
+      const angle: AngleObject = {
+        id: createId('ang'),
+        type: 'angle',
+        label: trimmedName,
+        showLabel: true,
+        point1Id: p1.id,
+        vertexPointId: vertex.id,
+        point3Id: p3.id,
+        showValue: true,
+        color: '#0ea5e9',
+        visible: true,
+        createdAt: nextCreatedAt(),
+      };
+      addObjects([vertex, p1, p3, angle], `${trimmedName} açısı (${fmt(ang)}°) eklendi`);
     }
 
+    setError(null);
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col select-none">
-        {/* Üst Başlık & Kapatma Butonu */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-            Nesne ekle
-          </h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const numberField = (
+    id: string,
+    label: string,
+    value: string,
+    setter: (v: string) => void
+  ) => (
+    <div className="space-y-1.5">
+      <label className={LABEL_CLASS} htmlFor={id}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        inputMode="decimal"
+        value={value}
+        onChange={(e) => {
+          setter(e.target.value);
+          setError(null);
+        }}
+        className={INPUT_CLASS}
+      />
+    </div>
+  );
 
-        {/* Ana Gövde: Sol Sekmeler + Sağ Form */}
-        <div className="flex flex-col sm:flex-row min-h-[420px]">
-          {/* Sol Sekmeler Listesi */}
-          <div className="w-full sm:w-52 p-3 bg-slate-50/60 dark:bg-slate-950/40 border-r border-slate-100 dark:border-slate-800/80 flex flex-row sm:flex-col gap-1 overflow-x-auto sm:overflow-y-auto max-h-[460px] scrollbar-thin shrink-0">
-            {TABS.map((tab) => {
-              const isSelected = selectedTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-left transition-all cursor-pointer whitespace-nowrap ${
-                    isSelected
-                      ? 'bg-white dark:bg-slate-800 text-primary shadow-sm border border-slate-200/60 dark:border-slate-700'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-200'
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      labelledBy="add-object-modal-title"
+      overlayClassName="bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col select-none"
+    >
+      {/* Üst Başlık & Kapatma Butonu */}
+      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <h2 id="add-object-modal-title" className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+          Nesne ekle {is3D ? '(3D)' : '(2D)'}
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
+          title="Kapat (Esc)"
+          aria-label="Kapat"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Ana Gövde: Sol Sekmeler + Sağ Form */}
+      <form
+        className="flex flex-col sm:flex-row min-h-[420px]"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAdd();
+        }}
+      >
+        {/* Sol Sekmeler Listesi */}
+        <div
+          className="w-full sm:w-52 p-3 bg-slate-50/60 dark:bg-slate-950/40 border-r border-slate-100 dark:border-slate-800/80 flex flex-row sm:flex-col gap-1 overflow-x-auto sm:overflow-y-auto max-h-[460px] scrollbar-thin shrink-0"
+          role="tablist"
+          aria-label="Nesne türleri"
+        >
+          {visibleTabs.map((tab) => {
+            const isSelected = selectedTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                onClick={() => handleTabChange(tab)}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-left transition-all cursor-pointer whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-white dark:bg-slate-800 text-primary shadow-sm border border-slate-200/60 dark:border-slate-700'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                    isSelected ? 'text-primary' : 'text-slate-400'
                   }`}
                 >
-                  <div
-                    className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                      isSelected ? 'text-primary' : 'text-slate-400'
-                    }`}
-                  >
-                    {tab.icon}
-                  </div>
-                  <span className="font-extrabold">{tab.label}</span>
-                </button>
-              );
-            })}
+                  {tab.icon}
+                </div>
+                <span className="font-extrabold">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Sağ Form Parametre Alanı */}
+        <div className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[460px] scrollbar-thin">
+          {/* Ad Alanı */}
+          <div className="space-y-1.5">
+            <label className={LABEL_CLASS} htmlFor="add-object-name">
+              Ad
+            </label>
+            <input
+              id="add-object-name"
+              type="text"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError(null);
+              }}
+              className={INPUT_CLASS}
+              autoFocus
+            />
           </div>
 
-          {/* Sağ Form Parametre Alanı */}
-          <div className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[460px] scrollbar-thin">
-            {/* Ad Alanı */}
+          <p className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+            {selectedTab === 'function'
+              ? 'x değişkenine bağlı bir ifade girin; grafik tuvale çizilir.'
+              : 'Kesin ölçüleri girin; gerekli noktalar otomatik oluşur. Ondalık için virgül veya nokta kullanabilirsiniz.'}
+          </p>
+
+          {/* Fonksiyon İfadesi */}
+          {selectedTab === 'function' && (
             <div className="space-y-1.5">
-              <label className="text-xs font-black text-slate-700 dark:text-slate-300">Ad</label>
+              <label className={LABEL_CLASS} htmlFor="add-object-function">
+                İfade — {name || 'f'}(x) =
+              </label>
               <input
+                id="add-object-function"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                value={funcExpr}
+                onChange={(e) => {
+                  setFuncExpr(e.target.value);
+                  setError(null);
+                }}
+                placeholder="Örn: x^2 - 4, 2x + 1, sin(x)"
+                className={INPUT_CLASS}
               />
+              <p className="text-[10px] text-slate-500">sin(x) radyan, sind(x) derece; x², 2x ve x sin(x) yazımı desteklenir.</p>
             </div>
+          )}
 
-            {/* Oluşturma Biçimi Dropdown */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                Oluşturma biçimi
-              </label>
-              <select
-                value={creationMode}
-                onChange={(e) => setCreationMode(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer"
-              >
-                <option value="Ölçü gir">Ölçü gir</option>
-                <option value="Koordinat gir">Koordinat gir</option>
-                <option value="Nokta seç">Nokta seç</option>
-              </select>
+          {/* Konum */}
+          {showsPosition && (
+            <div className={`grid ${is3D ? 'grid-cols-3' : 'grid-cols-2'} gap-3 pt-1`}>
+              {numberField('add-object-x', selectedTab === 'angle' ? 'Köşe x' : is3D ? 'Merkez x' : 'Başlangıç x', startX, setStartX)}
+              {numberField('add-object-y', selectedTab === 'angle' ? 'Köşe y' : is3D ? 'Merkez y' : 'Başlangıç y', startY, setStartY)}
+              {is3D && numberField('add-object-z', 'Merkez z', startZ, setStartZ)}
             </div>
+          )}
 
-            <p className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-              Kesin ölçüleri girin; gerekli noktalar otomatik oluşur.
-            </p>
+          {/* Yarıçap */}
+          {showsRadius && numberField('add-object-radius', 'Yarıçap', radius, setRadius)}
 
-            {/* Dinamik Form Alanları */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                  Başlangıç x
-                </label>
-                <input
-                  type="number"
-                  value={startX}
-                  onChange={(e) => setStartX(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                  Başlangıç y
-                </label>
-                <input
-                  type="number"
-                  value={startY}
-                  onChange={(e) => setStartY(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                />
-              </div>
+          {/* Ölçüler */}
+          {(showsWidth || showsHeight || showsDepth) && (
+            <div className={`grid ${showsDepth ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
+              {showsWidth && numberField('add-object-width', widthLabel, width, setWidth)}
+              {showsHeight && numberField('add-object-height', heightLabel, height, setHeight)}
+              {showsDepth && numberField('add-object-depth', 'Derinlik', depth, setDepth)}
             </div>
+          )}
 
-            {/* Çember / Daire / Küre için Yarıçap */}
-            {(selectedTab === 'disk' || selectedTab === 'circle' || selectedTab === 'sphere' || selectedTab === 'cylinder') && (
-              <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-700 dark:text-slate-300">Yarıçap</label>
-                <input
-                  type="number"
-                  value={radius}
-                  onChange={(e) => setRadius(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                />
-              </div>
-            )}
+          {/* Açı Ölçüsü */}
+          {selectedTab === 'angle' && numberField('add-object-angle', 'Açı Ölçüsü (°)', angleVal, setAngleVal)}
 
-            {/* Kare / Dikdörtgen / Prizma / Küp için Ölçüler */}
-            {(selectedTab === 'square' || selectedTab === 'rectangle' || selectedTab === 'triangle' || selectedTab === 'cube' || selectedTab === 'prism') && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {selectedTab === 'square' || selectedTab === 'cube' ? 'Kenar' : 'Genişlik'}
-                  </label>
-                  <input
-                    type="number"
-                    value={width}
-                    onChange={(e) => setWidth(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                  />
-                </div>
-
-                {selectedTab !== 'square' && selectedTab !== 'cube' && (
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-black text-slate-700 dark:text-slate-300">Yükseklik</label>
-                    <input
-                      type="number"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Komut Önizleme Kutusu */}
-            <div className="space-y-1.5 pt-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                KOMUT ÖNİZLEME
-              </label>
-              <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 font-mono text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-                {commandPreview}
-              </div>
+          {/* Komut Önizleme Kutusu */}
+          <div className="space-y-1.5 pt-2">
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">KOMUT ÖNİZLEME</div>
+            <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 font-mono text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+              {commandPreview}
             </div>
+          </div>
 
-            {/* Ekle Butonu */}
-            <div className="pt-2">
-              <button
-                onClick={handleAdd}
-                className="w-full py-3.5 rounded-2xl bg-[#5865f2] hover:bg-[#4752c4] text-white font-black text-xs shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
-              >
-                <span>Ekle</span>
-              </button>
+          {error && (
+            <div className="flex items-start gap-1.5 text-[11px] font-semibold text-red-600 dark:text-red-400" role="alert">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
+          )}
+
+          {/* Ekle Butonu */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-2xl bg-[#5865f2] hover:bg-[#4752c4] text-white font-black text-xs shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Ekle</span>
+            </button>
           </div>
         </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }

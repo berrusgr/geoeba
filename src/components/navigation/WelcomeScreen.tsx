@@ -23,7 +23,7 @@ export function WelcomeScreen() {
         {/* ============================================================== */}
         {/* 1. ÜST BAŞLIK ALANI (Sade & Zarif Tipografi)                     */}
         {/* ============================================================== */}
-        <div className="bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs">
+        <div className="bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-sm">
           <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
             Kademe Seçimi
           </h1>
@@ -44,10 +44,10 @@ export function WelcomeScreen() {
           >
             {/* Sol Üst İkon & Rozet */}
             <div className="flex items-center justify-between w-full relative z-10">
-              <div className="w-11 h-11 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-xs">
+              <div className="w-11 h-11 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shadow-sm">
                 <Smile className="w-6 h-6" />
               </div>
-              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-amber-800 dark:text-amber-300 text-xs font-black border border-amber-200 dark:border-amber-800 shadow-2xs">
+              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-amber-800 dark:text-amber-300 text-xs font-black border border-amber-200 dark:border-amber-800 shadow-sm">
                 1-4. Sınıf
               </span>
             </div>
@@ -82,7 +82,7 @@ export function WelcomeScreen() {
                       e.stopPropagation();
                       selectGrade(cls.num as any);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white text-amber-900 dark:text-amber-200 text-xs font-black border border-amber-300/80 shadow-2xs transition-all active:scale-95 cursor-pointer z-20"
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white text-amber-900 dark:text-amber-200 text-xs font-black border border-amber-300/80 shadow-sm transition-all active:scale-95 cursor-pointer z-20"
                   >
                     {cls.label}
                   </button>
@@ -98,10 +98,10 @@ export function WelcomeScreen() {
           >
             {/* Sol Üst İkon & Rozet */}
             <div className="flex items-center justify-between w-full relative z-10">
-              <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+              <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
                 <Compass className="w-6 h-6" />
               </div>
-              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-blue-800 dark:text-blue-300 text-xs font-black border border-blue-200 dark:border-blue-800 shadow-2xs">
+              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-blue-800 dark:text-blue-300 text-xs font-black border border-blue-200 dark:border-blue-800 shadow-sm">
                 5-8. Sınıf
               </span>
             </div>
@@ -136,7 +136,7 @@ export function WelcomeScreen() {
                       e.stopPropagation();
                       selectGrade(cls.num as any);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white text-blue-900 dark:text-blue-200 text-xs font-black border border-blue-300/80 shadow-2xs transition-all active:scale-95 cursor-pointer z-20"
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white text-blue-900 dark:text-blue-200 text-xs font-black border border-blue-300/80 shadow-sm transition-all active:scale-95 cursor-pointer z-20"
                   >
                     {cls.label}
                   </button>
@@ -152,10 +152,10 @@ export function WelcomeScreen() {
           >
             {/* Sol Üst İkon & Rozet */}
             <div className="flex items-center justify-between w-full relative z-10">
-              <div className="w-11 h-11 rounded-2xl bg-purple-700 text-white flex items-center justify-center shadow-xs">
+              <div className="w-11 h-11 rounded-2xl bg-purple-700 text-white flex items-center justify-center shadow-sm">
                 <GraduationCap className="w-6 h-6" />
               </div>
-              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-purple-800 dark:text-purple-300 text-xs font-black border border-purple-200 dark:border-purple-800 shadow-2xs">
+              <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 text-purple-800 dark:text-purple-300 text-xs font-black border border-purple-200 dark:border-purple-800 shadow-sm">
                 9-12. Sınıf
               </span>
             </div>
@@ -190,7 +190,7 @@ export function WelcomeScreen() {
                       e.stopPropagation();
                       selectGrade(cls.num as any);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white text-purple-900 dark:text-purple-200 text-xs font-black border border-purple-300/80 shadow-2xs transition-all active:scale-95 cursor-pointer z-20"
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900/90 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white text-purple-900 dark:text-purple-200 text-xs font-black border border-purple-300/80 shadow-sm transition-all active:scale-95 cursor-pointer z-20"
                   >
                     {cls.label}
                   </button>
@@ -206,11 +206,11 @@ export function WelcomeScreen() {
         {/* ============================================================== */}
         <button
           onClick={startFreeSandbox}
-          className="w-full group relative h-24 p-5 rounded-2xl bg-[#f0fdf4] hover:bg-[#dcfce7] dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 border border-[#bbf7d0] dark:border-emerald-900/40 hover:border-emerald-400 dark:hover:border-emerald-500 text-left flex items-center justify-between overflow-hidden shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer"
+          className="w-full group relative h-24 p-5 rounded-2xl bg-[#f0fdf4] hover:bg-[#dcfce7] dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 border border-[#bbf7d0] dark:border-emerald-900/40 hover:border-emerald-400 dark:hover:border-emerald-500 text-left flex items-center justify-between overflow-hidden shadow-sm hover:shadow-sm transition-all duration-200 cursor-pointer"
         >
           {/* Sol İkon & Başlık */}
           <div className="flex items-center gap-4 relative z-10">
-            <div className="w-10 h-10 rounded-xl bg-[#16a34a] text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-[#16a34a] text-white flex items-center justify-center shrink-0 shadow-sm">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -227,7 +227,7 @@ export function WelcomeScreen() {
           <Layers className="absolute -bottom-4 -right-4 w-32 h-32 text-emerald-200/40 dark:text-emerald-500/10 pointer-events-none group-hover:scale-105 transition-transform duration-300" />
 
           {/* Sağ Giriş Butonu */}
-          <div className="relative z-10 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16a34a] text-white text-xs font-semibold shadow-2xs group-hover:bg-[#15803d] transition-colors shrink-0">
+          <div className="relative z-10 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16a34a] text-white text-xs font-semibold shadow-sm group-hover:bg-[#15803d] transition-colors shrink-0">
             <span>Stüdyoyu Başlat</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </div>

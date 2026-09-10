@@ -9,11 +9,32 @@ export type ToolMode =
   | 'line'
   | 'ray'
   | 'circle'
+  | 'circle_radius'
+  | 'circle_3points'
+  | 'ellipse'
+  | 'arc'
+  | 'sector'
   | 'angle'
   | 'polygon'
   | 'square'
   | 'rectangle'
   | 'regular_polygon'
+  // --- Klasik geometri inşaları ---
+  | 'midpoint'
+  | 'divide_ratio'
+  | 'perp_bisector'
+  | 'angle_bisector'
+  | 'perpendicular'
+  | 'parallel'
+  | 'segment_length'
+  | 'compass'
+  | 'intersect'
+  | 'translate'
+  | 'measure_slope'
+  | 'trig_ratios'
+  | 'checkbox'
+  | 'button'
+  | 'input_box'
   | 'pen'
   | 'measure_distance'
   | 'measure_angle'
@@ -65,4 +86,72 @@ export interface WorkspaceState {
   };
   history: WorkspaceHistoryStep[];
   historyIndex: number;
+}
+
+/**
+ * Çizim stili ayarları — sağ paneldeki "Stil" sekmesinden yönetilir.
+ *
+ * Ölçekler ÇARPAN olarak tutulur (1 = varsayılan); böylece yakınlaştırmadan bağımsız
+ * olarak tüm çizim orantılı biçimde büyür veya küçülür. Ayrıntılı yazı ölçekleri
+ * genel `fontScale` ile ÇARPILIR: genel ayar hepsini birden, ayrıntılı ayar tek bir
+ * grubu değiştirir.
+ */
+export interface StyleSettings {
+  /** Şekil çizgilerinin kalınlık çarpanı (0,5 – 3) */
+  strokeScale: number;
+  /** Tüm yazıların orantılı boyut çarpanı (0,6 – 2) */
+  fontScale: number;
+  /** Nokta / pivot işaretçisinin yarıçapı, piksel (3 – 14) */
+  pointRadius: number;
+  /** Ayrıntılı: nokta adları ve koordinatları */
+  pointLabelScale: number;
+  /** Ayrıntılı: ölçüm kutuları (uzunluk, alan, çevre, açı) */
+  measurementScale: number;
+  /** Ayrıntılı: eksen sayıları ve bölge etiketleri */
+  axisScale: number;
+  /** Ölçüm etiketlerinin arka plan kutusunu kaldırır: yazılar düz metin olarak görünür. */
+  hideLabelBoxes: boolean;
+  /** Şekillerin iç dolgusunu kaldırır: yalnızca kenar çizgileri kalır. */
+  hideFills: boolean;
+}
+
+export const DEFAULT_STYLE_SETTINGS: StyleSettings = {
+  strokeScale: 1,
+  fontScale: 1,
+  pointRadius: 6,
+  pointLabelScale: 1,
+  measurementScale: 1,
+  axisScale: 1,
+  hideLabelBoxes: false,
+  hideFills: false,
+};
+
+/** Stil ayarlarının tarayıcıda saklandığı anahtar. */
+export const STYLE_STORAGE_KEY = 'geoeba_stil_ayarlari_v1';
+
+/**
+ * Kayıtlı stil ayarlarını okur. Eksik veya bozuk alanlar varsayılandan tamamlanır;
+ * böylece yeni bir ayar eklendiğinde eski kayıtlar bozulmaz.
+ */
+export function loadStyleSettings(): StyleSettings {
+  if (typeof window === 'undefined') return DEFAULT_STYLE_SETTINGS;
+  try {
+    const raw = localStorage.getItem(STYLE_STORAGE_KEY);
+    if (!raw) return DEFAULT_STYLE_SETTINGS;
+    const parsed = JSON.parse(raw) as Partial<StyleSettings>;
+    if (!parsed || typeof parsed !== 'object') return DEFAULT_STYLE_SETTINGS;
+    const sonuc = { ...DEFAULT_STYLE_SETTINGS };
+    (Object.keys(DEFAULT_STYLE_SETTINGS) as (keyof StyleSettings)[]).forEach((k) => {
+      const v = parsed[k];
+      const varsayilan = DEFAULT_STYLE_SETTINGS[k];
+      if (typeof varsayilan === 'boolean') {
+        if (typeof v === 'boolean') (sonuc[k] as boolean) = v;
+      } else if (typeof v === 'number' && Number.isFinite(v)) {
+        (sonuc[k] as number) = v;
+      }
+    });
+    return sonuc;
+  } catch {
+    return DEFAULT_STYLE_SETTINGS;
+  }
 }

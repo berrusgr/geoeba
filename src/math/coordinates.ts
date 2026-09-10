@@ -84,6 +84,22 @@ export function getAdaptiveGridStep(zoom: number): { step: number; subStep: numb
 }
 
 /**
+ * Görünümde gerçekten çizilen (uyarlanabilir) ızgara adımını döndürür.
+ * Izgaraya yapıştırma bu adımı kullanmalıdır.
+ */
+export function getSnapStep(transform: ViewportTransform): number {
+  return getAdaptiveGridStep(transform.zoom).step;
+}
+
+/**
+ * Izgaraya yapıştırma açıksa noktayı çizilen ızgara adımına yapıştırır, değilse olduğu gibi döndürür.
+ */
+export function snapToVisibleGrid(point: Point2D, transform: ViewportTransform): Point2D {
+  if (!transform.snapToGrid) return point;
+  return snapToGridPoint(point, getSnapStep(transform));
+}
+
+/**
  * Sayıyı Türkçe matematik standardında formatlar (Örn: 5,2 veya 12)
  */
 export function formatTurkishNumber(val: number, maxDecimals: number = 2): string {

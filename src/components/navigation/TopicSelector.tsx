@@ -44,7 +44,7 @@ export function TopicSelector() {
           </p>
         </div>
 
-        <div className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-pink-500/15 text-primary border border-primary/25 text-xs font-extrabold self-start sm:self-auto flex items-center gap-2 shadow-2xs">
+        <div className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-pink-500/15 text-primary border border-primary/25 text-xs font-extrabold self-start sm:self-auto flex items-center gap-2 shadow-sm">
           <Layers className="w-4 h-4 text-purple-500" />
           <span>{selectedGrade.topics.length} Konu Modülü</span>
         </div>
@@ -68,7 +68,7 @@ export function TopicSelector() {
               <div className="space-y-1.5">
                 {topic.badge && (
                   <span
-                    className="inline-block px-3 py-0.5 rounded-full text-white text-[10px] font-black uppercase tracking-wider shadow-xs"
+                    className="inline-block px-3 py-0.5 rounded-full text-white text-[10px] font-black uppercase tracking-wider shadow-sm"
                     style={{ backgroundColor: topic.colorTheme || '#3b82f6' }}
                   >
                     {topic.badge}
@@ -76,7 +76,7 @@ export function TopicSelector() {
                 )}
                 <h3 className="text-xl font-extrabold text-foreground">{topic.title}</h3>
               </div>
-              <span className="px-3 py-1 rounded-full bg-muted text-[11px] font-black text-foreground shrink-0 shadow-2xs">
+              <span className="px-3 py-1 rounded-full bg-muted text-[11px] font-black text-foreground shrink-0 shadow-sm">
                 {topic.activities.length} Etkinlik
               </span>
             </div>
@@ -88,7 +88,7 @@ export function TopicSelector() {
 
             {/* Renkli Temel Formül / Kural Kutusu */}
             {topic.keyFormula && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border-2 border-amber-400/30 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border-2 border-amber-400/30 flex items-center justify-between gap-3 shadow-sm">
                 <div className="space-y-0.5">
                   <div className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                     Önemli Formül / Kural
@@ -97,7 +97,7 @@ export function TopicSelector() {
                     {topic.keyFormula}
                   </div>
                 </div>
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center shrink-0 shadow-sm">
                   <Sparkles className="w-4 h-4" />
                 </div>
               </div>
@@ -177,7 +177,7 @@ export function TopicSelector() {
             {/* Anlatım İçeriği */}
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 text-sm text-muted-foreground">
               {activeExplainTopic.keyFormula && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-purple-500/15 border-2 border-amber-400/40 space-y-1 shadow-2xs">
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-purple-500/15 border-2 border-amber-400/40 space-y-1 shadow-sm">
                   <div className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                     Önemli Formül / Bağıntı
                   </div>
@@ -206,7 +206,7 @@ export function TopicSelector() {
                   <div className="space-y-2">
                     {activeExplainTopic.explanationSteps.map((step, idx) => (
                       <div key={idx} className="flex items-start gap-2.5 p-3 bg-muted/60 rounded-2xl border border-border text-xs font-medium">
-                        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground font-black flex items-center justify-center shrink-0 text-xs shadow-xs">
+                        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground font-black flex items-center justify-center shrink-0 text-xs shadow-sm">
                           {idx + 1}
                         </span>
                         <span className="text-foreground pt-0.5">{step}</span>

@@ -13,17 +13,10 @@ import {
 } from 'lucide-react';
 
 export function ActivityPanel() {
-  const { selectedActivity, isFreeSandbox, openMissionMode, selectedLevel, selectedGrade } = useCurriculum();
-  const {
-    activityCompleted,
-    activeSuccessMessage,
-    restartCurrentActivity,
-    studioDimension,
-    setStudioDimension,
-  } = useWorkspace();
+  const { selectedActivity, isFreeSandbox, openMissionMode } = useCurriculum();
+  // 2D/3D geçiş düğmesi Canvas'a taşındığı için studioDimension burada kullanılmıyor.
+  const { activityCompleted, activeSuccessMessage, restartCurrentActivity } = useWorkspace();
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const isPrimary = selectedLevel?.id === 'ilkokul' || (selectedGrade && selectedGrade.gradeNumber <= 4);
 
   if (isFreeSandbox || !selectedActivity) {
     return null;
@@ -34,7 +27,7 @@ export function ActivityPanel() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         {/* Sol Alan: Etkinlik Başlığı ve Hedefi */}
         <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider shrink-0 shadow-2xs">
+          <div className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider shrink-0 shadow-sm">
             Çizim &amp; Düzenleme Stüdyosu
           </div>
           <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">

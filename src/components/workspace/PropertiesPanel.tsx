@@ -1,6 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { exportPng, exportSvg, exportPdf, exportWord } from '@/utils/exportCanvas';
+import { StylePanel } from '@/components/workspace/StylePanel';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import {
   PointObject,
@@ -9,7 +11,6 @@ import {
   CircleObject,
   AngleObject,
   PolygonObject,
-  FunctionObject,
   SliderObject,
   FractionObject,
 } from '@/types/math';
@@ -26,14 +27,12 @@ import { formatTurkishNumber, formatCoordinate } from '@/math/coordinates';
 import {
   Settings,
   Trash2,
-  Eye,
-  EyeOff,
-  Palette,
   Sliders,
   Grid,
   Maximize,
   Compass,
   Check,
+  Download,
 } from 'lucide-react';
 
 const COLOR_PRESETS = [
@@ -48,22 +47,185 @@ const COLOR_PRESETS = [
 ];
 
 export function PropertiesPanel() {
+  /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi? */
+  const [sekme, setSekme] = useState<'ozellikler' | 'stil'>('ozellikler');
+  const [disaAktariliyor, setDisaAktariliyor] = useState<'png' | 'svg' | 'pdf' | 'word' | null>(null);
+  const [disaAktarimHatasi, setDisaAktarimHatasi] = useState<string | null>(null);
   const {
     objects,
     selectedObjectId,
     viewport,
-    setSelectedObjectId,
     updateObject,
     deleteObject,
     setViewport,
     handleSliderChange,
+    recordHistory,
   } = useWorkspace();
 
   const selectedObject = objects.find((o) => o.id === selectedObjectId);
   const sliders = objects.filter((o) => o.type === 'slider') as SliderObject[];
 
+  /**
+   * Süren düzenlemelerin (sürgü sürükleme, etiket yazma) başlangıç durumunu tutar.
+   * Anahtar -> düzenleme başlamadan önceki değerin metin özeti.
+   * Böylece her tuş vuruşu / her sürgü adımı yerine, işlem bittiğinde
+   * (bırakma, odak kaybı, Enter) TEK bir geçmiş adımı yazılır.
+   */
+  const pendingEditsRef = React.useRef<Record<string, string>>({});
+
+  // Düzenleme başlat: yalnızca ilk değişiklikte önceki durumu kaydeder.
+  const beginEdit = React.useCallback((key: string, snapshotBefore: string) => {
+    if (pendingEditsRef.current[key] === undefined) {
+      pendingEditsRef.current[key] = snapshotBefore;
+    }
+  }, []);
+
+  // Düzenlemeyi bitir: gerçekten bir değişiklik olduysa tek bir geçmiş adımı yazar.
+  const finishEdit = React.useCallback(
+    (key: string, snapshotNow: string, description: string) => {
+      const snapshotBefore = pendingEditsRef.current[key];
+      if (snapshotBefore === undefined) return;
+      delete pendingEditsRef.current[key];
+      if (snapshotBefore !== snapshotNow) {
+        recordHistory(description);
+      }
+    },
+    [recordHistory]
+  );
+
+  /**
+   * Range (sürgü) girişleri için bırakma olayları.
+   * Fare + dokunma (onPointerUp), klavye ok tuşları (onKeyUp) ve
+   * odak kaybı (onBlur) üçlüsü birlikte tüm etkileşim yollarını kapsar.
+   */
+  const sliderReleaseHandlers = React.useCallback(
+    (key: string, snapshotNow: () => string, description: () => string) => {
+      const finish = () => finishEdit(key, snapshotNow(), description());
+      return { onPointerUp: finish, onKeyUp: finish, onBlur: finish };
+    },
+    [finishEdit]
+  );
+
+  // Seçim değişince yarım kalan düzenleme kayıtlarını temizle.
+  React.useEffect(() => {
+    pendingEditsRef.current = {};
+  }, [selectedObjectId]);
+
+  /** Tuvalin SVG düğümünü bulur (ekrandaki en geniş SVG çizim alanıdır). */
+  const tuvaliBul = (): SVGSVGElement | null => {
+    const hepsi = Array.from(document.querySelectorAll('svg'));
+    if (hepsi.length === 0) return null;
+    return hepsi.reduce((enGenis, cur) =>
+      cur.getBoundingClientRect().width > enGenis.getBoundingClientRect().width ? cur : enGenis
+    ) as SVGSVGElement;
+  };
+
+  const disaAktar = async (bicim: 'png' | 'svg' | 'pdf' | 'word') => {
+    const svg = tuvaliBul();
+    if (!svg) {
+      setDisaAktarimHatasi('Çizim alanı bulunamadı.');
+      return;
+    }
+    setDisaAktariliyor(bicim);
+    setDisaAktarimHatasi(null);
+    try {
+      const baslik = 'GeoEBA Çizimi';
+      if (bicim === 'png') await exportPng(svg, baslik);
+      else if (bicim === 'svg') exportSvg(svg, baslik);
+      else if (bicim === 'pdf') await exportPdf(svg, baslik);
+      else await exportWord(svg, baslik);
+    } catch (e) {
+      // Sebebi göstermek şart: "başarısız oldu" tek başına ne kullanıcıya ne de
+      // hata bildirimine yarıyor.
+      const sebep = e instanceof Error ? e.message : String(e);
+      setDisaAktarimHatasi(`Dışa aktarma başarısız: ${sebep}`);
+      if (process.env.NODE_ENV !== 'production') console.error('Dışa aktarma hatası:', e);
+    } finally {
+      setDisaAktariliyor(null);
+    }
+  };
+
+  const disaAktarimDugmeleri: { id: 'png' | 'svg' | 'pdf' | 'word'; etiket: string; ipucu: string; renk: string }[] = [
+    { id: 'png', etiket: 'Görsel (PNG)', ipucu: 'Çizimi resim dosyası olarak indir', renk: 'text-sky-600 dark:text-sky-400' },
+    { id: 'svg', etiket: 'Vektör (SVG)', ipucu: 'Kalitesi bozulmadan büyütülebilen vektör dosyası', renk: 'text-violet-600 dark:text-violet-400' },
+    { id: 'pdf', etiket: 'PDF', ipucu: 'Yazdırmaya hazır PDF belgesi', renk: 'text-rose-600 dark:text-rose-400' },
+    { id: 'word', etiket: 'Word (.doc)', ipucu: 'Word ile açılıp düzenlenebilen belge', renk: 'text-blue-700 dark:text-blue-400' },
+  ];
+
   return (
     <div className="w-full lg:w-72 bg-card border-t lg:border-t-0 lg:border-l border-border p-4 space-y-6 overflow-y-auto shrink-0 h-full min-h-0 select-none">
+      {/* SEKME ÇUBUĞU */}
+      <div role="tablist" aria-label="Sağ panel sekmeleri" className="flex gap-1 p-1 rounded-2xl bg-muted/60 border border-border/70">
+        {([
+          { id: 'ozellikler' as const, ad: 'Özellikler' },
+          { id: 'stil' as const, ad: 'Stil' },
+        ]).map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={sekme === t.id}
+            onClick={() => setSekme(t.id)}
+            className={`flex-1 px-3 py-1.5 rounded-xl text-[11px] font-black transition-colors cursor-pointer ${
+              sekme === t.id
+                ? 'bg-card text-primary shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t.ad}
+          </button>
+        ))}
+      </div>
+
+      {sekme === 'stil' && <StylePanel />}
+
+      {sekme === 'ozellikler' && (
+        <div className="space-y-6">
+      {/* 0. ÇİZİMİ DIŞA AKTAR */}
+      <div className="space-y-2">
+        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Download className="w-3.5 h-3.5" />
+          <span>Çizimi İndir</span>
+        </h3>
+
+        {/* Siyah–beyaz mod: ekranda ne görünüyorsa indirilen dosya da öyle olur */}
+        <label className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-muted/40 border border-border/60 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={viewport.blackWhite === true}
+            onChange={(e) => setViewport((prev) => ({ ...prev, blackWhite: e.target.checked }))}
+            className="w-3.5 h-3.5 accent-slate-600 cursor-pointer"
+          />
+          <span className="text-[11px] font-bold text-foreground">Siyah–beyaz mod</span>
+        </label>
+        <p className="text-[10px] text-muted-foreground leading-snug px-1">
+          {viewport.blackWhite
+            ? 'Çizim gri tonlamada; indirilen PNG, SVG, PDF ve Word dosyaları da siyah–beyaz olacak.'
+            : 'Açarsanız hem tuval hem de indirilen dosyalar renksiz (baskıya uygun) olur.'}
+        </p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {disaAktarimDugmeleri.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => disaAktar(d.id)}
+              disabled={disaAktariliyor !== null}
+              title={d.ipucu}
+              className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${d.renk}`}
+            >
+              {disaAktariliyor === d.id ? (
+                <span className="text-[10px] font-semibold text-muted-foreground">Hazırlanıyor…</span>
+              ) : (
+                <span className="truncate">{d.etiket}</span>
+              )}
+            </button>
+          ))}
+        </div>
+        {disaAktarimHatasi && (
+          <p role="alert" className="text-[11px] text-destructive font-semibold">
+            {disaAktarimHatasi}
+          </p>
+        )}
+      </div>
+
       {/* 1. SEÇİLİ NESNE BİLGİ VE ÖZELLİK PANELİ */}
       {selectedObject ? (
         <div className="space-y-4 animate-in fade-in duration-150">
@@ -102,7 +264,27 @@ export function PropertiesPanel() {
                 <input
                   type="text"
                   value={selectedObject.label}
-                  onChange={(e) => updateObject(selectedObject.id, { label: e.target.value })}
+                  onChange={(e) => {
+                    // Yazarken geçmişe yazma; düzenleme öncesi etiketi bir kez sakla.
+                    beginEdit(`label-${selectedObject.id}`, selectedObject.label);
+                    updateObject(selectedObject.id, { label: e.target.value }, false);
+                  }}
+                  onBlur={() =>
+                    finishEdit(
+                      `label-${selectedObject.id}`,
+                      selectedObject.label,
+                      'Etiket güncellendi'
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      finishEdit(
+                        `label-${selectedObject.id}`,
+                        selectedObject.label,
+                        'Etiket güncellendi'
+                      );
+                    }
+                  }}
                   className="w-full px-3 py-1.5 rounded-lg bg-input border border-border text-foreground text-xs focus:ring-1 focus:ring-primary outline-none"
                 />
               </div>
@@ -190,8 +372,10 @@ export function PropertiesPanel() {
                       value={radius}
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
+                        // Sürükleme boyunca geçmişe yazma; bırakınca tek adım kaydedilir.
+                        beginEdit(`circle-radius-${circ.id}`, String(radius));
                         if (circ.fixedRadius !== undefined) {
-                          updateObject(circ.id, { fixedRadius: val });
+                          updateObject(circ.id, { fixedRadius: val }, false);
                         } else if (circ.radiusPointId && center) {
                           const rPoint = objects.find((o) => o.id === circ.radiusPointId) as PointObject;
                           if (rPoint) {
@@ -202,9 +386,14 @@ export function PropertiesPanel() {
                             updateObject(rPoint.id, { x: nx, y: ny }, false);
                           }
                         } else {
-                          updateObject(circ.id, { fixedRadius: val });
+                          updateObject(circ.id, { fixedRadius: val }, false);
                         }
                       }}
+                      {...sliderReleaseHandlers(
+                        `circle-radius-${circ.id}`,
+                        () => String(radius),
+                        () => `Yarıçap ${formatTurkishNumber(radius)} br olarak ayarlandı`
+                      )}
                       className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                     />
                   </div>
@@ -242,7 +431,12 @@ export function PropertiesPanel() {
             const cx = (minX + maxX) / 2;
             const cy = (minY + maxY) / 2;
 
+            const resizeKey = `polygon-size-${poly.id}`;
+            const sizeSnapshot = () => `${curW}x${curH}`;
+
             const handleResize = (newW: number, newH: number) => {
+              // Sürükleme boyunca geçmişe yazma; bırakınca tek adım kaydedilir.
+              beginEdit(resizeKey, sizeSnapshot());
               const scaleX = newW / curW;
               const scaleY = newH / curH;
               polyPoints.forEach((p) => {
@@ -253,6 +447,9 @@ export function PropertiesPanel() {
             };
 
             const isSquare = Math.abs(curW - curH) < 0.2 && polyPoints.length === 4;
+
+            const resizeRelease = (description: () => string) =>
+              sliderReleaseHandlers(resizeKey, sizeSnapshot, description);
 
             return (
               <div className="space-y-3 text-xs">
@@ -275,14 +472,14 @@ export function PropertiesPanel() {
                 <div className="p-3 bg-muted/30 rounded-xl space-y-3 border border-border/50">
                   <div className="font-black text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between">
                     <span>📐 Boyutları Ayarla</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">{curW} x {curH} br</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">{formatTurkishNumber(curW)} x {formatTurkishNumber(curH)} br</span>
                   </div>
 
                   {isSquare ? (
                     <div className="space-y-1">
                       <div className="flex justify-between text-[11px]">
                         <span className="text-muted-foreground font-semibold">Kenar Uzunluğu:</span>
-                        <span className="font-mono font-bold text-primary">{curW} br</span>
+                        <span className="font-mono font-bold text-primary">{formatTurkishNumber(curW)} br</span>
                       </div>
                       <input
                         type="range"
@@ -294,6 +491,9 @@ export function PropertiesPanel() {
                           const val = parseFloat(e.target.value);
                           handleResize(val, val);
                         }}
+                        {...resizeRelease(
+                          () => `Kenar uzunluğu ${formatTurkishNumber(curW)} br olarak ayarlandı`
+                        )}
                         className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                       />
                     </div>
@@ -302,7 +502,7 @@ export function PropertiesPanel() {
                       <div className="space-y-1">
                         <div className="flex justify-between text-[11px]">
                           <span className="text-muted-foreground font-semibold">Genişlik (En):</span>
-                          <span className="font-mono font-bold text-primary">{curW} br</span>
+                          <span className="font-mono font-bold text-primary">{formatTurkishNumber(curW)} br</span>
                         </div>
                         <input
                           type="range"
@@ -314,6 +514,10 @@ export function PropertiesPanel() {
                             const val = parseFloat(e.target.value);
                             handleResize(val, curH);
                           }}
+                          {...resizeRelease(
+                            () =>
+                              `Şekil ${formatTurkishNumber(curW)} x ${formatTurkishNumber(curH)} br olarak boyutlandırıldı`
+                          )}
                           className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                       </div>
@@ -321,7 +525,7 @@ export function PropertiesPanel() {
                       <div className="space-y-1">
                         <div className="flex justify-between text-[11px]">
                           <span className="text-muted-foreground font-semibold">Yükseklik (Boy):</span>
-                          <span className="font-mono font-bold text-primary">{curH} br</span>
+                          <span className="font-mono font-bold text-primary">{formatTurkishNumber(curH)} br</span>
                         </div>
                         <input
                           type="range"
@@ -333,6 +537,10 @@ export function PropertiesPanel() {
                             const val = parseFloat(e.target.value);
                             handleResize(curW, val);
                           }}
+                          {...resizeRelease(
+                            () =>
+                              `Şekil ${formatTurkishNumber(curW)} x ${formatTurkishNumber(curH)} br olarak boyutlandırıldı`
+                          )}
                           className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
                         />
                       </div>
@@ -368,7 +576,7 @@ export function PropertiesPanel() {
             const frac = selectedObject as FractionObject;
             const num = frac.numerator ?? 1;
             const den = frac.denominator ?? 1;
-            const decimalVal = den > 0 ? (num / den).toFixed(2) : '0.00';
+            const decimalVal = den > 0 ? formatTurkishNumber(num / den, 2) : '0';
             const percentVal = den > 0 ? Math.round((num / den) * 100) : 0;
 
             const getFracType = () => {
@@ -378,15 +586,32 @@ export function PropertiesPanel() {
               return 'Bileşik Kesir';
             };
 
-            const updateFraction = (newNum: number, newDen: number) => {
+            const fractionKey = `fraction-${frac.id}`;
+            const fractionSnapshot = () => `${num}/${den}`;
+
+            /**
+             * record=true: -/+ düğmeleri ve şablonlar gibi ayrık işlemler (her tık bir geçmiş adımı).
+             * record=false: sürgü sürüklemesi - bırakıldığında tek bir adım yazılır.
+             */
+            const updateFraction = (newNum: number, newDen: number, record: boolean = true) => {
               const clampedNum = Math.max(0, Math.min(30, newNum));
               const clampedDen = Math.max(1, Math.min(30, newDen));
-              updateObject(frac.id, {
-                numerator: clampedNum,
-                denominator: clampedDen,
-                label: `${clampedNum}/${clampedDen} Kesir Modeli`,
-              });
+              updateObject(
+                frac.id,
+                {
+                  numerator: clampedNum,
+                  denominator: clampedDen,
+                  label: `${clampedNum}/${clampedDen} Kesir Modeli`,
+                },
+                record
+              );
             };
+
+            const fractionRelease = sliderReleaseHandlers(
+              fractionKey,
+              fractionSnapshot,
+              () => `${num}/${den} kesrine güncellendi`
+            );
 
             return (
               <div className="space-y-4 text-xs">
@@ -424,7 +649,7 @@ export function PropertiesPanel() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => updateFraction(num - 1, den)}
-                        className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center font-black hover:bg-muted cursor-pointer transition-colors shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center font-black hover:bg-muted cursor-pointer transition-colors shadow-sm"
                       >
                         -
                       </button>
@@ -434,12 +659,16 @@ export function PropertiesPanel() {
                         max={Math.max(den, 20)}
                         step="1"
                         value={num}
-                        onChange={(e) => updateFraction(parseInt(e.target.value) || 0, den)}
+                        onChange={(e) => {
+                          beginEdit(fractionKey, fractionSnapshot());
+                          updateFraction(parseInt(e.target.value) || 0, den, false);
+                        }}
+                        {...fractionRelease}
                         className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-violet-600"
                       />
                       <button
                         onClick={() => updateFraction(num + 1, den)}
-                        className="w-7 h-7 rounded-lg bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center font-black cursor-pointer transition-colors shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center font-black cursor-pointer transition-colors shadow-sm"
                       >
                         +
                       </button>
@@ -457,7 +686,7 @@ export function PropertiesPanel() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => updateFraction(num, den - 1)}
-                        className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center font-black hover:bg-muted cursor-pointer transition-colors shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center font-black hover:bg-muted cursor-pointer transition-colors shadow-sm"
                       >
                         -
                       </button>
@@ -467,12 +696,16 @@ export function PropertiesPanel() {
                         max="24"
                         step="1"
                         value={den}
-                        onChange={(e) => updateFraction(num, parseInt(e.target.value) || 1)}
+                        onChange={(e) => {
+                          beginEdit(fractionKey, fractionSnapshot());
+                          updateFraction(num, parseInt(e.target.value) || 1, false);
+                        }}
+                        {...fractionRelease}
                         className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-violet-600"
                       />
                       <button
                         onClick={() => updateFraction(num, den + 1)}
-                        className="w-7 h-7 rounded-lg bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center font-black cursor-pointer transition-colors shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center font-black cursor-pointer transition-colors shadow-sm"
                       >
                         +
                       </button>
@@ -558,7 +791,16 @@ export function PropertiesPanel() {
                   max={s.max}
                   step={s.step}
                   value={s.value}
-                  onChange={(e) => handleSliderChange(s.id, parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    // Sürükleme boyunca geçmişe yazma; bırakınca tek adım kaydedilir.
+                    beginEdit(`slider-${s.id}`, String(s.value));
+                    handleSliderChange(s.id, parseFloat(e.target.value));
+                  }}
+                  {...sliderReleaseHandlers(
+                    `slider-${s.id}`,
+                    () => String(s.value),
+                    () => `${s.variableName} = ${formatTurkishNumber(s.value)} olarak değiştirildi`
+                  )}
                   className="w-full accent-primary cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -579,7 +821,7 @@ export function PropertiesPanel() {
         </div>
 
         <div className="space-y-2 text-xs">
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-2xs">
+          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
             <div className="flex items-center gap-2">
               <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-foreground font-bold">Izgara Çizgileri</span>
@@ -592,7 +834,7 @@ export function PropertiesPanel() {
             />
           </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-2xs">
+          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
             <div className="flex items-center gap-2">
               <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
@@ -605,7 +847,7 @@ export function PropertiesPanel() {
             />
           </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-2xs">
+          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
             <div className="flex items-center gap-2">
               <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <span className="text-foreground font-bold">Nokta Koordinatları</span>
@@ -620,7 +862,7 @@ export function PropertiesPanel() {
             />
           </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-2xs">
+          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
               <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
@@ -635,7 +877,7 @@ export function PropertiesPanel() {
             />
           </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-2xs">
+          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
             <div className="flex items-center gap-2">
               <span className="text-sm">🧲</span>
               <span className="text-foreground font-bold">Izgaraya Yapış (Snap)</span>
@@ -649,6 +891,8 @@ export function PropertiesPanel() {
           </label>
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 }

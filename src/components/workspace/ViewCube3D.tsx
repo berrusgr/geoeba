@@ -92,7 +92,14 @@ export function ViewCube3D({ camera, setCamera }: ViewCube3DProps) {
   ];
 
   // Projeksiyon Hesaplaması
-  const radPitch = (camera.rotX * Math.PI) / 180;
+  //
+  // Camera3D semantiği (Canvas3D -> buildCameraBasis ile birebir aynı olmalıdır):
+  //   forward = ( sin(yaw)·cos(pitch),  cos(yaw)·cos(pitch), -sin(pitch) )
+  //   up      = ( sin(yaw)·sin(pitch),  cos(yaw)·sin(pitch),  cos(pitch) )
+  // Yani POZİTİF rotX kamerayı zeminin ÜSTÜNE çıkarır. Aşağıdaki formüller
+  // (depthCam / upCam) pitch'i ters işaretle kullandığı için radPitch'i
+  // negatifleyerek kübü kamerayla aynı yöne bakacak biçimde hizalıyoruz.
+  const radPitch = -(camera.rotX * Math.PI) / 180;
   const radYaw = (camera.rotY * Math.PI) / 180;
 
   const projVertices = rawVertices.map((v) => {
@@ -169,10 +176,12 @@ export function ViewCube3D({ camera, setCamera }: ViewCube3DProps) {
       const dy = e.clientY - dragStartRef.current.y;
       dragStartRef.current = { x: e.clientX, y: e.clientY };
 
+      // Aşağı sürüklemek kamerayı yükseltir (cismin üstünü görürsünüz).
+      // Pozitif rotX = kamera zeminin üstünde olduğu için işaret artıdır.
       setCamera((prev) => ({
         ...prev,
         rotY: (prev.rotY - dx * 0.7) % 360,
-        rotX: Math.max(-85, Math.min(85, prev.rotX - dy * 0.7)),
+        rotX: Math.max(-85, Math.min(85, prev.rotX + dy * 0.7)),
       }));
     },
     [setCamera]
@@ -189,7 +198,8 @@ export function ViewCube3D({ camera, setCamera }: ViewCube3DProps) {
       rotX: target.rotX,
       rotY: target.rotY,
       panX: 0,
-      panY: target.rotX === 85 ? 0 : 30,
+      // Tam tepeden / tam alttan bakışta zemin kaydırması gerekmez
+      panY: Math.abs(target.rotX) >= 85 ? 0 : 30,
     }));
   };
 

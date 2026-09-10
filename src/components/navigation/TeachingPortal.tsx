@@ -2,37 +2,18 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCurriculum } from '@/state/CurriculumContext';
-import { MathCategory, Topic, Activity, TYMMTheme, GradeId } from '@/types/curriculum';
+import { MathCategory, Topic, TYMMTheme, GradeId } from '@/types/curriculum';
 import { DiscoveryModal } from './DiscoveryModal';
 import {
-  Search,
   BookOpen,
   ArrowLeft,
-  ArrowRight,
   Sparkles,
-  Trophy,
-  CheckCircle2,
-  Play,
-  RotateCcw,
-  Compass,
-  Layers,
   Shapes,
-  Divide,
-  Activity as ActivityIcon,
   ChevronRight,
-  TrendingUp,
-  Target,
   Percent,
   Sigma,
-  Variable,
-  Hash,
-  Ruler,
-  BarChart3,
-  Award,
   Box,
-  GraduationCap,
   Clock,
-  CheckCircle,
 } from 'lucide-react';
 
 const CATEGORY_TABS: {
@@ -256,7 +237,6 @@ export function TeachingPortal() {
   const {
     selectedLevel,
     selectedGrade,
-    selectLevel,
     selectGrade,
     selectedCategory,
     setSelectedCategory,
@@ -265,7 +245,6 @@ export function TeachingPortal() {
     selectActivity,
     activeModalTopic,
     setActiveModalTopic,
-    completedActivityIds,
     goBack,
   } = useCurriculum();
 
@@ -281,15 +260,6 @@ export function TeachingPortal() {
   const currentThemes: TYMMTheme[] = useMemo(() => {
     if (!selectedGrade) return [];
     return selectedGrade.themes || [];
-  }, [selectedGrade]);
-
-  const allTopicsInGrade: Topic[] = useMemo(() => {
-    if (!selectedGrade) return [];
-    const list: Topic[] = [...(selectedGrade.topics || [])];
-    for (const th of selectedGrade.themes || []) {
-      if (th.topics) list.push(...th.topics);
-    }
-    return list;
   }, [selectedGrade]);
 
   // Kategori başına tema sayısı hesaplama
@@ -318,10 +288,6 @@ export function TeachingPortal() {
     });
   }, [currentThemes, searchQuery, selectedCategory]);
 
-  const totalActivitiesCount = allTopicsInGrade.reduce((acc, t) => acc + t.activities.length, 0) || 24;
-  const completedCount = completedActivityIds.length || 2;
-  const progressPercent = Math.round((completedCount / totalActivitiesCount) * 100) || 5;
-
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-[#faf8f5] dark:bg-[#121316] relative overflow-hidden py-4 sm:py-6 select-none flex flex-col items-center justify-start">
       {/* Yumuşak Kil ve Kademe Işıkları */}
@@ -346,11 +312,11 @@ export function TeachingPortal() {
 
       <div className="w-full max-w-6xl space-y-6 animate-in fade-in duration-300 relative z-10 px-4 sm:px-6 lg:px-8">
         {/* 1. ÜST BAŞLIK ALANI & SINIF GEÇİŞ ŞERİDİ */}
-        <div className="bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-4 sm:p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-amber-200/80 via-rose-100/70 to-sky-100/70 dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-4 sm:p-5 rounded-2xl border border-amber-200/60 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={goBack}
-              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm transition-colors cursor-pointer"
               title="Geri Dön"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -373,11 +339,11 @@ export function TeachingPortal() {
                 onClick={() => selectGrade(gNum)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   selectedGrade?.gradeNumber === gNum
-                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm'
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                 }`}
               >
-                {gNum}. Sınıf
+                {gNum === 0 ? 'Hazırlık' : `${gNum}. Sınıf`}
               </button>
             ))}
           </div>
@@ -393,14 +359,14 @@ export function TeachingPortal() {
               <button
                 key={tab.id}
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer ${
+                className={`flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-xl text-xs font-black transition-all shadow-sm cursor-pointer ${
                   isActive
-                    ? `bg-card text-foreground border-2 ${tab.activeBorder} shadow-sm ring-1 ring-primary/20 scale-102`
+                    ? `bg-card text-foreground border-2 ${tab.activeBorder} shadow-sm ring-1 ring-primary/20 scale-105`
                     : 'bg-card text-muted-foreground hover:text-foreground border border-border/80 hover:border-border'
                 }`}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${tab.badgeBg} shadow-2xs shrink-0 text-[10px]`}>
+                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${tab.badgeBg} shadow-sm shrink-0 text-[10px]`}>
                     {tab.icon}
                   </div>
                   <span className="truncate">{tab.label}</span>
@@ -523,11 +489,11 @@ export function TeachingPortal() {
                           <button
                             key={topic.id}
                             onClick={() => setActiveModalTopic(topic)}
-                            className="p-3 rounded-xl bg-card border border-border/80 hover:border-primary flex items-center justify-between text-left shadow-2xs hover:shadow-xs transition-all group cursor-pointer"
+                            className="p-3 rounded-xl bg-card border border-border/80 hover:border-primary flex items-center justify-between text-left shadow-sm hover:shadow-sm transition-all group cursor-pointer"
                           >
                             <div className="flex items-center gap-2.5">
                               <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 shadow-3xs group-hover:scale-105 transition-transform"
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform"
                                 style={{ backgroundColor: topic.colorTheme || theme.colorTheme || '#ef4444' }}
                               >
                                 <Percent className="w-4 h-4" />

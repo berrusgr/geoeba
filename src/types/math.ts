@@ -16,6 +16,9 @@ export type ObjectType =
   | 'line'
   | 'ray'
   | 'circle'
+  | 'ellipse'
+  | 'arc'
+  | 'sector'
   | 'angle'
   | 'polygon'
   | 'function'
@@ -23,7 +26,27 @@ export type ObjectType =
   | 'fraction'
   | 'pen'
   | 'text'
-  | 'image';
+  | 'image'
+  | 'checkbox'
+  | 'button'
+  | 'input_box'
+  | 'measurement';
+
+/** Taşınabilir ölçüm etiketlerinin türleri (nesne başına birden çok etiket olabilir). */
+export type MeasurementKind =
+  /** Nokta adı ve koordinatı (taşınabilir, gizlenemez) */
+  | 'pointLabel'
+  | 'measure'
+  | 'length'
+  | 'area'
+  | 'perimeter'
+  | 'angle'
+  | 'arcLength'
+  /** Yay ve daire diliminin MERKEZ AÇISI; alan/yay uzunluğundan bağımsız gizlenebilir. */
+  | 'centralAngle';
+
+/** Çokgen kenarı etiketi için anahtar üretir: 0. kenar -> 'edge0'. */
+export const edgeLabelKey = (index: number) => `edge${index}`;
 
 export interface BaseMathObject {
   id: string;
@@ -35,6 +58,11 @@ export interface BaseMathObject {
   locked?: boolean;
   selected?: boolean;
   createdAt: number;
+  /**
+   * Ölçüm etiketlerinin varsayılan konumdan DÜNYA birimi cinsinden kayıklığı.
+   * Kayıklık şekle GÖRE tutulduğu için şekil taşındığında etiket de onunla birlikte gider.
+   */
+  labelOffsets?: Record<string, Point2D>;
 }
 
 export interface PointObject extends BaseMathObject {
@@ -43,6 +71,11 @@ export interface PointObject extends BaseMathObject {
   y: number;
   size?: number; // Nokta yarıçapı (piksel)
   isIndependent: boolean; // Bağımsız sürüklenebilir mi yoksa kesişim/bağımlı nokta mı
+  /**
+   * Nokta bir nesnenin ÜZERİNDE oluşturulduysa o nesnenin kimliği.
+   * Sürüklendiğinde bu nesnenin üzerinden ayrılmaz; nesne silinirse nokta da silinir.
+   */
+  onObjectId?: string;
   dependsOn?: string[]; // Bağımlı olduğu nesne kimlikleri
 }
 
@@ -78,9 +111,63 @@ export interface CircleObject extends BaseMathObject {
   centerPointId: string;
   radiusPointId?: string; // Yarıçapı belirleyen ikinci nokta
   fixedRadius?: number; // Sabit yarıçaplı ise
+  /**
+   * Üç noktadan geçen (çevrel) çember: merkez ve yarıçap bu üç noktadan CANLI hesaplanır.
+   * Verildiğinde centerPointId yok sayılır; noktalar sürüklendikçe çember yeniden kurulur.
+   */
+  throughPointIds?: string[];
   fillOpacity?: number;
   showArea?: boolean;
   showPerimeter?: boolean;
+}
+
+/**
+ * Elips: merkez noktası ile yatay (a) ve dikey (b) yarıçaplar.
+ * a = b olduğunda çemberle aynı şekli verir; ayrı bir tür olmasının nedeni
+ * iki yarıçapın birbirinden bağımsız düzenlenebilmesidir.
+ */
+export interface EllipseObject extends BaseMathObject {
+  type: 'ellipse';
+  centerPointId: string;
+  /** Yatay yarıçap (dünya birimi) */
+  radiusX: number;
+  /** Dikey yarıçap (dünya birimi) */
+  radiusY: number;
+  /** Saat yönünün tersine dönme açısı (derece) */
+  rotation?: number;
+  fillColor?: string;
+  fillOpacity?: number;
+  showArea?: boolean;
+  showPerimeter?: boolean;
+}
+
+/**
+ * Yay: merkez + başlangıç noktası + yön noktası.
+ * Yarıçapı |merkez-başlangıç| belirler; yön noktası yalnızca yayın açısını/yönünü verir.
+ */
+export interface ArcObject extends BaseMathObject {
+  type: 'arc';
+  centerPointId: string;
+  startPointId: string;
+  directionPointId: string;
+  thickness?: number;
+  showArcLength?: boolean;
+  /** Merkez açı yazısı görünür mü? (varsayılan: evet) */
+  showCentralAngle?: boolean;
+}
+
+/** Daire dilimi (sektör): yay ile aynı üç nokta, ama içi dolu. */
+export interface SectorObject extends BaseMathObject {
+  type: 'sector';
+  centerPointId: string;
+  startPointId: string;
+  directionPointId: string;
+  fillColor?: string;
+  fillOpacity?: number;
+  showArea?: boolean;
+  showPerimeter?: boolean;
+  /** Merkez açı yazısı görünür mü? (varsayılan: evet) */
+  showCentralAngle?: boolean;
 }
 
 export interface AngleObject extends BaseMathObject {
@@ -90,11 +177,21 @@ export interface AngleObject extends BaseMathObject {
   point3Id: string; // Açının diğer kolundaki nokta
   showValue?: boolean;
   arcRadius?: number;
+  /**
+   * true ise dar/geniş iç açı yerine onu tamamlayan DIŞ açı (360° - iç açı) gösterilir.
+   * Örn. iç açı 72° iken dış açı 288° olarak çizilir ve yazılır.
+   */
+  reflex?: boolean;
 }
 
 export interface PolygonObject extends BaseMathObject {
   type: 'polygon';
   pointIds: string[]; // Sıralı köşe noktaları
+  /**
+   * Uzunluğu gösterilecek kenarların dizinleri. i. kenar, pointIds[i] ile pointIds[i+1]
+   * arasındaki kenardır (son kenar pointIds[n-1] -> pointIds[0]).
+   */
+  edgeLabels?: number[];
   fillColor?: string;
   fillOpacity?: number;
   showArea?: boolean;
@@ -117,6 +214,11 @@ export interface SliderObject extends BaseMathObject {
   max: number;
   step: number;
   value: number;
+  /** Tuval üzerindeki çubuğun SOL UCUNUN dünya koordinatı. Yoksa panelde kalır, tuvale çizilmez. */
+  x?: number;
+  y?: number;
+  /** Çubuğun dünya birimi cinsinden uzunluğu (varsayılan 4). */
+  length?: number;
 }
 
 export interface FractionObject extends BaseMathObject {
@@ -152,12 +254,76 @@ export interface ImageObject extends BaseMathObject {
   height: number;
 }
 
+/**
+ * İŞARET KUTUSU — tuval üzerinde duran bir onay kutusu.
+ * Bağlı nesneleri topluca gösterip gizler; böylece bir çizimi silmek yerine
+ * geçici olarak kapatmak mümkün olur (etkinlik hazırlarken en çok istenen şey).
+ */
+export interface CheckboxObject extends BaseMathObject {
+  type: 'checkbox';
+  x: number;
+  y: number;
+  /** Görünürlüğü bu kutuya bağlı nesnelerin kimlikleri */
+  targetIds: string[];
+  checked: boolean;
+}
+
+/** DÜĞME — tıklanınca tek bir iş yapar. */
+export interface ButtonObject extends BaseMathObject {
+  type: 'button';
+  x: number;
+  y: number;
+  action:
+    /** Bağlı nesnelerin görünürlüğünü ters çevirir */
+    | { kind: 'toggle'; targetIds: string[] }
+    /** Kaydırıcı canlandırmasını başlatır/durdurur */
+    | { kind: 'animate'; sliderIds: string[] }
+    /** Bir kaydırıcıya sabit değer atar */
+    | { kind: 'setSlider'; sliderId: string; value: number };
+}
+
+/**
+ * GİRDİ KUTUSU — bir kaydırıcının değerini ya da bir fonksiyonun ifadesini
+ * doğrudan tuval üzerinden yazmayı sağlar.
+ */
+export interface InputBoxObject extends BaseMathObject {
+  type: 'input_box';
+  x: number;
+  y: number;
+  /** Bağlı kaydırıcı veya fonksiyon */
+  targetId: string;
+  /** Kaydırıcıda 'value', fonksiyonda 'expression' */
+  field: 'value' | 'expression';
+  /** Kutunun genişliği (dünya birimi değil, piksel) */
+  width?: number;
+}
+
+/**
+ * ÖLÇÜM ETİKETİ — tuval üzerinde duran, CANLI hesaplanan bir sonuç yazısı.
+ *
+ * "AB eğimi = 5" gibi sonuçlar geçici ipucu satırında kaybolmasın diye nesne olarak
+ * saklanır: noktalar taşındığında değer kendiliğinden güncellenir, etiket sürüklenebilir
+ * ve tıklanınca gizlenebilir.
+ */
+export interface MeasurementObject extends BaseMathObject {
+  type: 'measurement';
+  /** slope: iki nokta arası eğim · trig: dik üçgende sin/cos/tan */
+  kind: 'slope' | 'trig';
+  /** slope: [A, B] · trig: [açı köşesi, DİK köşe, üçüncü köşe] */
+  pointIds: string[];
+  /** Değer yazısı görünür mü? (tıklayınca kapanır) */
+  showValue?: boolean;
+}
+
 export type MathObject =
   | PointObject
   | SegmentObject
   | LineObject
   | RayObject
   | CircleObject
+  | EllipseObject
+  | ArcObject
+  | SectorObject
   | AngleObject
   | PolygonObject
   | FunctionObject
@@ -165,7 +331,11 @@ export type MathObject =
   | FractionObject
   | PenStrokeObject
   | TextObject
-  | ImageObject;
+  | ImageObject
+  | CheckboxObject
+  | ButtonObject
+  | InputBoxObject
+  | MeasurementObject;
 
 export interface ViewportTransform {
   zoom: number; // Piksel / birim ölçeği (varsayılan: 40px = 1 birim)
@@ -178,6 +348,11 @@ export interface ViewportTransform {
   showCoordinates: boolean;
   showMeasurements?: boolean;
   showQuadrants?: boolean;
+  /**
+   * Siyah–beyaz (gri tonlamalı) gösterim. Açıkken hem ekrandaki çizim hem de
+   * PNG/SVG/PDF/Word çıktıları renksiz üretilir; fotokopi ve baskı için uygundur.
+   */
+  blackWhite?: boolean;
   snapToGrid: boolean;
   gridStep: number;
 }

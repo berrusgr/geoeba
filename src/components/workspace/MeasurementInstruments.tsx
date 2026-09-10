@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Point2D, ViewportTransform } from '@/types/math';
-import { worldToScreen, screenToWorld } from '@/math/coordinates';
+import { worldToScreen, formatTurkishNumber } from '@/math/coordinates';
 import { ToolMode } from '@/types/workspace';
-import { Compass, Ruler as RulerIcon, Triangle, Check, X, RotateCw } from 'lucide-react';
 
 interface MeasurementInstrumentsProps {
   activeTool: ToolMode;
   viewport: ViewportTransform;
-  onAddAngleFromProtractor?: (center: Point2D, angleDeg: number) => void;
+  /** Ölçülen açıyı tuvale aktarır (taban açısı opsiyonel olarak yorumlanabilir). */
+  onAddAngleFromProtractor?: (center: Point2D, angleDeg: number, baseAngleDeg: number) => void;
   onAddSegmentFromRuler?: (p1: Point2D, p2: Point2D) => void;
   onAddPolygonFromAreaModel?: (pos: Point2D, cols: number, rows: number) => void;
 }
+
+/** Dereceyi [0, 360) aralığına indirger. */
+const normalizeDeg = (deg: number) => ((Math.round(deg) % 360) + 360) % 360;
 
 export function MeasurementInstruments({
   activeTool,
@@ -25,26 +28,20 @@ export function MeasurementInstruments({
   const [protractorPos, setProtractorPos] = useState<Point2D>({ x: 0, y: 0 });
   const [protractorAngle, setProtractorAngle] = useState<number>(60);
   const [protractorBaseAngle, setProtractorBaseAngle] = useState<number>(0);
-  const [isDraggingProtractor, setIsDraggingProtractor] = useState(false);
-  const [isRotatingArm, setIsRotatingArm] = useState(false);
 
   // Cetvel Durumu
   const [rulerPos, setRulerPos] = useState<Point2D>({ x: -4, y: 2 });
   const [rulerRotation, setRulerRotation] = useState<number>(0); // Derece
   const [rulerLength, setRulerLength] = useState<number>(8); // Birim
-  const [isDraggingRuler, setIsDraggingRuler] = useState(false);
 
   // Gönye Durumu
   const [setsquarePos, setSetsquarePos] = useState<Point2D>({ x: 2, y: -2 });
   const [setsquareRotation, setSetsquareRotation] = useState<number>(0);
-  const [isDraggingSetsquare, setIsDraggingSetsquare] = useState(false);
 
   // Alan Modeli Durumu
   const [areaCols, setAreaCols] = useState(4);
   const [areaRows, setAreaRows] = useState(3);
   const [areaModelPos, setAreaModelPos] = useState<Point2D>({ x: -2, y: -1 });
-  const [isDraggingAreaModel, setIsDraggingAreaModel] = useState(false);
-  const [isResizingAreaModel, setIsResizingAreaModel] = useState(false);
 
   const isVisible = ['measure_angle', 'setsquare', 'area_model', 'ruler'].includes(activeTool);
   if (!isVisible) return null;
@@ -57,12 +54,29 @@ export function MeasurementInstruments({
 
   const protRadius = 140; // piksel
 
+  // Cetvel Ekseni (ekran uzayı): gövde rotate(rulerRotation) ile döndürülüyor
+  const rulerRad = (rulerRotation * Math.PI) / 180;
+  const rulerPixelLength = rulerLength * viewport.zoom;
+  // Cetvelin orta noktası ve çentikli yüzeyine dik (yukarı bakan) yön
+  const rulerMidX = rulerScreen.x + Math.cos(rulerRad) * (rulerPixelLength / 2);
+  const rulerMidY = rulerScreen.y + Math.sin(rulerRad) * (rulerPixelLength / 2);
+  const rulerPerpX = Math.sin(rulerRad);
+  const rulerPerpY = -Math.cos(rulerRad);
+
+  // Gönye arayüz paneli: üçgenin ağırlık merkezinin TERS yönüne çapalanır,
+  // böylece gönye hangi açıya döndürülürse döndürülsün panel gövdeyi kapatmaz.
+  const ssRad = (setsquareRotation * Math.PI) / 180;
+  const ssPanelX = setsquareScreen.x - ((Math.cos(ssRad) + Math.sin(ssRad)) / Math.SQRT2) * 58;
+  const ssPanelY = setsquareScreen.y - ((Math.sin(ssRad) - Math.cos(ssRad)) / Math.SQRT2) * 58;
+
   // Açıölçer Derece Çentikleri (0° - 180°)
+  // NOT: Çentikler iletkinin YEREL çerçevesinde üretilir; taban açısı gövde
+  // grubuna uygulanan rotate() ile verildiği için burada eklenmez.
   const ticks = [];
   for (let d = 0; d <= 180; d += 5) {
     const isMajor = d % 10 === 0;
     const isSpecial = d === 90 || d === 45 || d === 135 || d === 0 || d === 180;
-    const rad = ((d + protractorBaseAngle) * Math.PI) / 180;
+    const rad = (d * Math.PI) / 180;
     const r1 = protRadius;
     const r2 = isSpecial ? protRadius - 16 : isMajor ? protRadius - 12 : protRadius - 7;
     const x1 = Math.cos(rad) * r1;
@@ -100,7 +114,6 @@ export function MeasurementInstruments({
   const handleProtractorMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsDraggingProtractor(true);
 
     const startClientX = e.clientX;
     const startClientY = e.clientY;
@@ -119,7 +132,6 @@ export function MeasurementInstruments({
     };
 
     const handleMouseUp = () => {
-      setIsDraggingProtractor(false);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -132,24 +144,20 @@ export function MeasurementInstruments({
   const handleNeedleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsRotatingArm(true);
 
     const svgEl = (e.target as SVGElement).closest('svg');
     const rect = svgEl?.getBoundingClientRect() || { left: 0, top: 0 };
+    const pivot = worldToScreen(protractorPos, viewport);
 
     const updateAngle = (moveEvent: MouseEvent) => {
-      const currentProtScreen = worldToScreen(protractorPos, viewport);
-      const curScreenX = moveEvent.clientX - rect.left;
-      const curScreenY = moveEvent.clientY - rect.top;
+      const dx = moveEvent.clientX - rect.left - pivot.x;
+      const dy = -(moveEvent.clientY - rect.top - pivot.y); // SVG y ekseni ters
 
-      const dx = curScreenX - currentProtScreen.x;
-      const dy = -(curScreenY - currentProtScreen.y); // SVG y ekseni ters
+      // Ekran açısını iletkinin TABAN açısına göre yerel açıya çevir
+      const rel = normalizeDeg(Math.round((Math.atan2(dy, dx) * 180) / Math.PI) - protractorBaseAngle);
 
-      let deg = Math.round((Math.atan2(dy, dx) * 180) / Math.PI) - protractorBaseAngle;
-      if (deg < 0) {
-        deg = dx >= 0 ? 0 : 180;
-      }
-      const clamped = Math.max(0, Math.min(180, deg));
+      // Alt yarı düzlemde (180° - 360°) en yakın uca kilitle
+      const clamped = rel <= 180 ? rel : rel > 270 ? 0 : 180;
       setProtractorAngle(clamped);
     };
 
@@ -158,7 +166,41 @@ export function MeasurementInstruments({
     };
 
     const handleMouseUp = () => {
-      setIsRotatingArm(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // İletki Taban Açısını Döndürme Başlat (Taban Çizgisini Işınla Hizalama)
+  const handleProtractorRotateMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const svgEl = (e.target as SVGElement).closest('svg');
+    const rect = svgEl?.getBoundingClientRect() || { left: 0, top: 0 };
+    const pivot = worldToScreen(protractorPos, viewport);
+
+    // Kavrama anındaki ofseti koru: tutamağa basıldığı an sıçrama olmasın
+    const startBase = protractorBaseAngle;
+    const grabDeg =
+      (Math.atan2(-(e.clientY - rect.top - pivot.y), e.clientX - rect.left - pivot.x) * 180) / Math.PI;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const curDeg =
+        (Math.atan2(-(moveEvent.clientY - rect.top - pivot.y), moveEvent.clientX - rect.left - pivot.x) * 180) /
+        Math.PI;
+
+      let deg = startBase + (curDeg - grabDeg);
+      if (moveEvent.shiftKey) {
+        deg = Math.round(deg / 5) * 5;
+      }
+      setProtractorBaseAngle(normalizeDeg(deg));
+    };
+
+    const handleMouseUp = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -171,7 +213,6 @@ export function MeasurementInstruments({
   const handleSetsquareMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsDraggingSetsquare(true);
 
     const startClientX = e.clientX;
     const startClientY = e.clientY;
@@ -190,7 +231,41 @@ export function MeasurementInstruments({
     };
 
     const handleMouseUp = () => {
-      setIsDraggingSetsquare(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // Gönye Döndürme Başlat (Hipotenüs Üzerindeki Tutamaç)
+  const handleSetsquareRotateMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const svgEl = (e.target as SVGElement).closest('svg');
+    const rect = svgEl?.getBoundingClientRect() || { left: 0, top: 0 };
+    const pivot = worldToScreen(setsquarePos, viewport);
+
+    // SVG rotate() saat yönünde pozitif ve y ekseni aşağı olduğu için işaret çevrimi YOK
+    const startRotation = setsquareRotation;
+    const grabDeg =
+      (Math.atan2(e.clientY - rect.top - pivot.y, e.clientX - rect.left - pivot.x) * 180) / Math.PI;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const curDeg =
+        (Math.atan2(moveEvent.clientY - rect.top - pivot.y, moveEvent.clientX - rect.left - pivot.x) * 180) /
+        Math.PI;
+
+      let deg = startRotation + (curDeg - grabDeg);
+      if (moveEvent.shiftKey) {
+        deg = Math.round(deg / 15) * 15;
+      }
+      setSetsquareRotation(normalizeDeg(deg));
+    };
+
+    const handleMouseUp = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -203,7 +278,6 @@ export function MeasurementInstruments({
   const handleRulerMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsDraggingRuler(true);
 
     const startClientX = e.clientX;
     const startClientY = e.clientY;
@@ -222,7 +296,6 @@ export function MeasurementInstruments({
     };
 
     const handleMouseUp = () => {
-      setIsDraggingRuler(false);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -271,20 +344,24 @@ export function MeasurementInstruments({
 
     const svgEl = (e.target as SVGElement).closest('svg');
     const rect = svgEl?.getBoundingClientRect() || { left: 0, top: 0 };
+    const pivot = worldToScreen(rulerPos, viewport);
+
+    // Kavrama anındaki ofseti koru: topuz cetvel ekseninin dışında durduğu için
+    // doğrudan atan2 atanırsa cetvel tutulur tutulmaz birkaç derece sıçrıyordu.
+    const startRotation = rulerRotation;
+    const grabDeg =
+      (Math.atan2(e.clientY - rect.top - pivot.y, e.clientX - rect.left - pivot.x) * 180) / Math.PI;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const currentRulerScreen = worldToScreen(rulerPos, viewport);
-      const curScreenX = moveEvent.clientX - rect.left;
-      const curScreenY = moveEvent.clientY - rect.top;
+      const curDeg =
+        (Math.atan2(moveEvent.clientY - rect.top - pivot.y, moveEvent.clientX - rect.left - pivot.x) * 180) /
+        Math.PI;
 
-      const dx = curScreenX - currentRulerScreen.x;
-      const dy = curScreenY - currentRulerScreen.y;
-
-      let deg = Math.round((Math.atan2(dy, dx) * 180) / Math.PI);
+      let deg = startRotation + (curDeg - grabDeg);
       if (moveEvent.shiftKey) {
         deg = Math.round(deg / 15) * 15;
       }
-      setRulerRotation(deg);
+      setRulerRotation(normalizeDeg(deg));
     };
 
     const handleMouseUp = () => {
@@ -300,7 +377,6 @@ export function MeasurementInstruments({
   const handleAreaModelMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsDraggingAreaModel(true);
 
     const startClientX = e.clientX;
     const startClientY = e.clientY;
@@ -319,7 +395,6 @@ export function MeasurementInstruments({
     };
 
     const handleMouseUp = () => {
-      setIsDraggingAreaModel(false);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -332,7 +407,6 @@ export function MeasurementInstruments({
   const handleAreaResizeMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsResizingAreaModel(true);
 
     const svgEl = (e.target as SVGElement).closest('svg');
     const rect = svgEl?.getBoundingClientRect() || { left: 0, top: 0 };
@@ -353,7 +427,6 @@ export function MeasurementInstruments({
     };
 
     const handleMouseUp = () => {
-      setIsResizingAreaModel(false);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -364,9 +437,28 @@ export function MeasurementInstruments({
 
   return (
     <g className="measurement-instruments select-none">
+      {/* Ölçü çizgisi ok başı: id bu bileşene özel (global "arrow" çakışmasını önler) */}
+      <defs>
+        <marker
+          id="mi-arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#047857" />
+        </marker>
+      </defs>
+
       {/* 1. İNTERAKTİF AÇIÖLÇER (İLETKİ) */}
       {activeTool === 'measure_angle' && (
-        <g transform={`translate(${protScreen.x}, ${protScreen.y})`}>
+        <>
+        {/* 1.A DÖNEN GÖVDE: taban açısı tüm iletkiye uygulanır.
+            SVG'de rotate() saat yönünde pozitif olduğu için matematiksel
+            taban açısı EKSİ işaretle veriliyor. */}
+        <g transform={`translate(${protScreen.x}, ${protScreen.y}) rotate(${-protractorBaseAngle})`}>
           {/* İletki Gövdesi (Yarı Saydam Akrilik - Sürüklenebilir) */}
           <path
             d={`M ${-protRadius} 0 A ${protRadius} ${protRadius} 0 0 1 ${protRadius} 0 Z`}
@@ -375,7 +467,7 @@ export function MeasurementInstruments({
             stroke="#0284c7"
             strokeWidth="2.5"
             onMouseDown={handleProtractorMouseDown}
-            className="cursor-grab active:cursor-grabbing drop-shadow-xl hover:fill-opacity-30 transition-colors"
+            className="cursor-grab active:cursor-grabbing drop-shadow-xl hover:[fill-opacity:0.3] transition-colors"
           />
 
           {/* İç Boşluk / Yay */}
@@ -441,10 +533,13 @@ export function MeasurementInstruments({
             </g>
           ))}
 
-          {/* Ölçülen Açı Sektörü (Renkli Dolgu) */}
+          {/* Ölçülen Açı Sektörü (Renkli Dolgu)
+              Yay, açı ucundan (protractorAngle) taban ucuna (0°) doğru çizilir.
+              SVG y ekseni aşağı olduğu için bu yön EKRANDA saat yönüdür => sweep-flag = 1.
+              Açı [0, 180] aralığında kısıtlı olduğundan large-arc-flag daima 0. */}
           {protractorAngle > 0 && (
             <path
-              d={`M 0 0 L ${Math.cos(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius - 5)} ${-Math.sin(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius - 5)} A ${protRadius - 5} ${protRadius - 5} 0 0 0 ${Math.cos((protractorBaseAngle * Math.PI) / 180) * (protRadius - 5)} ${-Math.sin((protractorBaseAngle * Math.PI) / 180) * (protRadius - 5)} Z`}
+              d={`M 0 0 L ${Math.cos((protractorAngle * Math.PI) / 180) * (protRadius - 5)} ${-Math.sin((protractorAngle * Math.PI) / 180) * (protRadius - 5)} A ${protRadius - 5} ${protRadius - 5} 0 0 1 ${protRadius - 5} 0 Z`}
               fill="#f59e0b"
               fillOpacity="0.32"
               stroke="#d97706"
@@ -458,8 +553,8 @@ export function MeasurementInstruments({
           <line
             x1="0"
             y1="0"
-            x2={Math.cos(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius + 22)}
-            y2={-Math.sin(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius + 22)}
+            x2={Math.cos((protractorAngle * Math.PI) / 180) * (protRadius + 22)}
+            y2={-Math.sin((protractorAngle * Math.PI) / 180) * (protRadius + 22)}
             stroke="transparent"
             strokeWidth="28"
             onMouseDown={handleNeedleMouseDown}
@@ -470,8 +565,8 @@ export function MeasurementInstruments({
           <line
             x1="0"
             y1="0"
-            x2={Math.cos(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius + 18)}
-            y2={-Math.sin(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius + 18)}
+            x2={Math.cos((protractorAngle * Math.PI) / 180) * (protRadius + 18)}
+            y2={-Math.sin((protractorAngle * Math.PI) / 180) * (protRadius + 18)}
             stroke="#ea580c"
             strokeWidth="4"
             strokeLinecap="round"
@@ -481,7 +576,7 @@ export function MeasurementInstruments({
 
           {/* İbre Tutamağı (Döner İbre Başlığı) */}
           <g
-            transform={`translate(${Math.cos(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius + 18)}, ${-Math.sin(((protractorAngle + protractorBaseAngle) * Math.PI) / 180) * (protRadius + 18)})`}
+            transform={`translate(${Math.cos((protractorAngle * Math.PI) / 180) * (protRadius + 18)}, ${-Math.sin((protractorAngle * Math.PI) / 180) * (protRadius + 18)})`}
             onMouseDown={handleNeedleMouseDown}
             className="cursor-grab active:cursor-grabbing group/knob"
           >
@@ -497,6 +592,42 @@ export function MeasurementInstruments({
             <circle cx="0" cy="0" r="4" fill="#ffffff" />
           </g>
 
+          {/* TABAN DÖNDÜRME TUTAMACI (Sol Uç - Mavi Topuz)
+              Cetveldeki döndürme tutamacıyla aynı kalıp: kavrama ofseti korunur,
+              Shift ile 5° adımlara yuvarlanır. */}
+          <g
+            transform={`translate(${-protRadius - 26}, 0)`}
+            onMouseDown={handleProtractorRotateMouseDown}
+            className="cursor-grab active:cursor-grabbing group/prot-rotate"
+          >
+            <title>Açıölçeri Döndür - Tabanı ışınla hizala (Shift ile 5° adımlarla)</title>
+            {/* Tutamağı taban çizgisine bağlayan sap */}
+            <line x1="26" y1="0" x2="0" y2="0" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" />
+            <circle
+              cx="0"
+              cy="0"
+              r="13"
+              fill="#2563eb"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              className="drop-shadow-lg group-hover/prot-rotate:scale-125 transition-transform"
+            />
+            {/* Dönme yönünü anlatan ok işareti */}
+            <path
+              d="M -5 3 A 6 6 0 1 1 4 3"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              className="pointer-events-none"
+            />
+            <path d="M 4 6 L 4 0 L 8 3 Z" fill="#ffffff" className="pointer-events-none" />
+          </g>
+        </g>
+
+        {/* 1.B SABİT ARAYÜZ KATMANI: paneller ve düğmeler taban açısıyla birlikte
+            dönerse baş aşağı okunur; bu yüzden döndürülmemiş grupta duruyorlar. */}
+        <g transform={`translate(${protScreen.x}, ${protScreen.y})`}>
           {/* Canlı Açı Değer Paneli */}
           <g transform={`translate(0, ${-protRadius - 32})`}>
             <rect
@@ -533,7 +664,7 @@ export function MeasurementInstruments({
                   fill={protractorAngle === deg ? '#0284c7' : '#ffffff'}
                   stroke="#0284c7"
                   strokeWidth="1.2"
-                  className="shadow-xs hover:opacity-90"
+                  className="shadow-sm hover:opacity-90"
                 />
                 <text
                   x="13"
@@ -547,11 +678,69 @@ export function MeasurementInstruments({
               </g>
             ))}
           </g>
+
+          {/* Taban Açısı Bilgi Çubuğu + Sıfırlama + Tuvale Aktarma */}
+          <g transform={`translate(-130, 50)`}>
+            <rect
+              width="118"
+              height="22"
+              rx="7"
+              fill="#0f172a"
+              fillOpacity="0.95"
+              stroke="#38bdf8"
+              strokeWidth="1"
+              className="shadow-lg"
+            />
+            <text
+              x="59"
+              y="15"
+              textAnchor="middle"
+              fill="#e0f2fe"
+              className="text-[9px] font-bold font-sans pointer-events-none"
+            >
+              Taban: {protractorBaseAngle}°
+            </text>
+
+            <g
+              transform="translate(124, 0)"
+              className="cursor-pointer"
+              onClick={() => setProtractorBaseAngle(0)}
+            >
+              <title>Tabanı Yatay Yap (0°)</title>
+              <rect width="58" height="22" rx="7" fill="#1e293b" stroke="#64748b" strokeWidth="0.8" />
+              <text x="29" y="15" textAnchor="middle" fill="#94a3b8" className="font-bold text-[9px] font-sans">
+                0° Yatay
+              </text>
+            </g>
+
+            {onAddAngleFromProtractor && (
+              <g
+                transform="translate(188, 0)"
+                className="cursor-pointer group/prot-add"
+                onClick={() => onAddAngleFromProtractor(protractorPos, protractorAngle, protractorBaseAngle)}
+              >
+                <title>Ölçülen açıyı tuvale nesne olarak ekle</title>
+                <rect
+                  width="90"
+                  height="22"
+                  rx="7"
+                  fill="#0284c7"
+                  className="group-hover/prot-add:fill-sky-400 transition-colors shadow-sm"
+                />
+                <text x="45" y="15" textAnchor="middle" fill="#ffffff" className="font-black text-[9px] font-sans">
+                  ✨ Tuvale Ekle
+                </text>
+              </g>
+            )}
+          </g>
         </g>
+        </>
       )}
 
       {/* 2. İNTERAKTİF CETVEL (RULER) */}
       {activeTool === 'ruler' && (
+        <>
+        {/* 2.A DÖNEN CETVEL GÖVDESİ */}
         <g
           transform={`translate(${rulerScreen.x}, ${rulerScreen.y}) rotate(${rulerRotation})`}
           className="ruler-instrument select-none"
@@ -568,7 +757,7 @@ export function MeasurementInstruments({
             stroke="#ca8a04"
             strokeWidth="2.5"
             onMouseDown={handleRulerMouseDown}
-            className="cursor-grab active:cursor-grabbing shadow-2xl backdrop-blur-sm hover:fill-opacity-98 transition-colors"
+            className="cursor-grab active:cursor-grabbing shadow-2xl backdrop-blur-sm hover:[fill-opacity:0.98] transition-colors"
           />
 
           {/* B) Santimetre / Birim Çentikleri ve Sayıları */}
@@ -665,9 +854,16 @@ export function MeasurementInstruments({
             />
             <circle cx="0" cy="0" r="3.5" fill="#ffffff" />
           </g>
+        </g>
 
+        {/* 2.B CETVEL ARAYÜZ KATMANI (DÖNDÜRÜLMEZ)
+            Paneller cetvelin döndürülmüş orta noktasına, çentikli yüzeyine dik
+            olarak çapalanır; böylece cetvel 180° çevrilse bile yazılar düz kalır. */}
+        <g className="ruler-instrument-ui select-none">
           {/* E) Üst Cetvel Bilgi ve Hızlı Ayar Paneli */}
-          <g transform={`translate(${((rulerLength * viewport.zoom) / 2) - 105}, -46)`}>
+          <g
+            transform={`translate(${rulerMidX + rulerPerpX * 48 - 105}, ${rulerMidY + rulerPerpY * 48 - 14})`}
+          >
             <rect
               width="210"
               height="28"
@@ -680,7 +876,7 @@ export function MeasurementInstruments({
               onMouseDown={handleRulerMouseDown}
             />
             <text x="50" y="18" textAnchor="middle" fill="#ffffff" className="font-black text-xs font-sans pointer-events-none">
-              📏 {rulerLength} cm (br)
+              📏 {formatTurkishNumber(rulerLength)} br • {rulerRotation}°
             </text>
 
             {/* Uzunluk [-] [+] Düğmeleri */}
@@ -712,8 +908,10 @@ export function MeasurementInstruments({
             </g>
           </g>
 
-          {/* F) Hızlı Uzunluk Şablonları (5, 8, 10, 12, 15, 20 cm) */}
-          <g transform={`translate(${((rulerLength * viewport.zoom) / 2) - 110}, 30)`}>
+          {/* F) Hızlı Uzunluk Şablonları (5, 8, 10, 12, 15, 20 br) */}
+          <g
+            transform={`translate(${rulerMidX - rulerPerpX * 46 - 110}, ${rulerMidY - rulerPerpY * 46 - 9})`}
+          >
             {[5, 8, 10, 12, 15, 20].map((len, i) => (
               <g
                 key={`rlen-${len}`}
@@ -728,25 +926,56 @@ export function MeasurementInstruments({
                   fill={rulerLength === len ? '#ca8a04' : '#1e293b'}
                   stroke="#ca8a04"
                   strokeWidth="0.8"
-                  className="shadow-xs hover:opacity-90"
+                  className="shadow-sm hover:opacity-90"
                 />
                 <text
                   x="16.5"
                   y="12"
                   textAnchor="middle"
                   fill="#ffffff"
-                  className="font-bold text-[8.5px] font-sans"
+                  className="font-bold text-[9px] font-sans"
                 >
-                  {len} cm
+                  {len} br
                 </text>
               </g>
             ))}
+
+            {/* Ölçülen Uzunluğu Tuvale Doğru Parçası Olarak Ekle */}
+            {onAddSegmentFromRuler && (
+              <g
+                transform="translate(65, 26)"
+                className="cursor-pointer group/ruler-add"
+                onClick={() => {
+                  // Cetvel ekran uzayında rotate(rulerRotation) ile döndürülüyor;
+                  // dünya koordinatında y ekseni ters olduğu için açı işareti çevriliyor.
+                  const rad = (-rulerRotation * Math.PI) / 180;
+                  onAddSegmentFromRuler(rulerPos, {
+                    x: Number((rulerPos.x + rulerLength * Math.cos(rad)).toFixed(2)),
+                    y: Number((rulerPos.y + rulerLength * Math.sin(rad)).toFixed(2)),
+                  });
+                }}
+              >
+                <title>Cetvel boyunu tuvale doğru parçası olarak ekle</title>
+                <rect
+                  width="88"
+                  height="22"
+                  rx="7"
+                  fill="#ca8a04"
+                  className="group-hover/ruler-add:fill-yellow-400 transition-colors shadow-sm"
+                />
+                <text x="44" y="15" textAnchor="middle" fill="#ffffff" className="font-black text-[9px] font-sans">
+                  ✨ Tuvale Ekle
+                </text>
+              </g>
+            )}
           </g>
         </g>
+        </>
       )}
 
       {/* 3. İNTERAKTİF GÖNYE (SET SQUARE - 90° & 45°/45°) */}
       {activeTool === 'setsquare' && (
+        <>
         <g
           transform={`translate(${setsquareScreen.x}, ${setsquareScreen.y}) rotate(${setsquareRotation})`}
           onMouseDown={handleSetsquareMouseDown}
@@ -810,7 +1039,86 @@ export function MeasurementInstruments({
           >
             45°
           </text>
+
+          {/* DÖNDÜRME TUTAMACI (Hipotenüs Ortasının Dışında - Mavi Topuz)
+              Sürükleme kök <g> üzerinde olduğu için tutamak kendi
+              onMouseDown'ında önce stopPropagation çağırır. */}
+          <g
+            transform={`translate(${3 * viewport.zoom + 18}, ${-3 * viewport.zoom - 18})`}
+            onMouseDown={handleSetsquareRotateMouseDown}
+            className="cursor-grab active:cursor-grabbing group/ss-rotate"
+          >
+            <title>Gönyeyi Döndür - Dik kenarı doğruya hizala (Shift ile 15° adımlarla)</title>
+            {/* Tutamağı hipotenüse bağlayan sap */}
+            <line x1="-16" y1="16" x2="0" y2="0" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" />
+            <circle
+              cx="0"
+              cy="0"
+              r="13"
+              fill="#2563eb"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              className="drop-shadow-lg group-hover/ss-rotate:scale-125 transition-transform"
+            />
+            <path
+              d="M -5 3 A 6 6 0 1 1 4 3"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              className="pointer-events-none"
+            />
+            <path d="M 4 6 L 4 0 L 8 3 Z" fill="#ffffff" className="pointer-events-none" />
+          </g>
         </g>
+
+        {/* 3.B GÖNYE ARAYÜZ KATMANI (DÖNDÜRÜLMEZ): dönüş bilgisi ve hızlı açılar */}
+        <g className="setsquare-instrument-ui select-none">
+          <g transform={`translate(${ssPanelX - 104}, ${ssPanelY - 13})`}>
+            <rect
+              width="208"
+              height="26"
+              rx="9"
+              fill="#064e3b"
+              fillOpacity="0.96"
+              stroke="#34d399"
+              strokeWidth="1.2"
+              className="shadow-2xl"
+            />
+            <text x="10" y="17" fill="#ffffff" className="font-black text-[10px] font-sans pointer-events-none">
+              📐 Dönüş: {setsquareRotation}°
+            </text>
+            {[0, 45, 90, 135].map((deg, i) => (
+              <g
+                key={`ss-rot-${deg}`}
+                transform={`translate(${96 + i * 28}, 4)`}
+                className="cursor-pointer"
+                onClick={() => setSetsquareRotation(deg)}
+              >
+                <title>Gönyeyi {deg}° konumuna getir</title>
+                <rect
+                  width="26"
+                  height="18"
+                  rx="5"
+                  fill={setsquareRotation === deg ? '#059669' : '#1e293b'}
+                  stroke="#34d399"
+                  strokeWidth="0.8"
+                  className="shadow-sm hover:opacity-90"
+                />
+                <text
+                  x="13"
+                  y="13"
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  className="font-bold text-[9px] font-sans"
+                >
+                  {deg}°
+                </text>
+              </g>
+            ))}
+          </g>
+        </g>
+        </>
       )}
 
       {/* 4. İNTERAKTİF ALAN MODELLEME IZGARASI (GEOGEBRA AREA MODEL) */}
@@ -851,7 +1159,7 @@ export function MeasurementInstruments({
                       fillOpacity={0.45}
                       stroke="#059669"
                       strokeWidth={1.2}
-                      className="hover:fill-opacity-70 transition-colors"
+                      className="hover:[fill-opacity:0.7] transition-colors"
                     />
                     {viewport.zoom >= 26 && (
                       <text
@@ -878,7 +1186,8 @@ export function MeasurementInstruments({
                 y2={0}
                 stroke="#047857"
                 strokeWidth={2}
-                markerEnd="url(#arrow)"
+                markerStart="url(#mi-arrow)"
+                markerEnd="url(#mi-arrow)"
               />
               <rect
                 x={(areaCols * viewport.zoom) / 2 - 45}
@@ -889,7 +1198,7 @@ export function MeasurementInstruments({
                 fill="#ffffff"
                 stroke="#059669"
                 strokeWidth={1}
-                className="shadow-xs dark:fill-slate-900"
+                className="shadow-sm dark:fill-slate-900"
               />
               <text
                 x={(areaCols * viewport.zoom) / 2}
@@ -911,6 +1220,8 @@ export function MeasurementInstruments({
                 y2={-areaRows * viewport.zoom + 2}
                 stroke="#047857"
                 strokeWidth={2}
+                markerStart="url(#mi-arrow)"
+                markerEnd="url(#mi-arrow)"
               />
               <rect
                 x={-55}
@@ -921,7 +1232,7 @@ export function MeasurementInstruments({
                 fill="#ffffff"
                 stroke="#059669"
                 strokeWidth={1}
-                className="shadow-xs dark:fill-slate-900"
+                className="shadow-sm dark:fill-slate-900"
               />
               <text
                 x={-30}

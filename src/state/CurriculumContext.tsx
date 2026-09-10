@@ -13,6 +13,8 @@ interface HistoryNavState {
   topicId: string | null;
   activityId: string | null;
   isFreeSandbox: boolean;
+  /** Portal ekranında açık olan Keşif Modalı'nın konusu (tarayıcı geri tuşu modalı kapatabilsin diye) */
+  modalTopicId: string | null;
 }
 
 interface CurriculumContextType {
@@ -47,6 +49,188 @@ interface CurriculumContextType {
 }
 
 const CurriculumContext = createContext<CurriculumContextType | undefined>(undefined);
+
+const HOME_NAV_STATE: HistoryNavState = {
+  screen: 'home',
+  levelId: null,
+  gradeNumber: null,
+  topicId: null,
+  activityId: null,
+  isFreeSandbox: false,
+  modalTopicId: null,
+};
+
+/**
+ * Sınıf numarasından kademeyi müfredat verisinden türetir.
+ * Sabit aralık kuralı yerine veriyi tek kaynak kabul eder; böylece Lise "Hazırlık Sınıfı"
+ * (gradeNumber: 0) doğru şekilde 'lise' kademesine eşlenir (0 sayısı falsy olduğu için
+ * elle yazılan aralık koşulları bu sınıfı ilkokula düşürüyordu).
+ */
+function levelIdForGrade(gradeNumber: number): LevelId | null {
+  for (const levelKey of Object.keys(curriculumData.levels) as LevelId[]) {
+    if (curriculumData.levels[levelKey].grades.some((g) => g.gradeNumber === gradeNumber)) {
+      return levelKey;
+    }
+  }
+  return null;
+}
+
+/** Bir etkinliğin ait olduğu kademe, sınıf ve konuyu bulur */
+function locateActivity(activityId: string): {
+  levelId: LevelId;
+  gradeNumber: GradeId;
+  topicId: string;
+} | null {
+  for (const levelKey of Object.keys(curriculumData.levels) as LevelId[]) {
+    const level = curriculumData.levels[levelKey];
+    for (const grade of level.grades) {
+      const topics = [...(grade.topics || []), ...(grade.themes || []).flatMap((th) => th.topics || [])];
+      for (const topic of topics) {
+        if ((topic.activities || []).some((a) => a.id === activityId)) {
+          return { levelId: levelKey, gradeNumber: grade.gradeNumber as GradeId, topicId: topic.id };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** Bir konunun ait olduğu kademe ve sınıfı bulur */
+function locateTopic(topicId: string): {
+  levelId: LevelId;
+  gradeNumber: GradeId;
+  topic: Topic;
+} | null {
+  for (const levelKey of Object.keys(curriculumData.levels) as LevelId[]) {
+    const level = curriculumData.levels[levelKey];
+    for (const grade of level.grades) {
+      const topics = [...(grade.topics || []), ...(grade.themes || []).flatMap((th) => th.topics || [])];
+      for (const topic of topics) {
+        if (topic.id === topicId) {
+          return { levelId: levelKey, gradeNumber: grade.gradeNumber as GradeId, topic };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** ID'ye göre konu arama */
+function findTopicById(topicId: string): Topic | null {
+  return locateTopic(topicId)?.topic || null;
+}
+
+/** Gezinme durumundan adres çubuğu hash'ini üretir (parseHashToNavState'in tersi) */
+function hashForNavState(navState: HistoryNavState): string {
+  switch (navState.screen) {
+    case 'home':
+      return '#/home';
+    case 'grades':
+      return navState.levelId ? `#/kademe/${navState.levelId}` : '#/home';
+    case 'portal':
+      // gradeNumber 0 (Hazırlık Sınıfı) geçerli bir değerdir; truthy kontrolü kullanılamaz.
+      return navState.gradeNumber != null ? `#/sinif/${navState.gradeNumber}` : '#/portal';
+    case 'topics':
+      return navState.topicId ? `#/konu/${navState.topicId}` : '#/portal';
+    case 'mission':
+      return navState.activityId ? `#/gorev/${navState.activityId}` : '#/portal';
+    case 'workspace':
+      if (!navState.isFreeSandbox && navState.activityId) return `#/calisma/${navState.activityId}`;
+      return '#/studyo';
+    default:
+      return '#/home';
+  }
+}
+
+/**
+ * Adres çubuğundaki hash'i uygulama gezinme durumuna çevirir.
+ * Desteklenen biçimler: #/home, #/studyo, #/portal, #/kademe/:levelId, #/sinif/:gradeNumber,
+ * #/konu/:topicId, #/gorev/:activityId, #/calisma/:activityId
+ */
+export function parseHashToNavState(rawHash: string): { state: HistoryNavState; hash: string } {
+  const hash = (rawHash || '').replace(/^#\/?/, '').trim();
+  const parts = hash.split('/').filter(Boolean);
+  const fallback = { state: HOME_NAV_STATE, hash: '#/home' };
+  if (parts.length === 0) return fallback;
+
+  const [section, param] = parts;
+
+  if (section === 'home') return fallback;
+
+  if (section === 'studyo') {
+    return {
+      state: { ...HOME_NAV_STATE, screen: 'workspace', isFreeSandbox: true },
+      hash: '#/studyo',
+    };
+  }
+
+  if (section === 'portal') {
+    return {
+      state: { ...HOME_NAV_STATE, screen: 'portal' },
+      hash: '#/portal',
+    };
+  }
+
+  if (section === 'konu' && param) {
+    const where = locateTopic(param);
+    if (!where) return fallback;
+    return {
+      state: {
+        ...HOME_NAV_STATE,
+        screen: 'topics',
+        levelId: where.levelId,
+        gradeNumber: where.gradeNumber,
+        topicId: param,
+      },
+      hash: `#/konu/${param}`,
+    };
+  }
+
+  if (section === 'kademe' && param) {
+    if (!Object.prototype.hasOwnProperty.call(curriculumData.levels, param)) return fallback;
+    const levelId = param as LevelId;
+    return {
+      state: { ...HOME_NAV_STATE, screen: 'grades', levelId },
+      hash: `#/kademe/${levelId}`,
+    };
+  }
+
+  if (section === 'sinif' && param) {
+    const gradeNumber = Number(param);
+    const levelId = Number.isFinite(gradeNumber) ? levelIdForGrade(gradeNumber) : null;
+    if (!levelId) return fallback;
+    return {
+      state: {
+        ...HOME_NAV_STATE,
+        screen: 'portal',
+        levelId,
+        gradeNumber: gradeNumber as GradeId,
+      },
+      hash: `#/sinif/${gradeNumber}`,
+    };
+  }
+
+  if ((section === 'gorev' || section === 'calisma') && param) {
+    const activity = findActivityById(param);
+    if (!activity) return fallback;
+    const where = locateActivity(param);
+    const isMission = section === 'gorev';
+    return {
+      state: {
+        ...HOME_NAV_STATE,
+        screen: isMission ? 'mission' : 'workspace',
+        levelId: where ? where.levelId : null,
+        gradeNumber: where ? where.gradeNumber : null,
+        topicId: where ? where.topicId : null,
+        activityId: param,
+        isFreeSandbox: false,
+      },
+      hash: `#/${section}/${param}`,
+    };
+  }
+
+  return fallback;
+}
 
 const PROGRESS_STORAGE_KEY = 'matematik_tamamlanan_etkinlikler_v3';
 
@@ -94,7 +278,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   const [selectedGradeNumber, setSelectedGradeNumber] = useState<GradeId | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [activeModalTopic, setActiveModalTopic] = useState<Topic | null>(null);
+  const [activeModalTopic, setActiveModalTopicState] = useState<Topic | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<MathCategory>('hepsi');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isFreeSandbox, setIsFreeSandbox] = useState<boolean>(false);
@@ -103,8 +287,9 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   const isPopStateRef = useRef(false);
 
   const selectedLevel = selectedLevelId ? curriculumData.levels[selectedLevelId] : null;
+  // Hazırlık Sınıfı'nın gradeNumber değeri 0'dır; 0 falsy olduğu için burada `||` kullanılamaz.
   const effectiveGradeNumber =
-    selectedGradeNumber ||
+    selectedGradeNumber ??
     (selectedLevelId === 'ilkokul' ? 1 : selectedLevelId === 'lise' ? 9 : 5);
   const selectedGrade =
     selectedLevel
@@ -130,19 +315,18 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   // Tarayıcı Geçmişi (Browser Back / Forward) Senkronizasyonu
-  const pushBrowserHistory = useCallback((navState: HistoryNavState) => {
+  const pushBrowserHistory = useCallback((navState: HistoryNavState, mode: 'push' | 'replace' = 'push') => {
     if (typeof window === 'undefined' || isPopStateRef.current) return;
 
-    let urlHash = '#/';
-    if (navState.screen === 'home') urlHash = '#/home';
-    else if (navState.screen === 'grades' && navState.levelId) urlHash = `#/kademe/${navState.levelId}`;
-    else if (navState.screen === 'portal' && navState.levelId && navState.gradeNumber) urlHash = `#/sinif/${navState.gradeNumber}`;
-    else if (navState.screen === 'mission' && navState.activityId) urlHash = `#/gorev/${navState.activityId}`;
-    else if (navState.screen === 'workspace' && navState.isFreeSandbox) urlHash = '#/studyo';
-    else if (navState.screen === 'workspace' && navState.activityId) urlHash = `#/calisma/${navState.activityId}`;
+    const urlHash = hashForNavState(navState);
+    const currentState = (window.history.state || {}) as Record<string, unknown>;
+
+    // Next.js App Router'ın kendi geçmiş alanlarını (__NA, tree vb.) ezmemek için üzerine yaz.
+    const entryState = { ...currentState, ...navState };
 
     try {
-      window.history.pushState(navState, '', urlHash);
+      if (mode === 'replace') window.history.replaceState(entryState, '', urlHash);
+      else window.history.pushState(entryState, '', urlHash);
     } catch (e) {}
   }, []);
 
@@ -150,46 +334,43 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // İlk sayfa yüklenişinde mevcut durumu kaydet
-    if (!window.history.state || !window.history.state.screen) {
-      window.history.replaceState(
-        {
-          screen: 'home',
-          levelId: null,
-          gradeNumber: null,
-          topicId: null,
-          activityId: null,
-          isFreeSandbox: false,
-        },
-        '',
-        '#/home'
-      );
+    // İlk sayfa yüklenişinde adres çubuğundaki hash'i çözümle ve o ekranı aç
+    // (#/studyo, #/sinif/5, #/gorev/xyz gibi doğrudan bağlantılar çalışsın).
+    // Koşulsuz çalışır: React StrictMode bileşeni yeniden bağladığında durum
+    // sıfırlanır ama adres aynı kalır; bu yüzden hash daima kaynak kabul edilir.
+    // Kullanıcı gezindikçe hash ekranla eşitlendiği için tekrar uygulamak etkisizdir.
+    const parsed = parseHashToNavState(window.location.hash);
+    window.history.replaceState({ ...(window.history.state || {}), ...parsed.state }, '', parsed.hash);
+
+    if (parsed.state.screen !== 'home') {
+      setCurrentScreen(parsed.state.screen);
+      setSelectedLevelId(parsed.state.levelId);
+      setSelectedGradeNumber(parsed.state.gradeNumber);
+      setSelectedTopicId(parsed.state.topicId);
+      setIsFreeSandbox(parsed.state.isFreeSandbox);
+      setSelectedActivity(parsed.state.activityId ? findActivityById(parsed.state.activityId) : null);
     }
+
+    const applyNavState = (state: HistoryNavState) => {
+      setCurrentScreen(state.screen);
+      setSelectedLevelId(state.levelId);
+      setSelectedGradeNumber(state.gradeNumber);
+      setSelectedTopicId(state.topicId);
+      setIsFreeSandbox(state.isFreeSandbox || false);
+      setSelectedActivity(state.activityId ? findActivityById(state.activityId) : null);
+      // Keşif Modalı da geçmişin parçası: geri/ileri modalı kendiliğinden açık bırakmaz.
+      setActiveModalTopicState(state.modalTopicId ? findTopicById(state.modalTopicId) : null);
+    };
 
     const handlePopState = (event: PopStateEvent) => {
       isPopStateRef.current = true;
       const state = event.state as HistoryNavState | null;
 
       if (state && state.screen) {
-        setCurrentScreen(state.screen);
-        setSelectedLevelId(state.levelId);
-        setSelectedGradeNumber(state.gradeNumber);
-        setSelectedTopicId(state.topicId);
-        setIsFreeSandbox(state.isFreeSandbox || false);
-        if (state.activityId) {
-          const act = findActivityById(state.activityId);
-          setSelectedActivity(act);
-        } else {
-          setSelectedActivity(null);
-        }
+        applyNavState(state);
       } else {
-        // Durum yoksa ana sayfaya dön
-        setCurrentScreen('home');
-        setSelectedLevelId(null);
-        setSelectedGradeNumber(null);
-        setSelectedTopicId(null);
-        setSelectedActivity(null);
-        setIsFreeSandbox(false);
+        // Durum yoksa (ör. kullanıcı adres çubuğundan hash'i elle değiştirdi) adresi çözümle
+        applyNavState(parseHashToNavState(window.location.hash).state);
       }
 
       setTimeout(() => {
@@ -227,7 +408,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
     setSelectedGradeNumber(defaultGrade);
     setSelectedTopicId(null);
     setSelectedActivity(null);
-    setActiveModalTopic(null);
+    setActiveModalTopicState(null);
     setIsFreeSandbox(false);
     setCurrentScreen('grades');
 
@@ -238,28 +419,22 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       topicId: null,
       activityId: null,
       isFreeSandbox: false,
+      modalTopicId: null,
     });
   };
 
   const selectGrade = (gradeNumber: GradeId) => {
     stopSpeech();
-    // Kademeyi de otomatik eşle
-    if (gradeNumber <= 4) {
-      setSelectedLevelId('ilkokul');
-    } else if (gradeNumber >= 9) {
-      setSelectedLevelId('lise');
-    } else {
-      setSelectedLevelId('ortaokul');
-    }
+    // Kademeyi müfredat verisinden eşle: Hazırlık Sınıfı (0) lise kademesindedir.
+    const mappedLevelId = levelIdForGrade(gradeNumber) || 'ortaokul';
+    setSelectedLevelId(mappedLevelId);
 
     setSelectedGradeNumber(gradeNumber);
     setSelectedTopicId(null);
     setSelectedActivity(null);
-    setActiveModalTopic(null);
+    setActiveModalTopicState(null);
     setIsFreeSandbox(false);
     setCurrentScreen('portal');
-
-    const mappedLevelId = gradeNumber <= 4 ? 'ilkokul' : gradeNumber >= 9 ? 'lise' : 'ortaokul';
 
     pushBrowserHistory({
       screen: 'portal',
@@ -268,6 +443,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       topicId: null,
       activityId: null,
       isFreeSandbox: false,
+      modalTopicId: null,
     });
   };
 
@@ -289,8 +465,38 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
         topicId,
         activityId: null,
         isFreeSandbox: false,
+        modalTopicId: activeModalTopic?.id || null,
       });
     }
+  };
+
+  /**
+   * Keşif Modalı'nı açar/kapatır. Modal durumu tarayıcı geçmişine de yazılır: açılış yeni bir
+   * kayıt ekler (tarayıcının Geri tuşu modalı kapatır), kapanış ise mevcut kaydı günceller.
+   * Böylece ileri/geri ile gezinirken modal kendiliğinden açılmaz.
+   */
+  const setActiveModalTopic = (topic: Topic | null) => {
+    setActiveModalTopicState(topic);
+
+    const portalNavState: HistoryNavState = {
+      screen: 'portal',
+      levelId: selectedLevelId,
+      gradeNumber: selectedGradeNumber,
+      topicId: selectedTopicId,
+      activityId: null,
+      isFreeSandbox: false,
+      modalTopicId: topic ? topic.id : null,
+    };
+
+    if (topic) {
+      pushBrowserHistory(portalNavState);
+      return;
+    }
+
+    if (typeof window === 'undefined') return;
+    const historyState = (window.history.state || null) as HistoryNavState | null;
+    // Yalnızca modalın açık olduğunu söyleyen kaydı güncelle (yeni kayıt ekleme).
+    if (historyState?.modalTopicId) pushBrowserHistory(portalNavState, 'replace');
   };
 
   const selectActivity = (activity: Activity, openAsMission: boolean = true) => {
@@ -301,7 +507,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
     // Eğer modal konusu hafızada yoksa ait olduğu konuyu otomatik bağla
     if (!activeModalTopic) {
       const parentTopic = findTopicByActivityId(activity.id);
-      if (parentTopic) setActiveModalTopic(parentTopic);
+      if (parentTopic) setActiveModalTopicState(parentTopic);
     }
 
     const targetScreen: AppScreen = openAsMission ? 'mission' : 'workspace';
@@ -314,6 +520,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       topicId: selectedTopicId,
       activityId: activity.id,
       isFreeSandbox: false,
+      modalTopicId: null,
     });
   };
 
@@ -330,6 +537,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       topicId: null,
       activityId: null,
       isFreeSandbox: true,
+      modalTopicId: null,
     });
   };
 
@@ -347,58 +555,114 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       topicId: selectedTopicId,
       activityId: selectedActivity?.id || null,
       isFreeSandbox,
+      modalTopicId: null,
     });
   };
 
+  /**
+   * Uygulama içi "Geri". Ekran hedefleri korunur; fark şu: artık geçmişe YENİ kayıt eklemez,
+   * mevcut kaydı replaceState ile günceller. Böylece uygulama içi Geri tarayıcı geçmişini
+   * uzatmaz ve tarayıcının Geri tuşu kullanıcıyı az önce çıktığı ekrana (ileriye) götürmez.
+   * Derin bağlantıyla girildiğinde de siteden çıkılmaz.
+   */
   const goBack = () => {
     stopSpeech();
+
     if (currentScreen === 'workspace') {
       if (selectedActivity) {
-        selectActivity(selectedActivity, true);
+        if (!activeModalTopic) {
+          const parentTopic = findTopicByActivityId(selectedActivity.id);
+          if (parentTopic) setActiveModalTopicState(parentTopic);
+        }
+        setIsFreeSandbox(false);
+        setCurrentScreen('mission');
+        pushBrowserHistory(
+          {
+            screen: 'mission',
+            levelId: selectedLevelId,
+            gradeNumber: selectedGradeNumber,
+            topicId: selectedTopicId,
+            activityId: selectedActivity.id,
+            isFreeSandbox: false,
+            modalTopicId: null,
+          },
+          'replace'
+        );
       } else {
         setCurrentScreen('portal');
+        pushBrowserHistory(
+          {
+            screen: 'portal',
+            levelId: selectedLevelId,
+            gradeNumber: selectedGradeNumber,
+            topicId: selectedTopicId,
+            activityId: null,
+            isFreeSandbox: false,
+            modalTopicId: null,
+          },
+          'replace'
+        );
       }
     } else if (currentScreen === 'mission') {
       // Görevden çıkıldığında doğrudan ait olduğu konunun Görevler Modalı'na dön
+      let modalTopicId = activeModalTopic?.id || null;
       if (!activeModalTopic && selectedActivity) {
         const parentTopic = findTopicByActivityId(selectedActivity.id);
-        if (parentTopic) setActiveModalTopic(parentTopic);
+        if (parentTopic) {
+          setActiveModalTopicState(parentTopic);
+          modalTopicId = parentTopic.id;
+        }
       }
       setCurrentScreen('portal');
-      pushBrowserHistory({
-        screen: 'portal',
-        levelId: selectedLevelId,
-        gradeNumber: selectedGradeNumber,
-        topicId: selectedTopicId,
-        activityId: null,
-        isFreeSandbox: false,
-      });
-    } else if (currentScreen === 'portal') {
-      if (activeModalTopic) {
-        setActiveModalTopic(null);
-      } else {
-        setCurrentScreen('grades');
-        pushBrowserHistory({
-          screen: 'grades',
+      pushBrowserHistory(
+        {
+          screen: 'portal',
           levelId: selectedLevelId,
           gradeNumber: selectedGradeNumber,
-          topicId: null,
+          topicId: selectedTopicId,
           activityId: null,
           isFreeSandbox: false,
-        });
+          modalTopicId,
+        },
+        'replace'
+      );
+    } else if (currentScreen === 'portal') {
+      if (activeModalTopic) {
+        setActiveModalTopicState(null);
+        pushBrowserHistory(
+          {
+            screen: 'portal',
+            levelId: selectedLevelId,
+            gradeNumber: selectedGradeNumber,
+            topicId: selectedTopicId,
+            activityId: null,
+            isFreeSandbox: false,
+            modalTopicId: null,
+          },
+          'replace'
+        );
+      } else {
+        setCurrentScreen('grades');
+        pushBrowserHistory(
+          {
+            screen: 'grades',
+            levelId: selectedLevelId,
+            gradeNumber: selectedGradeNumber,
+            topicId: null,
+            activityId: null,
+            isFreeSandbox: false,
+            modalTopicId: null,
+          },
+          'replace'
+        );
       }
-    } else if (currentScreen === 'grades') {
-      setCurrentScreen('home');
-      pushBrowserHistory({
-        screen: 'home',
-        levelId: null,
-        gradeNumber: null,
-        topicId: null,
-        activityId: null,
-        isFreeSandbox: false,
-      });
     } else {
       setCurrentScreen('home');
+      setSelectedTopicId(null);
+      setSelectedActivity(null);
+      setActiveModalTopicState(null);
+      setIsFreeSandbox(false);
+      pushBrowserHistory(HOME_NAV_STATE, 'replace');
     }
   };
 
@@ -407,17 +671,10 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
     setCurrentScreen('home');
     setSelectedTopicId(null);
     setSelectedActivity(null);
-    setActiveModalTopic(null);
+    setActiveModalTopicState(null);
     setIsFreeSandbox(false);
 
-    pushBrowserHistory({
-      screen: 'home',
-      levelId: null,
-      gradeNumber: null,
-      topicId: null,
-      activityId: null,
-      isFreeSandbox: false,
-    });
+    pushBrowserHistory(HOME_NAV_STATE);
   };
 
   const setScreen = (screen: AppScreen) => {
@@ -429,6 +686,7 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       topicId: selectedTopicId,
       activityId: selectedActivity?.id || null,
       isFreeSandbox,
+      modalTopicId: activeModalTopic?.id || null,
     });
   };
 

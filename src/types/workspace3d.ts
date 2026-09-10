@@ -6,17 +6,15 @@ export type Tool3DMode =
   | 'select_move'
   | 'orbit'
   | 'pan'
-  | 'front_view'
-  | 'top_view'
-  | 'isometric_view'
+  | 'inspect'
   | 'delete'
   | 'create_cube'
   | 'create_sphere'
   | 'create_cylinder'
   | 'create_prism'
+  | 'create_triangular_prism'
   | 'create_cone'
-  | 'create_pyramid'
-  | 'unfold_net';
+  | 'create_pyramid';
 
 export interface Point3D {
   x: number;
@@ -55,6 +53,8 @@ export interface Solid3DObject {
   showFaces: boolean;
   unfoldProgress: number; // 0 (kapalı cisim) - 1 (tam açınım)
   selectedFaceIndex: number | null;
+  /** Yüz dizinine göre özel yüz renkleri (Yüzü renklendir aracı) */
+  faceColors?: Record<number, string>;
 }
 
 export type Solid3D = Solid3DObject;
@@ -70,3 +70,8 @@ export interface Camera3D {
   showAxes: boolean;
   showCoordinates: boolean;
 }
+
+/** Kamera yakınlaştırma sınırları (tek kaynak) */
+export const CAMERA_ZOOM_MIN = 15;
+export const CAMERA_ZOOM_MAX = 180;
+export const CAMERA_PITCH_LIMIT = 85;

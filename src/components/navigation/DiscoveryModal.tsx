@@ -50,7 +50,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
         {/* 1. ÜST PASTEL BAŞLIK ŞERİDİ (Tıpkı Referans Görsel 1 Gibi) */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-200/80 via-rose-100 to-sky-100 dark:from-slate-800 dark:via-slate-850 dark:to-slate-900 border-b border-border/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
               <Box className="w-5 h-5" />
             </div>
             <div>
@@ -82,7 +82,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
             </div>
 
             {/* Sağ Sarı Sayaç Kutusu (İLGİLİ GÖREVLER) */}
-            <div className="px-6 py-3 rounded-2xl bg-amber-300 dark:bg-amber-400 text-slate-950 font-black text-center shrink-0 shadow-xs">
+            <div className="px-6 py-3 rounded-2xl bg-amber-300 dark:bg-amber-400 text-slate-950 font-black text-center shrink-0 shadow-sm">
               <div className="text-[9px] uppercase tracking-wider text-slate-800 font-extrabold">
                 İLGİLİ GÖREVLER
               </div>
@@ -103,7 +103,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                 >
                   {/* Klasör Kulakçığı */}
                   <div
-                    className="absolute -top-3 left-6 px-4 py-1 rounded-t-xl font-bold text-[10px] uppercase tracking-wider shadow-xs"
+                    className="absolute -top-3 left-6 px-4 py-1 rounded-t-xl font-bold text-[10px] uppercase tracking-wider shadow-sm"
                     style={{ backgroundColor: folderColor }}
                   >
                     <span className="opacity-90">GÖREV #{idx + 1}</span>
@@ -468,16 +468,16 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                     {activity.previewType === 'eratosthenes_sieve' && (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="grid grid-cols-5 gap-1 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">2</span>
-                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">3</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-sm">2</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-sm">3</span>
                           <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">4</span>
-                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">5</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-sm">5</span>
                           <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">6</span>
-                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">7</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-sm">7</span>
                           <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">8</span>
                           <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">9</span>
                           <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-200 dark:bg-slate-700 text-slate-400 line-through text-[8px]">10</span>
-                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-xs">11</span>
+                          <span className="w-5 h-5 flex items-center justify-center rounded bg-amber-400 text-amber-950 font-black text-[9px] shadow-sm">11</span>
                         </div>
                         <div className="font-mono text-[9px] font-bold text-rose-600 dark:text-rose-400 mt-1">
                           1-100 Asal Sayı Kalburu (25 Asal)
@@ -489,7 +489,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                     {activity.previewType === 'divisibility_rules' && (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="flex items-center gap-1.5 p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-500/20">
-                          <span className="px-2 py-1 rounded bg-white dark:bg-slate-800 font-mono font-black text-xs text-foreground shadow-xs border">
+                          <span className="px-2 py-1 rounded bg-white dark:bg-slate-800 font-mono font-black text-xs text-foreground shadow-sm border">
                             24<span className="text-emerald-600 underline">0</span>
                           </span>
                           <div className="flex flex-col gap-0.5 text-[8px] font-black text-emerald-700 dark:text-emerald-300">
@@ -639,10 +639,10 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="flex items-center gap-1">
                           <span className="text-2xl">🚂</span>
-                          <span className="px-1.5 py-0.5 rounded-md bg-blue-500 text-white font-black text-xs shadow-xs">1.</span>
-                          <span className="px-1.5 py-0.5 rounded-md bg-rose-500 text-white font-black text-xs shadow-xs">2.</span>
-                          <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white font-black text-xs shadow-xs">3.</span>
-                          <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white font-black text-xs shadow-xs">4.</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-blue-500 text-white font-black text-xs shadow-sm">1.</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-rose-500 text-white font-black text-xs shadow-sm">2.</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white font-black text-xs shadow-sm">3.</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white font-black text-xs shadow-sm">4.</span>
                         </div>
                         <div className="text-xs font-black text-blue-600 dark:text-blue-400 mt-1.5">
                           Sıra Sayıları: 1. 2. 3. 4. Vagon
@@ -683,7 +683,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                           <span className="text-[10px] text-muted-foreground">➡️</span>
                           <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">10</span>
                           <span className="text-[10px] text-muted-foreground">➡️</span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold shadow-xs">15</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold shadow-sm">15</span>
                           <span className="text-[10px] text-muted-foreground">➡️</span>
                           <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">20</span>
                         </div>
@@ -744,7 +744,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                     {activity.previewType === 'money_coins' && (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-amber-400 border-2 border-amber-600 flex items-center justify-center font-black text-xs text-amber-950 shadow-xs">
+                          <span className="w-8 h-8 rounded-full bg-amber-400 border-2 border-amber-600 flex items-center justify-center font-black text-xs text-amber-950 shadow-sm">
                             1₺
                           </span>
                           <span className="px-2.5 py-1 rounded-md bg-blue-100 dark:bg-blue-950 border border-blue-400 text-blue-700 dark:text-blue-300 font-bold text-xs">
@@ -835,7 +835,7 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
                       onClose();
                       onLaunchActivity(activity);
                     }}
-                    className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl hover:scale-102 transition-all mt-auto cursor-pointer"
+                    className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl hover:scale-105 transition-all mt-auto cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-current text-amber-400" />
                     <span>Görevi Başlat</span>
