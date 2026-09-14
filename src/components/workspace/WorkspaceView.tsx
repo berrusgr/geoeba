@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { ToolMode } from '@/types/workspace';
+import { isAnyModalOpen } from '@/components/ui/modalState';
+import { isEditingOrInDialog, toolForShortcut } from './toolShortcuts';
 import { Toolbar } from './Toolbar';
+import { CommandAssistant } from './CommandAssistant';
 import { Canvas } from './Canvas';
 import { PropertiesPanel } from './PropertiesPanel';
 import { ActivityPanel } from './ActivityPanel';
@@ -20,6 +24,7 @@ import { Properties3D } from './Properties3D';
 import { Solid3DObject, Solid3DType, Tool3DMode, Camera3D, Point3D } from '@/types/workspace3d';
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { useWorkspace } from '@/state/WorkspaceContext';
+import { syncUserFunctions } from '@/math/functionNames';
 import { createId } from '@/state/ids';
 
 const SCENE_STORAGE_KEY = 'matematik_3d_sahne_v1';
@@ -191,6 +196,9 @@ function loadSavedScene(): Solid3DObject[] {
 export function WorkspaceView() {
   const {
     objects,
+    setSelectedObjectIds,
+    setActiveTool,
+    openRegularPolygonDialog,
     studioDimension,
     setStudioDimension,
     clearWorkspace,
@@ -208,12 +216,15 @@ export function WorkspaceView() {
     setIsCircleRadiusDialogOpen,
   } = useWorkspace();
 
+  // Adlı fonksiyonlar (f, g …) tuval çizilmeden önce ayrıştırıcıya bildirilir: "g(x) = f(x) + 1" ve "f(5)" çalışsın.
+  syncUserFunctions(objects);
+
   // 2D & 3D Dialog ve Panel Durumları
   const [isFunctionDialogOpen, setIsFunctionDialogOpen] = useState(false);
   const [isSliderDialogOpen, setIsSliderDialogOpen] = useState(false);
   const [isAddObjectDialogOpen, setIsAddObjectDialogOpen] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
-  const [showProperties, setShowProperties] = useState(true);
+  const [showProperties, setShowProperties] = useState(false);
 
   // 3D Stüdyo Durumları (geçmiş destekli)
   const [scene, dispatch] = useReducer(sceneReducer, null, () => ({
@@ -434,6 +445,37 @@ export function WorkspaceView() {
   const undo3D = () => dispatch({ type: 'undo' });
   const redo3D = () => dispatch({ type: 'redo' });
 
+  const activateTool = (tool: ToolMode) => {
+    if (tool === 'function') { setIsFunctionDialogOpen(true); return; }
+    if (tool === 'slider') { setIsSliderDialogOpen(true); return; }
+    setActiveTool(tool);
+    if (tool === 'regular_polygon') openRegularPolygonDialog();
+  };
+  const shortcutsRef = useRef({ objects, solids, studioDimension, activateTool });
+  shortcutsRef.current = { objects, solids, studioDimension, activateTool };
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing || isAnyModalOpen() || isEditingOrInDialog(event.target)) return;
+      const current = shortcutsRef.current;
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.code === 'KeyA') {
+        event.preventDefault();
+        if (current.studioDimension === '2D') {
+          setActiveTool('select');
+          setSelectedObjectIds(current.objects.map(object => object.id));
+        } else {
+          setActive3DTool('select_move');
+          setSelectedSolidIds(current.solids.map(solid => solid.id));
+        }
+        return;
+      }
+      if (current.studioDimension !== '2D') return;
+      const tool = toolForShortcut(event);
+      if (tool) { event.preventDefault(); current.activateTool(tool); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setActiveTool, setSelectedObjectIds]);
+
   const selectedSolid = solids.find((s) => s.id === selectedSolidId) || null;
 
   return (
@@ -446,6 +488,7 @@ export function WorkspaceView() {
           {showToolbar &&
             (studioDimension === '2D' ? (
               <Toolbar
+                onSelectTool={activateTool}
                 onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
                 onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
               />
@@ -470,7 +513,7 @@ export function WorkspaceView() {
             ))}
           <button
             onClick={() => setShowToolbar(!showToolbar)}
-            className="hidden lg:flex absolute top-3 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
+            className="hidden lg:flex absolute top-16 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
             style={{ left: showToolbar ? 'calc(100% + 8px)' : '8px' }}
             title={showToolbar ? 'Araç Çubuğunu Gizle' : 'Araç Çubuğunu Göster'}
           >
@@ -480,7 +523,11 @@ export function WorkspaceView() {
 
         {/* ORTA TUVAL (2D SVG veya 3D three.js) */}
         {studioDimension === '2D' ? (
-          <Canvas onSwitchTo3D={() => setStudioDimension('3D')} />
+          <div className="relative flex min-w-0 min-h-0 flex-1">
+            <Canvas onSwitchTo3D={() => setStudioDimension('3D')} />
+            {/* Klavye + mikrofon düğmesi: komut kutusu düğmenin yanında açılır */}
+            <CommandAssistant onSelectTool={activateTool} />
+          </div>
         ) : (
           <Canvas3D
             solids={solids}
@@ -521,7 +568,7 @@ export function WorkspaceView() {
         <div className="relative flex shrink-0 h-full min-h-0">
           <button
             onClick={() => setShowProperties(!showProperties)}
-            className="hidden lg:flex absolute top-3 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
+            className="hidden lg:flex absolute top-16 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
             style={{ right: showProperties ? 'calc(100% + 8px)' : '8px' }}
             title={showProperties ? 'Özellikler Panelini Gizle' : 'Özellikler Panelini Göster'}
           >

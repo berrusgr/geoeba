@@ -1,0 +1,471 @@
+[
+  {
+    "type": "results",
+    "id": 1,
+    "text": "B köşesinden tabana yükseklik çek",
+    "matches": [
+      {
+        "intent": "altitude",
+        "score": 0.9371395855616522
+      },
+      {
+        "intent": "tangent",
+        "score": 0.8589610033303374
+      },
+      {
+        "intent": "angle",
+        "score": 0.7713730952916213
+      },
+      {
+        "intent": "midpoint",
+        "score": 0.7594989195062921
+      },
+      {
+        "intent": "segment",
+        "score": 0.6715876059509694
+      },
+      {
+        "intent": "area",
+        "score": 0.6339652613192083
+      },
+      {
+        "intent": "bind",
+        "score": 0.6303901832092291
+      },
+      {
+        "intent": "triangle",
+        "score": 0.6111658974617733
+      },
+      {
+        "intent": "lengths",
+        "score": 0.6107450538394995
+      },
+      {
+        "intent": "ray",
+        "score": 0.6016264781004506
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.5989726094461983
+      },
+      {
+        "intent": "circle",
+        "score": 0.5957173496143124
+      },
+      {
+        "intent": "square",
+        "score": 0.5889221653107639
+      },
+      {
+        "intent": "line",
+        "score": 0.5835391380217556
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.5643277574039741
+      }
+    ]
+  },
+  {
+    "type": "results",
+    "id": 2,
+    "text": "A köşesi kaç derecedir",
+    "matches": [
+      {
+        "intent": "angle",
+        "score": 0.9616630048107254
+      },
+      {
+        "intent": "altitude",
+        "score": 0.7026512451913206
+      },
+      {
+        "intent": "area",
+        "score": 0.6079182367402967
+      },
+      {
+        "intent": "lengths",
+        "score": 0.5312208160803498
+      },
+      {
+        "intent": "tangent",
+        "score": 0.5302138219353862
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.5297138651955874
+      },
+      {
+        "intent": "square",
+        "score": 0.5239235231228693
+      },
+      {
+        "intent": "ray",
+        "score": 0.5050901636801248
+      },
+      {
+        "intent": "segment",
+        "score": 0.4938722110495272
+      },
+      {
+        "intent": "bind",
+        "score": 0.4862056594987612
+      },
+      {
+        "intent": "midpoint",
+        "score": 0.47683911763379355
+      },
+      {
+        "intent": "triangle",
+        "score": 0.47528030802426374
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.47407962270537285
+      },
+      {
+        "intent": "line",
+        "score": 0.4173507952318498
+      },
+      {
+        "intent": "circle",
+        "score": 0.3751499253283987
+      }
+    ]
+  },
+  {
+    "type": "results",
+    "id": 3,
+    "text": "üçgenin kenarlarını sürgülerle kontrol edeyim",
+    "matches": [
+      {
+        "intent": "lengths",
+        "score": 0.8476776595596801
+      },
+      {
+        "intent": "area",
+        "score": 0.8439134199391471
+      },
+      {
+        "intent": "bind",
+        "score": 0.7989850852403585
+      },
+      {
+        "intent": "triangle",
+        "score": 0.7791398840829347
+      },
+      {
+        "intent": "altitude",
+        "score": 0.7587765368655137
+      },
+      {
+        "intent": "angle",
+        "score": 0.6873163566996965
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.6647901848669072
+      },
+      {
+        "intent": "tangent",
+        "score": 0.6646761406561466
+      },
+      {
+        "intent": "midpoint",
+        "score": 0.6273643173624968
+      },
+      {
+        "intent": "square",
+        "score": 0.6225941597351164
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.6111457661363533
+      },
+      {
+        "intent": "circle",
+        "score": 0.5966701548386947
+      },
+      {
+        "intent": "segment",
+        "score": 0.5798978129173751
+      },
+      {
+        "intent": "ray",
+        "score": 0.5603834682616435
+      },
+      {
+        "intent": "line",
+        "score": 0.5464955466709528
+      }
+    ]
+  },
+  {
+    "type": "results",
+    "id": 4,
+    "text": "şeklin etrafının toplamı ne kadar",
+    "matches": [
+      {
+        "intent": "area",
+        "score": 0.7761597848302705
+      },
+      {
+        "intent": "square",
+        "score": 0.6841548295072768
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.6830617788213909
+      },
+      {
+        "intent": "bind",
+        "score": 0.6392004554218289
+      },
+      {
+        "intent": "lengths",
+        "score": 0.6268531780949919
+      },
+      {
+        "intent": "triangle",
+        "score": 0.6092559290481059
+      },
+      {
+        "intent": "angle",
+        "score": 0.6064508325808726
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.6035651042710168
+      },
+      {
+        "intent": "altitude",
+        "score": 0.5541580488450121
+      },
+      {
+        "intent": "ray",
+        "score": 0.5281554347368396
+      },
+      {
+        "intent": "segment",
+        "score": 0.5225762926770267
+      },
+      {
+        "intent": "tangent",
+        "score": 0.5146549528782607
+      },
+      {
+        "intent": "circle",
+        "score": 0.4735953900709673
+      },
+      {
+        "intent": "midpoint",
+        "score": 0.45059844428313
+      },
+      {
+        "intent": "line",
+        "score": 0.4059793919995615
+      }
+    ]
+  },
+  {
+    "type": "results",
+    "id": 5,
+    "text": "A ile B arasını birleştir",
+    "matches": [
+      {
+        "intent": "midpoint",
+        "score": 0.8487182653421329
+      },
+      {
+        "intent": "segment",
+        "score": 0.8432068889986298
+      },
+      {
+        "intent": "tangent",
+        "score": 0.7018959804711581
+      },
+      {
+        "intent": "circle",
+        "score": 0.6601017727314323
+      },
+      {
+        "intent": "altitude",
+        "score": 0.639760456883101
+      },
+      {
+        "intent": "angle",
+        "score": 0.6270270033273972
+      },
+      {
+        "intent": "line",
+        "score": 0.6225200964003794
+      },
+      {
+        "intent": "lengths",
+        "score": 0.6030010514561687
+      },
+      {
+        "intent": "ray",
+        "score": 0.5930556989136573
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.5821028393788448
+      },
+      {
+        "intent": "triangle",
+        "score": 0.5474172986205275
+      },
+      {
+        "intent": "area",
+        "score": 0.5251805042642765
+      },
+      {
+        "intent": "bind",
+        "score": 0.5108536752347094
+      },
+      {
+        "intent": "square",
+        "score": 0.5053896929214208
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.48929667982254144
+      }
+    ]
+  },
+  {
+    "type": "results",
+    "id": 6,
+    "text": "yarıçapı 7 olan yuvarlak oluştur",
+    "matches": [
+      {
+        "intent": "altitude",
+        "score": 0.7779398763511167
+      },
+      {
+        "intent": "triangle",
+        "score": 0.7755312161425374
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.7557772697822209
+      },
+      {
+        "intent": "area",
+        "score": 0.7394799447768614
+      },
+      {
+        "intent": "tangent",
+        "score": 0.6937046345925255
+      },
+      {
+        "intent": "bind",
+        "score": 0.6829344280865584
+      },
+      {
+        "intent": "lengths",
+        "score": 0.6590157218666683
+      },
+      {
+        "intent": "square",
+        "score": 0.6427174687918826
+      },
+      {
+        "intent": "circle",
+        "score": 0.6277726674161097
+      },
+      {
+        "intent": "midpoint",
+        "score": 0.6134469569808099
+      },
+      {
+        "intent": "angle",
+        "score": 0.6061072858355608
+      },
+      {
+        "intent": "segment",
+        "score": 0.5946503959804619
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.5566825380664443
+      },
+      {
+        "intent": "ray",
+        "score": 0.5531167507048365
+      },
+      {
+        "intent": "line",
+        "score": 0.4948100344104958
+      }
+    ]
+  },
+  {
+    "type": "results",
+    "id": 7,
+    "text": "bugün hava nasıl",
+    "matches": [
+      {
+        "intent": "angle",
+        "score": 0.48821494326867526
+      },
+      {
+        "intent": "perimeter",
+        "score": 0.3363509297419784
+      },
+      {
+        "intent": "area",
+        "score": 0.3350794787640882
+      },
+      {
+        "intent": "ray",
+        "score": 0.3306577565962535
+      },
+      {
+        "intent": "line",
+        "score": 0.2845044785731665
+      },
+      {
+        "intent": "altitude",
+        "score": 0.2545551912619525
+      },
+      {
+        "intent": "rectangle",
+        "score": 0.2531501908862487
+      },
+      {
+        "intent": "square",
+        "score": 0.2523846717183109
+      },
+      {
+        "intent": "circle",
+        "score": 0.2476018400159648
+      },
+      {
+        "intent": "segment",
+        "score": 0.19055013472319773
+      },
+      {
+        "intent": "tangent",
+        "score": 0.17519328706782705
+      },
+      {
+        "intent": "midpoint",
+        "score": 0.16067035762639717
+      },
+      {
+        "intent": "triangle",
+        "score": 0.12685362684459053
+      },
+      {
+        "intent": "bind",
+        "score": 0.10945137045320179
+      },
+      {
+        "intent": "lengths",
+        "score": 0.10643376566222673
+      }
+    ]
+  }
+]

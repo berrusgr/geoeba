@@ -770,6 +770,7 @@ export function splitPolygonByChord(
 export type HostShape =
   | { kind: 'segment'; a: Point2D; b: Point2D }
   | { kind: 'line'; a: Point2D; b: Point2D }
+  | { kind: 'ray'; a: Point2D; b: Point2D }
   | { kind: 'circle'; center: Point2D; radius: number }
   | { kind: 'ellipse'; center: Point2D; radiusX: number; radiusY: number }
   | { kind: 'polygon'; vertices: Point2D[] };
@@ -785,12 +786,14 @@ export function projectOntoHost(p: Point2D, host: HostShape): Point2D | null {
   switch (host.kind) {
     case 'segment':
       return distanceToSegment(p, host.a, host.b).projection;
+    case 'ray':
     case 'line': {
       const dx = host.b.x - host.a.x;
       const dy = host.b.y - host.a.y;
       const uz2 = dx * dx + dy * dy;
       if (uz2 < 1e-18) return null;
-      const t = ((p.x - host.a.x) * dx + (p.y - host.a.y) * dy) / uz2;
+      const rawT = ((p.x - host.a.x) * dx + (p.y - host.a.y) * dy) / uz2;
+      const t = host.kind === 'ray' ? Math.max(0, rawT) : rawT;
       return { x: host.a.x + dx * t, y: host.a.y + dy * t };
     }
     case 'circle':

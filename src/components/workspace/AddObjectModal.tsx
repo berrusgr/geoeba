@@ -14,6 +14,7 @@ import { generateNextPointLabel } from '@/math/geometry';
 import { createId } from '@/state/ids';
 import { formatTurkishNumber } from '@/math/coordinates';
 import { validateMathExpression } from '@/math/parser';
+import { functionNameOwner, nextFunctionName } from '@/math/functionNames';
 import { Modal } from '@/components/ui/Modal';
 import {
   X,
@@ -123,7 +124,8 @@ export function AddObjectModal({ isOpen, onClose, is3D = false, onAddSolid3D }: 
 
   const handleTabChange = (tab: TabItem) => {
     setSelectedTab(tab.id);
-    setName(tab.defaultName);
+    // Fonksiyon adı boştaki sıradaki ad olur (f varsa g …)
+    setName(tab.id === 'function' ? nextFunctionName(objects) : tab.defaultName);
     setError(null);
   };
 
@@ -253,6 +255,10 @@ export function AddObjectModal({ isOpen, onClose, is3D = false, onAddSolid3D }: 
       const validation = validateMathExpression(expr);
       if (!validation.ok) {
         setError(validation.error);
+        return;
+      }
+      if (functionNameOwner(objects, trimmedName)) {
+        setError(`“${trimmedName}” adı zaten kullanılıyor. Başka bir ad yazın (örn. ${nextFunctionName(objects)}).`);
         return;
       }
       addFunction(expr, `${trimmedName}(x) = ${expr}`);

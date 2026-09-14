@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "semantic:prepare": "node scripts/prepare-semantic.mjs",
+    "speech:prepare": "node scripts/prepare-speech.mjs",
+    "predev": "npm run semantic:prepare && npm run speech:prepare",
+    "prebuild": "npm run semantic:prepare && npm run speech:prepare",
+    "prematematik": "npm run semantic:prepare && npm run speech:prepare",
     "dev": "next dev",
     "matematik": "next dev",
     "build": "next build",
@@ -11,6 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@huggingface/transformers": "3.8.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "docx": "^9.0.2",

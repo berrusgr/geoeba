@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useCurriculum } from '@/state/CurriculumContext';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import { useTheme } from '@/state/ThemeContext';
+import { Brand } from './Brand';
 import { Modal } from '@/components/ui/Modal';
 import { curriculumData } from '@/curriculum/curriculumData';
 import type { Activity, GradeId, LevelId, Topic } from '@/types/curriculum';
@@ -267,20 +268,11 @@ export function Header() {
           {/* Logo */}
           <button
             onClick={goHome}
-            className="flex items-center gap-2.5 group focus:outline-none"
+            className="flex items-center rounded-xl transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-4 dark:focus-visible:ring-offset-slate-900"
+            aria-label="GeoEBA — Ana sayfaya dön"
             title="Ana Sayfaya Dön"
           >
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-              <Compass className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col items-start leading-none">
-              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
-                GeoEBA
-              </span>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                Etkileşimli Çalışma Ortamı
-              </span>
-            </div>
+            <Brand />
           </button>
         </div>
 
@@ -462,14 +454,7 @@ export function Header() {
         className="w-72 bg-white dark:bg-slate-900 h-full p-5 shadow-2xl border-r border-slate-200 dark:border-slate-800 space-y-4 overflow-y-auto animate-in slide-in-from-left duration-200"
       >
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-              <Compass className="w-4 h-4" />
-            </div>
-            <span id="menu-drawer-title" className="text-sm font-black text-slate-900 dark:text-white">
-              GeoEBA
-            </span>
-          </div>
+          <div id="menu-drawer-title"><Brand /></div>
           <button
             onClick={closeMenuDrawer}
             className="p-1 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white"

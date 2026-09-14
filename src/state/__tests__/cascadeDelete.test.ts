@@ -16,6 +16,23 @@ const sil = (objeler: MathObject[], ids: string[]) => [...collectDependentIds(ob
  * bir noktaya işaret eden nesneler belgede kalır ve ekranda görünmeden listeyi kirletir.
  */
 describe('Bağımlı nesnelerin birlikte silinmesi', () => {
+  it('çember silinince kullanılmayan merkezi de siler', () => {
+    const o = [nokta('M'), nokta('R'), yap({ id: 'c', type: 'circle', centerPointId: 'M', radiusPointId: 'R' })];
+    expect(sil(o, ['c'])).toEqual(['M', 'c']);
+  });
+
+  it('başka çizimin kullandığı ortak merkezi korur', () => {
+    const o = [nokta('M'), nokta('R'), yap({ id: 'c', type: 'circle', centerPointId: 'M', fixedRadius: 2 }),
+      yap({ id: 's', type: 'segment', startPointId: 'M', endPointId: 'R' })];
+    expect(sil(o, ['c'])).toEqual(['c']);
+  });
+
+  it('aynı merkezli tüm çemberler silinince merkezi temizler', () => {
+    const o = [nokta('M'), yap({ id: 'c1', type: 'circle', centerPointId: 'M', fixedRadius: 2 }),
+      yap({ id: 'c2', type: 'circle', centerPointId: 'M', fixedRadius: 3 })];
+    expect(sil(o, ['c1'])).toEqual(['c1']);
+    expect(sil(o, ['c1', 'c2'])).toEqual(['M', 'c1', 'c2']);
+  });
   it('nokta silinince onu kullanan doğru parçası da silinir', () => {
     const o = [nokta('A'), nokta('B'), yap({ id: 's1', type: 'segment', startPointId: 'A', endPointId: 'B' })];
     expect(sil(o, ['A'])).toEqual(['A', 's1']);
@@ -157,7 +174,7 @@ describe('Nesne üzerindeki bağlı noktalar', () => {
   });
 
   it('çember silinince ÜZERİNDEKİ noktalar da silinir', () => {
-    expect(sil(cemberliBelge(), ['c1'])).toEqual(['C', 'D', 'c1']);
+    expect(sil(cemberliBelge(), ['c1'])).toEqual(['C', 'D', 'M', 'c1']);
   });
 
   it('merkez silinince çember ve üzerindeki noktalar zincirleme gider', () => {

@@ -42,6 +42,8 @@ export type MeasurementKind =
   | 'perimeter'
   | 'angle'
   | 'arcLength'
+  | 'radius'
+  | 'chordLength'
   /** Yay ve daire diliminin MERKEZ AÇISI; alan/yay uzunluğundan bağımsız gizlenebilir. */
   | 'centralAngle';
 
@@ -66,6 +68,30 @@ export interface BaseMathObject {
 }
 
 export interface PointObject extends BaseMathObject {
+  /** Türkçe komutlarla kurulan canlı geometrik ilişkiler. */
+  construction?:
+    | { kind: 'foot'; sourceId: string; linePointIds: [string, string] }
+    | { kind: 'midpoint'; pointIds: [string, string] }
+    | { kind: 'tangent'; circleId: string; sourceId: string; branch: -1 | 1; direction?: boolean }
+    | { kind: 'triangleVertex'; anchorId: string; sliderIds: [string, string, string]; vertex: 1 | 2; rotation: number; orientation: 1 | -1 }
+    /** A + t·(B − A); t = m/(m+n) oranında bölme. */
+    | { kind: 'ratio'; pointIds: [string, string]; t: number }
+    /** throughId noktasından geçen, AB'ye paralel/dik doğrunun ikinci noktası (|AB| kadar ötede). */
+    | { kind: 'direction'; throughId: string; linePointIds: [string, string]; mode: 'parallel' | 'perpendicular' }
+    /** ∠(P1, V, P3) açıortayı üzerindeki nokta. */
+    | { kind: 'bisector'; pointIds: [string, string, string] }
+    /** İki nesnenin (doğru/ışın/parça, çember/yay/dilim, elips) index. kesişim noktası; kesişim yoksa son konumda kalır. */
+    | { kind: 'intersection'; objectIds: [string, string]; index: number }
+    /** Doğruya (axisPointIds), noktaya (centerId) veya eksene göre yansıma. */
+    | { kind: 'reflect'; sourceId: string; axisPointIds?: [string, string]; centerId?: string; axis?: 'x' | 'y' | 'y=x' | 'y=-x' }
+    /** Merkez noktası (centerId) ya da sabit merkez etrafında saat yönünün tersine döndürme. */
+    | { kind: 'rotate'; sourceId: string; centerId?: string; center?: Point2D; degrees: number }
+    /** Vektör (vectorPointIds: başlangıç → bitiş) ya da sabit vektör kadar öteleme. */
+    | { kind: 'translate'; sourceId: string; vectorPointIds?: [string, string]; vector?: Point2D }
+    /** Merkeze göre k katı (homotete). */
+    | { kind: 'dilate'; sourceId: string; centerId?: string; center?: Point2D; factor: number }
+    /** Üçgenin ağırlık, çevrel, iç teğet veya diklik merkezi. */
+    | { kind: 'triangleCenter'; pointIds: [string, string, string]; center: 'centroid' | 'circumcenter' | 'incenter' | 'orthocenter' };
   type: 'point';
   x: number;
   y: number;
@@ -90,6 +116,8 @@ export interface SegmentObject extends BaseMathObject {
 }
 
 export interface LineObject extends BaseMathObject {
+  /** Tanım noktaları arasındaki sonlu mesafe; doğrunun/ışının toplam uzunluğu değildir. */
+  showLength?: boolean;
   type: 'line';
   point1Id: string;
   point2Id: string;
@@ -99,6 +127,8 @@ export interface LineObject extends BaseMathObject {
 }
 
 export interface RayObject extends BaseMathObject {
+  /** Tanım noktaları arasındaki sonlu mesafe; doğrunun/ışının toplam uzunluğu değildir. */
+  showLength?: boolean;
   type: 'ray';
   startPointId: string;
   throughPointId: string;
@@ -111,6 +141,8 @@ export interface CircleObject extends BaseMathObject {
   centerPointId: string;
   radiusPointId?: string; // Yarıçapı belirleyen ikinci nokta
   fixedRadius?: number; // Sabit yarıçaplı ise
+  /** Bu nokta çembere KİLİTLENİRKEN yarıçap noktası olmaktan çıkarıldı; kilit çözülünce yarıçap ona geri verilir. */
+  releasedRadiusPointId?: string;
   /**
    * Üç noktadan geçen (çevrel) çember: merkez ve yarıçap bu üç noktadan CANLI hesaplanır.
    * Verildiğinde centerPointId yok sayılır; noktalar sürüklendikçe çember yeniden kurulur.
@@ -146,6 +178,8 @@ export interface EllipseObject extends BaseMathObject {
  * Yarıçapı |merkez-başlangıç| belirler; yön noktası yalnızca yayın açısını/yönünü verir.
  */
 export interface ArcObject extends BaseMathObject {
+  showRadius?: boolean;
+  showChordLength?: boolean;
   type: 'arc';
   centerPointId: string;
   startPointId: string;
@@ -158,6 +192,9 @@ export interface ArcObject extends BaseMathObject {
 
 /** Daire dilimi (sektör): yay ile aynı üç nokta, ama içi dolu. */
 export interface SectorObject extends BaseMathObject {
+  showArcLength?: boolean;
+  showRadius?: boolean;
+  showChordLength?: boolean;
   type: 'sector';
   centerPointId: string;
   startPointId: string;
@@ -307,9 +344,9 @@ export interface InputBoxObject extends BaseMathObject {
  */
 export interface MeasurementObject extends BaseMathObject {
   type: 'measurement';
-  /** slope: iki nokta arası eğim · trig: dik üçgende sin/cos/tan */
-  kind: 'slope' | 'trig';
-  /** slope: [A, B] · trig: [açı köşesi, DİK köşe, üçüncü köşe] */
+  /** slope: iki nokta arası eğim · trig: dik üçgende sin/cos/tan · distance: iki nokta arası CANLI uzunluk (ör. parça üzerindeki P için |AP|) */
+  kind: 'slope' | 'trig' | 'distance';
+  /** slope / distance: [A, B] · trig: [açı köşesi, DİK köşe, üçüncü köşe] */
   pointIds: string[];
   /** Değer yazısı görünür mü? (tıklayınca kapanır) */
   showValue?: boolean;

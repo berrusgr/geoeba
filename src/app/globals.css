@@ -131,3 +131,9 @@ body {
   .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
 }
+
+/* Araç ikonu görünürken nesnelerin kendi cursor stillerini de gizle. */
+[data-tool-cursor-active],
+[data-tool-cursor-active] * {
+  cursor: none !important;
+}

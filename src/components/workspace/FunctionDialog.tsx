@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import { validateMathExpression } from '@/math/parser';
+import { functionNameOf, functionNameOwner, nextFunctionName, undefinedFunctionCalls } from '@/math/functionNames';
 import { Modal } from '@/components/ui/Modal';
 import { TrendingUp, X, Check, AlertCircle } from 'lucide-react';
 
@@ -24,16 +25,20 @@ const TEMPLATES = [
 
 const DEFAULT_EXPRESSION = '2*x + 1';
 
-/** Yeni fonksiyon için sırayla denenecek adlar (cebir listesinde ayırt edilebilsin diye) */
-const FUNCTION_NAMES = ['f(x)', 'g(x)', 'h(x)', 'p(x)', 'q(x)', 'r(x)', 's(x)', 'u(x)', 'v(x)', 'w(x)'];
+/** Yalnız harf yazılan ad ("g") çağrılabilir biçime getirilir: "g(x)". */
+const callableName = (typed: string) => (/^[a-zçğıöşü][a-zçğıöşü0-9]?$/i.test(typed) ? `${typed}(x)` : typed);
 
 export function FunctionDialog({ isOpen, onClose }: FunctionDialogProps) {
   const { addFunction, objects } = useWorkspace();
   const [expression, setExpression] = useState(DEFAULT_EXPRESSION);
-  const [label, setLabel] = useState(FUNCTION_NAMES[0]);
+  const [label, setLabel] = useState('f(x)');
 
   const validation = validateMathExpression(expression);
-  const isValid = validation.ok;
+  // Aynı adla ikinci fonksiyon eklenmez; tanımsız çağrı ("h(x)" yokken) kaydırıcıya dönüşmesin.
+  const typedName = functionNameOf({ label: `${callableName(label.trim())} = 0` });
+  const nameOwner = typedName ? functionNameOwner(objects, typedName) : undefined;
+  const missingCalls = validation.ok ? undefinedFunctionCalls(objects, expression, typedName) : [];
+  const isValid = validation.ok && !nameOwner && missingCalls.length === 0;
 
   // Diyalog kalıcı olarak mount edilir; her açılışta ifadeyi ve adı sıfırla.
   // Ad, mevcut fonksiyon etiketleriyle çakışmayan sıradaki addır.
@@ -42,13 +47,8 @@ export function FunctionDialog({ isOpen, onClose }: FunctionDialogProps) {
 
   useEffect(() => {
     if (!isOpen) return;
-    const usedNames = new Set(
-      objectsRef.current
-        .filter((o) => o.type === 'function')
-        .map((o) => o.label.split('=')[0].trim())
-    );
     setExpression(DEFAULT_EXPRESSION);
-    setLabel(FUNCTION_NAMES.find((n) => !usedNames.has(n)) ?? FUNCTION_NAMES[0]);
+    setLabel(`${nextFunctionName(objectsRef.current)}(x)`);
   }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,7 +57,7 @@ export function FunctionDialog({ isOpen, onClose }: FunctionDialogProps) {
     if (!isValid || !expr) return;
 
     // Ad boş bırakılırsa " = 2*x + 1" gibi bozuk bir etiket oluşmasın.
-    const name = label.trim() || FUNCTION_NAMES[0];
+    const name = callableName(label.trim()) || `${nextFunctionName(objects)}(x)`;
     addFunction(expr, `${name} = ${expr}`);
     onClose();
   };
@@ -110,13 +110,23 @@ export function FunctionDialog({ isOpen, onClose }: FunctionDialogProps) {
               placeholder="Örn: 2*x + 1 veya x^2 - 4"
               className="w-full px-3 py-2 rounded-xl bg-input border border-border text-foreground font-mono text-sm focus:ring-2 focus:ring-primary outline-none"
               autoFocus
-              aria-invalid={!isValid && expression.trim() !== ''}
+              aria-invalid={!validation.ok && expression.trim() !== ''}
             />
           </div>
-          {!isValid && expression.trim() !== '' && (
+          {!validation.ok && expression.trim() !== '' && (
             <div className="flex items-start gap-1 text-[11px] text-destructive pt-1" role="alert">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{validation.error}</span>
+            </div>
+          )}
+          {(nameOwner || missingCalls.length > 0) && (
+            <div className="flex items-start gap-1 text-[11px] text-destructive pt-1" role="alert">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>
+                {nameOwner
+                  ? `“${typedName}” adı zaten kullanılıyor. Başka bir ad yazın (örn. ${nextFunctionName(objects)}(x)).`
+                  : `${missingCalls[0]}(x) tanımlı değil. Önce onu tanımlayın; çarpma için ${missingCalls[0]}*(…) yazın.`}
+              </span>
             </div>
           )}
           <p className="text-[11px] text-muted-foreground leading-snug pt-0.5">

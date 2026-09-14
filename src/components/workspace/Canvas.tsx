@@ -39,11 +39,17 @@ import {
   formatCoordinate,
 } from '@/math/coordinates';
 import { MeasurementInstruments } from './MeasurementInstruments';
+import { ToolCursor } from './ToolCursor';
 import { TextNoteDialog } from './TextNoteDialog';
 import { ContextMenu, ContextMenuItem } from './ContextMenu';
 import { useSliderPlayback } from '@/hooks/useSliderPlayback';
 
 /** Etiketi olmayan nesneler için menü başlığında gösterilecek tür adları. */
+/** 'distance' ölçüm etiketinin yazısı: "|AP| = 2 br". */
+function mesafeEtiketMetni(a: PointObject, b: PointObject): string {
+  return `|${a.label}${b.label}| = ${formatTurkishNumber(calculateDistance(a, b))} br`;
+}
+
 const TYPE_LABELS: Record<string, string> = {
   point: 'Nokta',
   segment: 'Doğru Parçası',
@@ -99,6 +105,19 @@ import {
   generateNextPointLabels,
 } from '@/math/geometry';
 import { compileMathExpression } from '@/math/parser';
+import { copyObjects, pasteObjects, ObjectClipboard } from '@/math/objectClipboard';
+import { contextMenuSelection } from './contextMenuSelection';
+import { pointLockCandidates, isPointLocked } from '@/math/pointLock';
+import { pointAngleAction } from '@/math/pointAngles';
+import {
+  distanceLabelLevel,
+  isLengthShown,
+  lengthOptionsAtPoint,
+  samePair,
+  straightEnds,
+  straightLengthOptions,
+  type LengthOption,
+} from '@/math/partialLengths';
 import {
   Grid,
   Contrast,
@@ -108,6 +127,7 @@ import {
   RotateCcw,
   RotateCw,
   Hand,
+  MousePointer,
   Home,
   ZoomIn,
   ZoomOut,
@@ -120,13 +140,8 @@ import {
   Eraser,
   Settings,
   Check,
-  Shapes,
   ChevronDown,
 } from 'lucide-react';
-
-// 2D üst şeritteki çalışma alanı (domain) seçenekleri - etiketlerin tek kaynağı
-const DOMAINS = ['Geometri', 'Analitik Geometri', 'Cebir & Grafikler', 'Serbest Çizim'] as const;
-type DomainOption = (typeof DOMAINS)[number];
 
 // Derlenmiş fonksiyon ifadeleri önbelleği (ifade başına tek derleme)
 const compiledExpressionCache = new Map<string, ((x: number, scope?: Record<string, number>) => number) | null>();
@@ -229,7 +244,6 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
 
   const { selectedLevel, selectedGrade, isFreeSandbox, selectedActivity } = useCurriculum();
   const isPrimary = selectedLevel?.id === 'ilkokul' || (selectedGrade && selectedGrade.gradeNumber <= 4);
-  const showQuadrants = !isPrimary && (selectedGrade ? selectedGrade.gradeNumber >= 7 : true);
 
   const {
     objects,
@@ -291,6 +305,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     setSegmentLength,
     setAngleDegrees,
     setCircleRadius,
+    setLengthMeasurement,
   } = useWorkspace();
 
   // Görsel dosyası seçimi (Görsel Ekle aracı)
@@ -299,12 +314,13 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
 
   // Sağ tık bağlam menüsü hedefi (nesne + ekran konumu)
   const [contextTarget, setContextTarget] = useState<{
-    obj: MathObject;
+    obj: MathObject | null;
     x: number;
     y: number;
     /** Çokgene sağ tıklandıysa imlece EN YAKIN kenarın dizini (yoksa null). */
     edgeIndex: number | null;
   } | null>(null);
+  const [objectClipboard, setObjectClipboard] = useState<ObjectClipboard | null>(null);
   // Dokunmatik uzun basma durumu
   const longPressRef = useRef<{ timer: number; startX: number; startY: number; obj: MathObject } | null>(null);
 
@@ -324,6 +340,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     // Izgaraya yapıştırma için referans (çapa) nokta: sürüklenen ilk noktanın kimliği ve tutma ofseti
     anchorId: string | null;
     anchorOffset: Point2D;
+    /** Çapanın kilit olmasaydı bulunacağı yer (son hedef): seçimin geri kalanı farenin gerçek adımını buradan alır. */
+    virtualAnchor?: Point2D | null;
   } | null>(null);
   const [selectionMarquee, setSelectionMarquee] = useState<{
     startWorld: Point2D;
@@ -345,11 +363,49 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
   const [isDrawingPen, setIsDrawingPen] = useState(false);
   const [currentPenStroke, setCurrentPenStroke] = useState<Point2D[]>([]);
 
-  // 2D Üst Seçenekler (Referans Görsel: Geometri / Dik Koordinat / Sade)
-  const [activeDomain, setActiveDomain] = useState<DomainOption>('Geometri');
+  // 2D üst seçenekler: düzlem ve ayrıntı görünümü
   const [planeType, setPlaneType] = useState<'dik_koordinat' | 'kareli_duzlem' | 'bos_duzlem'>('dik_koordinat');
   const [styleMode, setStyleMode] = useState<'Sade' | 'Ayrıntılı'>('Ayrıntılı');
-  const [openDropdown, setOpenDropdown] = useState<'domain' | 'plane' | 'style' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'plane' | 'style' | null>(null);
+
+  useEffect(() => {
+    const show = () => setStyleMode('Ayrıntılı');
+    window.addEventListener('geoeba:show-measurements', show);
+    return () => window.removeEventListener('geoeba:show-measurements', show);
+  }, []);
+
+  // Yazılı komut: "sade görünüm" / "ayrıntılı görünüm" — açılır menüdeki seçimle aynı etki
+  useEffect(() => {
+    const onStyleMode = (event: Event) => {
+      const mode = (event as CustomEvent<unknown>).detail;
+      if (mode !== 'Sade' && mode !== 'Ayrıntılı') return;
+      setStyleMode(mode);
+      setViewport((prev) => mode === 'Sade'
+        ? { ...prev, showCoordinates: false, showMeasurements: false }
+        : { ...prev, showMeasurements: true });
+    };
+    window.addEventListener('geoeba:style-mode', onStyleMode);
+    return () => window.removeEventListener('geoeba:style-mode', onStyleMode);
+  }, [setViewport]);
+
+  // Yazılı komut: "kareli düzlem", "boş düzlem", "dik koordinat sistemi" — açılır menüdeki seçimle aynı etki
+  useEffect(() => {
+    const onPlaneType = (event: Event) => {
+      const plane = (event as CustomEvent<unknown>).detail;
+      if (plane === 'dik_koordinat') {
+        setPlaneType('dik_koordinat');
+        setViewport((prev) => ({ ...prev, showGrid: true, showAxes: true }));
+      } else if (plane === 'kareli_duzlem') {
+        setPlaneType('kareli_duzlem');
+        setViewport((prev) => ({ ...prev, showGrid: true, showAxes: false, showCoordinates: false }));
+      } else if (plane === 'bos_duzlem') {
+        setPlaneType('bos_duzlem');
+        setViewport((prev) => ({ ...prev, showGrid: false, showAxes: false, showCoordinates: false }));
+      }
+    };
+    window.addEventListener('geoeba:plane-type', onPlaneType);
+    return () => window.removeEventListener('geoeba:plane-type', onPlaneType);
+  }, [setViewport]);
 
   const isSade = styleMode === 'Sade';
   const showDetails = !isSade && viewport.showMeasurements !== false;
@@ -691,13 +747,6 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         return;
       }
 
-      // V: Seç ve Taşı (tasarım programlarındaki alışılmış kısayol)
-      if (!isMod && !e.altKey && key === 'v') {
-        e.preventDefault();
-        k.setActiveTool('select');
-        return;
-      }
-
       // Ok tuşları: seçili nesneleri (pivot noktaları dâhil) ince ayarla.
       // Shift ile 5 adım birden, Alt ile ızgaranın onda biri kadar hassas.
       const OKLAR: Record<string, [number, number]> = {
@@ -745,12 +794,6 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     };
   }, []);
 
-  // Bölge (I-IV) rozetlerinin sınıf düzeyine göre varsayılanını BİR KEZ tohumla.
-  // Kullanıcı 'I-IV' düğmesine bastıktan sonra değer tanımlı olur ve bu efekt artık karışmaz.
-  useEffect(() => {
-    setViewport((prev) => (prev.showQuadrants === undefined ? { ...prev, showQuadrants } : prev));
-  }, [showQuadrants, setViewport]);
-
   // Kimliğe göre nokta haritası (render sırasında tekrarlı aramaları önler)
   const pointsById = useMemo(() => {
     const map = new Map<string, PointObject>();
@@ -759,6 +802,18 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     }
     return map;
   }, [objects]);
+
+  // Mesafe etiketlerinin katları ORTAK bir kutu genişliğiyle dizilir (en az 120 px): uzun bir etiket komşu katla çakışmasın
+  const mesafeEtiketiYariGenislik = useMemo(() => {
+    let enGenis = 120;
+    for (const o of objects) {
+      if (o.type !== 'measurement' || o.kind !== 'distance' || o.showValue === false || o.visible === false) continue;
+      const a = pointsById.get(o.pointIds[0]);
+      const b = pointsById.get(o.pointIds[1]);
+      if (a && b) enGenis = Math.max(enGenis, mesafeEtiketMetni(a, b).length * 6.4 + 14);
+    }
+    return enGenis / 2;
+  }, [objects, pointsById]);
 
   // Aktif Kaydırıcı Değişkenleri Haritası (Fonksiyon grafikleri için)
   // Sahnedeki kaydırıcılar (oynatma ve tuval üstü çizim için)
@@ -771,6 +826,16 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     sliders,
     onValues: setSliderValues,
   });
+
+  // Yazılı komut: "kaydırıcıları oynat / durdur" — oynatma düğmesiyle aynı döngü
+  useEffect(() => {
+    const onPlayback = (event: Event) => {
+      const mode = (event as CustomEvent<unknown>).detail;
+      if (mode === 'toggle' || (mode === 'play' && !sliderPlaying) || (mode === 'stop' && sliderPlaying)) toggleSliderPlayback();
+    };
+    window.addEventListener('geoeba:slider-playback', onPlayback);
+    return () => window.removeEventListener('geoeba:slider-playback', onPlayback);
+  }, [sliderPlaying, toggleSliderPlayback]);
 
   /**
    * Sürükleme biter bitmez tarayıcı bir 'click' olayı da gönderir. mouseup, click'ten ÖNCE
@@ -1165,24 +1230,37 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       // Çapa noktasının SON konumunu hesapla (delta değil, hedef konum ızgaraya yapıştırılır)
       const anchorPos = getAnchorPosition(draggingObjState.anchorId);
       let delta: Point2D;
+      let capa: { id: string; delta: Point2D } | undefined;
+      let hedef: Point2D | null = null;
       if (anchorPos) {
         const target = snapIfEnabled({
           x: world.x + draggingObjState.anchorOffset.x,
           y: world.y + draggingObjState.anchorOffset.y,
         });
-        delta = { x: target.x - anchorPos.x, y: target.y - anchorPos.y };
+        hedef = target;
+        // Kilit yüzünden çapa hedefe tam gidemeyebilir. Seçimin geri kalanı farenin GERÇEK adımını (hedef − çapanın
+        // kısıtsız olsaydı bulunacağı yer) alır; çapanın grubu eksik kalan kısmı da yeniden ister ki taşıyıcısı
+        // boyunca imleci izlesin. Aksi hâlde kilitli noktadan tutulunca serbest şekiller her karede fazla kayıyordu.
+        const sanalCapa = draggingObjState.virtualAnchor ?? anchorPos;
+        delta = { x: target.x - sanalCapa.x, y: target.y - sanalCapa.y };
+        // İnşa noktası (orta nokta, kesişim…) çapaysa konumunu bağlı olduğu nesneler belirler: eksik kısmı yeniden
+        // istemek onu her karede daha ileri itmeye çalışıp grubunu kaçırıyordu; o zaman grup da farenin adımını alır.
+        if (draggingObjState.anchorId && !pointsById.get(draggingObjState.anchorId)?.construction) {
+          capa = { id: draggingObjState.anchorId, delta: { x: target.x - anchorPos.x, y: target.y - anchorPos.y } };
+        }
       } else {
         delta = { x: world.x - draggingObjState.lastWorld.x, y: world.y - draggingObjState.lastWorld.y };
       }
 
       if (Math.abs(delta.x) > 1e-9 || Math.abs(delta.y) > 1e-9) {
-        moveObjects(draggingObjState.objectIds, delta, false);
+        moveObjects(draggingObjState.objectIds, delta, false, capa);
         setDraggingObjState((prev) =>
           prev
             ? {
                 ...prev,
                 lastWorld: world,
                 hasMoved: true,
+                virtualAnchor: hedef,
               }
             : null
         );
@@ -1637,20 +1715,41 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     [pointsById, viewport]
   );
 
+  /**
+   * Noktaların 18 px'lik görünmez yakalayıcı daireleri üst üste biner; SONRA çizilen komşu nokta sağ
+   * tıklamayı / uzun basmayı çalıyordu (gri kilitli noktaya sağ tıklayınca komşunun "Kilitle" menüsü
+   * açılıyordu). İmlecin altındaki noktalardan GÖVDESİ en yakın olanı döndürür.
+   */
+  const imlecinNoktasi = useCallback(
+    (clientX: number, clientY: number, obj: MathObject): MathObject => {
+      if (obj.type !== 'point' || !svgRef.current) return obj;
+      const rect = svgRef.current.getBoundingClientRect();
+      const uzaklik = (p: PointObject) => {
+        const s = worldToScreen(p, viewport);
+        return Math.hypot(s.x - (clientX - rect.left), s.y - (clientY - rect.top));
+      };
+      let enYakin = obj as PointObject;
+      for (const el of document.elementsFromPoint(clientX, clientY)) {
+        const id = el.closest('[data-object-id]')?.getAttribute('data-object-id');
+        const aday = id ? pointsById.get(id) : undefined;
+        if (aday && uzaklik(aday) < uzaklik(enYakin)) enYakin = aday;
+      }
+      return enYakin;
+    },
+    [pointsById, viewport]
+  );
+
   const openContextMenu = useCallback(
-    (e: React.MouseEvent, obj: MathObject) => {
+    (e: React.MouseEvent, tiklanan: MathObject) => {
       e.preventDefault();
       e.stopPropagation();
+      // Yalnızca noktanın yakalayıcı dairesine tıklandıysa hedef düzeltilir; ad etiketine tıklama olduğu gibi kalır.
+      const obj = (e.target as Element).tagName.toLowerCase() === 'circle' ? imlecinNoktasi(e.clientX, e.clientY, tiklanan) : tiklanan;
       // Sağ tıklanan nesne ZATEN çoklu seçimin parçasıysa seçim korunur.
       // Aksi hâlde "5 noktayı birleştir" gibi çoklu seçim maddeleri, menü açılır
       // açılmaz seçim tek nesneye indiği için hiç görünmüyordu.
-      const cokluSecimIcinde = selectedObjectIds.length > 1 && selectedObjectIds.includes(obj.id);
-      if (!cokluSecimIcinde) {
-        setSelectedObjectId(obj.id);
-        setSelectedObjectIds([obj.id]);
-      } else {
-        setSelectedObjectId(obj.id);
-      }
+      // (setSelectedObjectId burada ÇAĞRILMAZ: o da seçimi tek nesneye indirir.)
+      setSelectedObjectIds(contextMenuSelection(selectedObjectIds, obj.id));
       let edgeIndex: number | null = null;
       if (obj.type === 'polygon' && svgRef.current) {
         const rect = svgRef.current.getBoundingClientRect();
@@ -1658,7 +1757,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       }
       setContextTarget({ obj, x: e.clientX, y: e.clientY, edgeIndex });
     },
-    [setSelectedObjectId, setSelectedObjectIds, selectedObjectIds, enYakinKenar]
+    [setSelectedObjectIds, selectedObjectIds, enYakinKenar, imlecinNoktasi]
   );
 
   /** Dokunmatik cihazlarda 600 ms basılı tutmak menüyü açar; 12 px'ten fazla kayma sürükleme sayılır. */
@@ -1668,20 +1767,24 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       if (!t) return;
       const startX = t.clientX;
       const startY = t.clientY;
+      // Sağ tıklamadaki gibi yalnızca noktanın yakalayıcı dairesine basıldıysa hedef düzeltilir (ad etiketi olduğu gibi kalır)
+      const yakalayici = (e.target as Element).tagName.toLowerCase() === 'circle';
       const timer = window.setTimeout(() => {
-        setSelectedObjectId(obj.id);
-        setSelectedObjectIds([obj.id]);
+        // Üst üste binen yakalayıcılarda parmağın altındaki noktanın menüsü açılır
+        const hedef = yakalayici ? imlecinNoktasi(startX, startY, obj) : obj;
+        // Parmağın altındaki nesne çoklu seçimdeyse seçim korunur; zamanlayıcı eski seçimi görmesin diye güncel değerden
+        setSelectedObjectIds((onceki) => contextMenuSelection(onceki, hedef.id));
         let edgeIndex: number | null = null;
-        if (obj.type === 'polygon' && svgRef.current) {
+        if (hedef.type === 'polygon' && svgRef.current) {
           const rect = svgRef.current.getBoundingClientRect();
-          edgeIndex = enYakinKenar(obj as PolygonObject, { x: startX - rect.left, y: startY - rect.top });
+          edgeIndex = enYakinKenar(hedef as PolygonObject, { x: startX - rect.left, y: startY - rect.top });
         }
-        setContextTarget({ obj, x: startX, y: startY, edgeIndex });
+        setContextTarget({ obj: hedef, x: startX, y: startY, edgeIndex });
         longPressRef.current = null;
       }, 600);
       longPressRef.current = { timer, startX, startY, obj };
     },
-    [setSelectedObjectId, setSelectedObjectIds, enYakinKenar]
+    [setSelectedObjectId, setSelectedObjectIds, enYakinKenar, imlecinNoktasi]
   );
 
   const cancelLongPress = useCallback((e?: React.TouchEvent) => {
@@ -1760,9 +1863,60 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
 
   /** Sağ tıklanan nesnenin türüne göre menü maddelerini üretir. */
   const contextMenuItems = useMemo<ContextMenuItem[]>(() => {
-    const hedef = contextTarget?.obj;
-    if (!hedef) return [];
-    const maddeler: ContextMenuItem[] = [];
+    const hedef = objects.find(o => o.id === contextTarget?.obj?.id);
+    const pasteItem: ContextMenuItem = {
+      id: 'yapistir', label: 'Yapıştır', disabled: !objectClipboard?.objects.length,
+      onSelect: () => {
+        if (!objectClipboard || !contextTarget || !svgRef.current) return;
+        const rect = svgRef.current.getBoundingClientRect();
+        const location = screenToWorld({ x: contextTarget.x - rect.left, y: contextTarget.y - rect.top }, viewport);
+        const pasted = pasteObjects(objectClipboard, objects, location);
+        addObjects(pasted.objects, 'Nesneler yapıştırıldı');
+        setSelectedObjectIds(pasted.selectedIds);
+        setActiveTool('select');
+      },
+    };
+    if (!hedef) return [pasteItem];
+    const targetIds = selectedObjectIds.includes(hedef.id) ? selectedObjectIds : [hedef.id];
+    const maddeler: ContextMenuItem[] = [
+      { id: 'kopyala', label: 'Kopyala', onSelect: () => {
+        setObjectClipboard(copyObjects(objects, targetIds));
+        setHintMessage('Kopyalandı. Yapıştırmak istediğiniz yere sağ tıklayın.');
+      } },
+      pasteItem,
+    ];
+    if (activeTool !== 'select') {
+      maddeler.unshift({ id: 'tasi', label: 'Taşı (V)', onSelect: () => {
+        setSelectedObjectIds(targetIds);
+        setActiveTool('select');
+      } });
+    }
+
+    // PARÇALI UZUNLUK: "[AB] baştan sona" + aradaki her nokta için "[AP] P noktasına kadar" /
+    // "[PB] P noktasından sona". Metin ölçümün EKRANDAKİ durumunu söyler (ölç ↔ gizle); ayrıntılar
+    // kapalıyken etiket görünmediği için "ölç" yazar (seçilince ayrıntılar açılır).
+    const uzunlukMaddesi = (o: LengthOption, ayiriciOnce: boolean, ekGoster: boolean): ContextMenuItem => {
+      const ad = `[${pointsById.get(o.fromId)?.label ?? '?'}${pointsById.get(o.toId)?.label ?? '?'}]`;
+      const ara = o.viaId ? pointsById.get(o.viaId)?.label ?? '?' : '';
+      const ek = !ekGoster
+        ? ''
+        : o.role === 'whole'
+        ? ' (baştan sona)'
+        : o.role === 'piece'
+        ? ' (bu parça)'
+        : o.role === 'toPoint'
+        ? ` (${ara} noktasına kadar)`
+        : o.role === 'fromPoint'
+        ? ` (${ara} noktasından sona kadar)`
+        : ` (${pointsById.get(o.fromId)?.label ?? '?'} ile ${pointsById.get(o.toId)?.label ?? '?'} arası)`;
+      const acik = showDetails && isLengthShown(objects, o.fromId, o.toId);
+      return {
+        id: `olc-uzunluk-${o.fromId}-${o.toId}`,
+        label: `${ad} uzunluğunu ${acik ? 'gizle' : 'ölç'}${ek}`,
+        separatorBefore: ayiriciOnce,
+        onSelect: () => setLengthMeasurement(o.fromId, o.toId, !acik),
+      };
+    };
 
     if (hedef.type === 'segment') {
       const seg = hedef as SegmentObject;
@@ -1778,7 +1932,11 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       const a = pointsById.get(seg.startPointId);
       const b = pointsById.get(seg.endPointId);
       const uzunluk = a && b ? calculateDistance(a, b) : 0;
-      maddeler.push({ id: 'olc-uzunluk', label: 'Uzunluğunu ölç', onSelect: () => measureLength(seg.id) });
+      const { options: uzunluklar } = straightLengthOptions(objects, seg.id);
+      if (uzunluklar.length === 0) {
+        maddeler.push({ id: 'olc-uzunluk', label: 'Uzunluğunu ölç', onSelect: () => measureLength(seg.id) });
+      }
+      uzunluklar.forEach((o, i) => maddeler.push(uzunlukMaddesi(o, i === 0, uzunluklar.length > 1)));
       maddeler.push({
         id: 'ayarla-uzunluk',
         label: 'Uzunluğu ayarla…',
@@ -1790,7 +1948,45 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           onSubmit: (v) => setSegmentLength(seg.id, v),
         },
       });
+    } else if (hedef.type === 'line' || hedef.type === 'ray') {
+      maddeler.push({ id: 'olc-uzunluk', label: hedef.showLength ? 'İki nokta arasındaki mesafeyi gizle' : 'İki nokta arasındaki mesafeyi ölç',
+        onSelect: () => hedef.showLength ? hideMeasurement(hedef.id, 'length') : measureLength(hedef.id) });
+      // Üzerine nokta konmuş doğru/ışın: tanım noktaları dışındaki çiftler için kısmi uzunluklar
+      const tanimCifti = straightEnds(hedef);
+      straightLengthOptions(objects, hedef.id)
+        .options.filter((o) => !samePair([o.fromId, o.toId], tanimCifti))
+        .forEach((o) => maddeler.push(uzunlukMaddesi(o, false, true)));
+      if (hedef.type === 'line') maddeler.push({ id: 'denklem', label: hedef.showEquation ? 'Denklemi gizle' : 'Denklemi göster',
+        onSelect: () => updateObject(hedef.id, { showEquation: !hedef.showEquation } as Partial<MathObject>, true) });
     } else if (hedef.type === 'point') {
+      // Menü, gri çizim ve "Kilitle" adayları AYNI yargıdan türer (isPointLocked): taşıyıcısı
+      // silinmiş bir bağ kilit sayılmaz. "Kilit çöz", "Kilitle"nin tam tersidir: kilitlenirken
+      // yarıçap noktası olmaktan çıkarılan nokta, kilidi çözülünce çemberin yarıçapını yeniden belirler.
+      if (isPointLocked(hedef, objects)) {
+        maddeler.push({ id: 'kilit-coz', label: 'Kilit çöz', separatorBefore: true,
+          onSelect: () => commit(prev => prev.map(object => {
+            if (object.id === hedef.id) return { ...object, onObjectId: undefined, locked: undefined, isIndependent: !hedef.construction } as MathObject;
+            if (object.id === hedef.onObjectId && object.type === 'circle' && object.releasedRadiusPointId === hedef.id) {
+              const { releasedRadiusPointId: _birakilan, fixedRadius: _sabit, ...cember } = object;
+              return { ...cember, radiusPointId: hedef.id } as MathObject;
+            }
+            return object;
+          }), `${hedef.label} noktasının kilidi çözüldü`) });
+      } else {
+        const candidates = pointLockCandidates(hedef, objects, viewport.zoom);
+        for (const candidate of candidates) maddeler.push({
+          id: `kilitle-${candidate.host.id}`,
+          label: candidates.length === 1 ? 'Kilitle' : `Kilitle: ${candidate.host.label}`,
+          separatorBefore: candidate === candidates[0],
+          onSelect: () => commit(prev => prev.map(object => {
+            if (object.id === hedef.id) return { ...object, onObjectId: candidate.host.id, x: candidate.position.x, y: candidate.position.y } as MathObject;
+            if (object.id === candidate.host.id && object.type === 'circle' && candidate.fixedRadius !== undefined) {
+              return { ...object, radiusPointId: undefined, fixedRadius: candidate.fixedRadius, releasedRadiusPointId: hedef.id };
+            }
+            return object;
+          }), 'Nokta çizgiye kilitlendi'),
+        });
+      }
       // ÇOKLU SEÇİM: birden çok nokta seçiliyken bağlama / ayırma / uydurma sunulur.
       // (Seçim "Seç ve Taşı" ile Shift veya Ctrl basılı tutularak yapılır.)
       const seciliNoktalar = selectedObjectIds.filter((id) =>
@@ -1875,20 +2071,29 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         }
       }
 
-      // Nokta bir yay/dilimin MERKEZİ ise "açısını ölç" o şeklin merkez açısını açıp kapatır;
-      // menü de bunu söylemeli, yoksa açık bir rozet için hâlâ "ölç" yazardı.
-      const merkeziOlduguSekil = objects.find(
-        (o) => (o.type === 'arc' || o.type === 'sector') && o.centerPointId === hedef.id
-      ) as ArcObject | SectorObject | undefined;
-      maddeler.push({
-        id: 'olc-aci',
-        label: merkeziOlduguSekil
-          ? merkeziOlduguSekil.showCentralAngle !== false
-            ? 'Merkez açıyı gizle'
-            : 'Açısını ölç (merkez açı)'
-          : 'Açısını ölç',
-        onSelect: () => measureAngleAtPoint(hedef.id),
-      });
+      // Nokta bir parçanın/doğrunun ARASINDA (ya da bölünmüş zincirin eklem yerinde) duruyorsa
+      // "baştan sona" ve "noktaya kadar" uzunlukları noktanın kendi menüsünde de sunulur.
+      const noktaUzunluklari = lengthOptionsAtPoint(objects, hedef.id)?.options ?? [];
+      noktaUzunluklari.forEach((o, i) => maddeler.push(uzunlukMaddesi(o, i === 0, noktaUzunluklari.length > 1)));
+
+      // "Açısını ölç" YALNIZCA noktada gerçekten bir açı varsa sunulur: en az iki farklı komşu kenar
+      // (parça/doğru/ışın/çokgen kenarı) ya da yay/dilim merkezi. Düz çember merkezi, yalnız nokta veya
+      // yarıçap noktası için madde çıkmaz; karar measureAngleAtPoint ile AYNI yardımcıdan gelir.
+      // Nokta bir yay/dilimin MERKEZİ ise madde o şeklin merkez açısını açıp kapatır; menü de bunu söyler.
+      const aciEylemi = pointAngleAction(hedef.id, objects);
+      if (aciEylemi) {
+        // Bölünmüş çemberin merkezinde birden çok yay olabilir: herhangi birinin açısı görünüyorsa "gizle"
+        const merkezAcisiGorunur = aciEylemi.kind === 'central' && aciEylemi.shapes.some((s) => s.visible !== false && s.showCentralAngle !== false);
+        maddeler.push({
+          id: 'olc-aci',
+          label: aciEylemi.kind === 'central'
+            ? merkezAcisiGorunur
+              ? 'Merkez açıyı gizle'
+              : 'Açısını ölç (merkez açı)'
+            : 'Açısını ölç',
+          onSelect: () => measureAngleAtPoint(hedef.id),
+        });
+      }
       const iliskiliAci = objects.find((o) => o.type === 'angle' && o.vertexPointId === hedef.id) as
         | AngleObject
         | undefined;
@@ -2015,6 +2220,10 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         label: merkezAciAcik ? 'Merkez açıyı gizle' : 'Açısını ölç (merkez açı)',
         onSelect: () => measureArcAngle(hedef.id),
       });
+      maddeler.push({ id: 'olc-yay', label: hedef.showArcLength ? 'Yay uzunluğunu gizle' : 'Yay uzunluğunu ölç', onSelect: () => hedef.showArcLength ? hideMeasurement(hedef.id, 'arcLength') : measureArcLength(hedef.id) });
+      maddeler.push({ id: 'olc-yaricap', label: hedef.showRadius ? 'Yarıçap uzunluğunu gizle' : 'Yarıçap uzunluğunu ölç', onSelect: () => updateObject(hedef.id, { showRadius: !hedef.showRadius } as Partial<MathObject>, true) });
+      maddeler.push({ id: 'olc-kiris', label: hedef.showChordLength ? 'Kiriş uzunluğunu gizle' : 'Kiriş / çap uzunluğunu ölç', onSelect: () => updateObject(hedef.id, { showChordLength: !hedef.showChordLength } as Partial<MathObject>, true) });
+      if (hedef.type === 'sector') maddeler.push({ id: 'olc-cevre', label: hedef.showPerimeter ? 'Çevre uzunluğunu gizle' : 'Çevresini ölç', onSelect: () => hedef.showPerimeter ? hideMeasurement(hedef.id, 'perimeter') : measurePerimeter(hedef.id) });
       if (hedef.type === 'arc') {
         const ustundeY = uzerindekiNoktalar(hedef);
         if (ustundeY.length > 0) {
@@ -2025,11 +2234,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             onSelect: () => splitArcAtPoint(hedef.id, p.id),
           });
         }
-        maddeler.push({
-          id: 'olc-yay',
-          label: 'Yay uzunluğunu ölç',
-          onSelect: () => measureArcLength(hedef.id),
-        });
+
       } else {
         maddeler.push({ id: 'olc-alan', label: 'Alanını ölç', onSelect: () => measureArea(hedef.id) });
       }
@@ -2062,6 +2267,9 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       });
     }
 
+    if (hedef.type === 'text') maddeler.push({ id: 'metni-duzenle', label: 'Metni düzenle…', onSelect: () => { setEditingTextObj(hedef); setPendingTextWorldPos({ x: hedef.x, y: hedef.y }); setIsTextDialogOpen(true); } });
+    if (hedef.type === 'measurement') maddeler.push({ id: 'olcum-goster', label: hedef.showValue === false ? 'Ölçümü göster' : 'Ölçümü gizle', onSelect: () => updateObject(hedef.id, { showValue: hedef.showValue === false } as Partial<MathObject>, true) });
+
     // "Sil" her nesne türünde bulunur
     maddeler.push({
       id: 'sil',
@@ -2070,8 +2278,16 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       separatorBefore: maddeler.length > 0,
       onSelect: () => deleteObject(hedef.id),
     });
-    return maddeler;
+    return maddeler.map(item => item.id.startsWith('olc-') && item.onSelect ? {
+      ...item,
+      onSelect: () => {
+        setStyleMode('Ayrıntılı');
+        setViewport(prev => ({ ...prev, showMeasurements: true }));
+        item.onSelect?.();
+      },
+    } : item);
   }, [
+    objectClipboard, viewport, addObjects, setSelectedObjectIds, setActiveTool, activeTool, commit,
     contextTarget,
     objects,
     pointsById,
@@ -2098,6 +2314,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     setSegmentLength,
     setAngleDegrees,
     setCircleRadius,
+    setLengthMeasurement,
+    showDetails,
     deleteObject,
   ]);
 
@@ -2120,6 +2338,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     }
 
     if (activeTool === 'measure_distance' || activeTool === 'unit_measure') {
+      if (obj.type === 'arc' || obj.type === 'sector') { measureArcLength(obj.id); return; }
+      if (obj.type === 'line' || obj.type === 'ray') { measureLength(obj.id); return; }
       if (obj.type === 'segment') {
         const seg = obj as SegmentObject;
         const p1 = pointsById.get(seg.startPointId);
@@ -2146,6 +2366,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     }
 
     if (activeTool === 'measure_perimeter') {
+      if (obj.type === 'sector' || obj.type === 'ellipse') { measurePerimeter(obj.id); return; }
       if (obj.type === 'polygon') {
         const poly = obj as PolygonObject;
         const polyPoints = poly.pointIds.map((id) => pointsById.get(id)).filter(Boolean) as PointObject[];
@@ -2165,6 +2386,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     }
 
     if (activeTool === 'measure_area') {
+      if (obj.type === 'sector' || obj.type === 'ellipse') { measureArea(obj.id); return; }
       if (obj.type === 'polygon') {
         const poly = obj as PolygonObject;
         const polyPoints = poly.pointIds.map((id) => pointsById.get(id)).filter(Boolean) as PointObject[];
@@ -2302,6 +2524,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         hasMoved: false,
         anchorId: anchorPos ? anchorId : null,
         anchorOffset,
+        virtualAnchor: anchorPos,
       });
     } else {
       if (obj.type === 'point') {
@@ -2621,43 +2844,24 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     >
       {/* 1. ÜST 2D / 3D DÜZLEM VE SEÇENEKLER ŞERİDİ (Referans Görsel Birebir) */}
       <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-        {/* Sol Alan: 3 Seçenek Açılır Menü Hapları (Geometri / Dik koordinat sistemi / Sade) */}
+        {/* Sol alan: düzlem ve ayrıntı menüleri */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* 1. Seçenek: Geometri */}
-          <div className="relative">
-            <button
-              onClick={() => setOpenDropdown(openDropdown === 'domain' ? null : 'domain')}
-              className="flex items-center gap-1.5 p-1 pr-2.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-sm text-xs font-black text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-xl bg-[#1e2337] dark:bg-slate-800 text-white flex items-center justify-center shadow-sm">
-                <Shapes className="w-3.5 h-3.5" />
-              </div>
-              <span>{activeDomain}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {openDropdown === 'domain' && (
-              <div className="absolute left-0 top-11 w-44 p-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-30 space-y-1 text-xs">
-                {DOMAINS.map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => {
-                      setActiveDomain(d);
-                      setOpenDropdown(null);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-xl font-bold transition-all cursor-pointer ${
-                      activeDomain === d
-                        ? 'bg-[#2563eb] text-white shadow-sm'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
+          <button
+            type="button"
+            onClick={() => setActiveTool('select')}
+            aria-label="Seç ve Taşı"
+            aria-keyshortcuts="V"
+            aria-pressed={activeTool === 'select'}
+            title="Seç ve Taşı (V)"
+            className={`relative w-9 h-9 shrink-0 rounded-xl flex items-center justify-center border shadow-sm backdrop-blur-md transition-colors cursor-pointer ${
+              activeTool === 'select'
+                ? 'bg-blue-600 border-blue-600 text-white'
+                : 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <MousePointer className="w-5 h-5" />
+            <kbd className="absolute bottom-0.5 right-1 text-[8px] leading-none opacity-75">V</kbd>
+          </button>
           {/* 2. Seçenek: Dik koordinat sistemi / Kareli düzlem / Boş düzlem */}
           <div className="relative">
             <button
@@ -2679,7 +2883,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                 <button
                   onClick={() => {
                     setPlaneType('dik_koordinat');
-                    setViewport((prev) => ({ ...prev, showGrid: true, showAxes: true, showCoordinates: true }));
+                    setViewport((prev) => ({ ...prev, showGrid: true, showAxes: true }));
                     setOpenDropdown(null);
                   }}
                   className={`w-full text-left px-3 py-2 rounded-xl font-bold transition-all cursor-pointer ${
@@ -2750,7 +2954,6 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                       } else {
                         setViewport((prev) => ({
                           ...prev,
-                          showCoordinates: true,
                           showMeasurements: true,
                         }));
                       }
@@ -2873,6 +3076,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         </div>
       </div>
 
+      <ToolCursor tool={activeTool} surfaceRef={svgRef} />
       <svg
         ref={svgRef}
         className="w-full h-full block"
@@ -2882,9 +3086,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onContextMenu={(e) => {
-          // Tuval bir belge değil, çalışma yüzeyi: boş alanda ne uygulama ne tarayıcı menüsü açılır
           e.preventDefault();
-          setContextTarget(null);
+          setContextTarget({ obj: null, x: e.clientX, y: e.clientY, edgeIndex: null });
         }}
       >
         <defs>
@@ -3008,22 +3211,22 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   y1={originScreen.y}
                   x2={Math.max(viewport.width, 3000) + 1000}
                   y2={originScreen.y}
-                  stroke="#3b82f6"
+                  stroke="#737373"
                   strokeWidth={2.5}
                 />
                 {/* X Eksen Sağ Ok (+x) */}
                 <polygon
                   points={`${viewport.width - 12},${originScreen.y - 6} ${viewport.width - 2},${originScreen.y} ${viewport.width - 12},${originScreen.y + 6}`}
-                  fill="#3b82f6"
+                  fill="#737373"
                 />
                 {/* X Eksen Sol Ok (-x) */}
                 <polygon
                   points={`12,${originScreen.y - 6} 2,${originScreen.y} 12,${originScreen.y + 6}`}
-                  fill="#3b82f6"
+                  fill="#737373"
                 />
                 {/* X Eksen Etiketi */}
                 <g transform={`translate(${viewport.width - 46}, ${Math.max(14, Math.min(viewport.height - 30, originScreen.y - 24))})`}>
-                  <rect width="36" height="20" rx="6" fill="#3b82f6" className="shadow-sm" />
+                  <rect width="36" height="20" rx="6" fill="#737373" className="shadow-sm" />
                   <text x="18" y="14" textAnchor="middle" fill="#ffffff" fontSize={fs(11, 'axis')} className="font-black font-sans">
                     +x
                   </text>
@@ -3039,29 +3242,29 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   y1={-1000}
                   x2={originScreen.x}
                   y2={Math.max(viewport.height, 2000) + 1000}
-                  stroke="#06b6d4"
+                  stroke="#737373"
                   strokeWidth={2.5}
                 />
                 {/* Y Eksen Üst Ok (+y) */}
                 <polygon
                   points={`${originScreen.x - 6},12 ${originScreen.x},2 ${originScreen.x + 6},12`}
-                  fill="#06b6d4"
+                  fill="#737373"
                 />
                 {/* Y Eksen Alt Ok (-y) — Aşağıya doğru tam genişleme */}
                 <polygon
                   points={`${originScreen.x - 6},${viewport.height - 12} ${originScreen.x},${viewport.height - 2} ${originScreen.x + 6},${viewport.height - 12}`}
-                  fill="#06b6d4"
+                  fill="#737373"
                 />
                 {/* Y Eksen Üst Etiketi (+y) */}
                 <g transform={`translate(${Math.max(10, Math.min(viewport.width - 46, originScreen.x + 10))}, 10)`}>
-                  <rect width="36" height="20" rx="6" fill="#06b6d4" className="shadow-sm" />
+                  <rect width="36" height="20" rx="6" fill="#737373" className="shadow-sm" />
                   <text x="18" y="14" textAnchor="middle" fill="#ffffff" fontSize={fs(11, 'axis')} className="font-black font-sans">
                     +y
                   </text>
                 </g>
                 {/* Y Eksen Alt Etiketi (-y) */}
                 <g transform={`translate(${Math.max(10, Math.min(viewport.width - 46, originScreen.x + 10))}, ${viewport.height - 30})`}>
-                  <rect width="36" height="20" rx="6" fill="#06b6d4" className="shadow-sm" />
+                  <rect width="36" height="20" rx="6" fill="#737373" className="shadow-sm" />
                   <text x="18" y="14" textAnchor="middle" fill="#ffffff" fontSize={fs(11, 'axis')} className="font-black font-sans">
                     -y
                   </text>
@@ -3082,7 +3285,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     y1={clampedOriginY - 3}
                     x2={p.x}
                     y2={clampedOriginY + 3}
-                    stroke="#3b82f6"
+                    stroke="#737373"
                     strokeWidth={1.5}
                   />
                   <text
@@ -3109,7 +3312,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     y1={p.y}
                     x2={clampedOriginX + 3}
                     y2={p.y}
-                    stroke="#06b6d4"
+                    stroke="#737373"
                     strokeWidth={1.5}
                   />
                   <text
@@ -3127,11 +3330,11 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             {/* O (Orijin 0,0) Rozeti ve Odak Halkası */}
             {originScreen.x >= -30 && originScreen.x <= viewport.width + 30 && originScreen.y >= -30 && originScreen.y <= viewport.height + 30 && (
               <g transform={`translate(${originScreen.x}, ${originScreen.y})`}>
-                <circle cx="0" cy="0" r="14" fill="#3b82f6" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3,2" />
-                <circle cx="0" cy="0" r="4" fill="#2563eb" stroke="#ffffff" strokeWidth="1.5" />
+                <circle cx="0" cy="0" r="14" fill="#737373" fillOpacity="0.15" stroke="#737373" strokeWidth="1.5" strokeDasharray="3,2" />
+                <circle cx="0" cy="0" r="4" fill="#737373" stroke="#ffffff" strokeWidth="1.5" />
                 <g transform="translate(8, 8)">
-                  <rect width="48" height="20" rx="6" fill="#ffffff" stroke="#3b82f6" strokeWidth="1.5" className="shadow-sm" />
-                  <text x="24" y="14" textAnchor="middle" fill="#2563eb" fontSize={fs(10, 'axis')} className="font-mono font-black">
+                  <rect width="48" height="20" rx="6" fill="#ffffff" stroke="#737373" strokeWidth="1.5" className="shadow-sm" />
+                  <text x="24" y="14" textAnchor="middle" fill="#737373" fontSize={fs(10, 'axis')} className="font-mono font-black">
                     (0; 0)
                   </text>
                 </g>
@@ -3214,7 +3417,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             }
 
             return (
-              <g key={fn.id} className="function-plot">
+              <g key={fn.id} className="function-plot" data-object-id={fn.id} onContextMenu={(e) => openContextMenu(e, fn)} onMouseDown={(e) => handleObjectMouseDown(e, fn)} onTouchStart={(e) => handleTouchStartOnObject(e, fn)} onTouchMove={cancelLongPress} onTouchEnd={() => cancelLongPress()} onTouchCancel={() => cancelLongPress()}>
+                <path d={pathD} fill="none" stroke="transparent" strokeWidth={14} />
                 <path
                   d={pathD}
                   fill="none"
@@ -3255,7 +3459,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={poly.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, poly)}
-                onContextMenu={(e) => openContextMenu(e, poly)}
+                data-object-id={poly.id} onContextMenu={(e) => openContextMenu(e, poly)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, poly)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -3465,6 +3669,59 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
 
             const et = olcumEtiketi(m.id, 'measure');
 
+            // İKİ NOKTA ARASI UZUNLUK — parça üzerindeki nokta için |AP|, bölünmüş zincir için |AB|.
+            // Ölçü çizgisiyle çizilir ki hangi aralığın ölçüldüğü görülsün; kapsayan (daha uzun) ölçüm
+            // bir kat dışarıda durur. Bu dal trig'den ÖNCE olmalı: trig üç nokta bekler.
+            if (m.kind === 'distance') {
+              const [a, b] = noktalar as PointObject[];
+              const sa = worldToScreen(a, viewport);
+              const sb = worldToScreen(b, viewport);
+              const dx = sb.x - sa.x;
+              const dy = sb.y - sa.y;
+              const boy = Math.hypot(dx, dy) || 1;
+              // Normal ekranda YUKARI bakar; soldan sağa çizilmiş parçanın kendi uzunluk etiketi
+              // altta durduğu için üst üste binmezler.
+              let nx = -dy / boy;
+              let ny = dx / boy;
+              // Tam dikey çizgide (ny = 0) yön nokta sırasına kalmasın: etiketler hep sağa konur
+              if (ny > 1e-9 || (Math.abs(ny) <= 1e-9 && nx < 0)) {
+                nx = -nx;
+                ny = -ny;
+              }
+              const metin = mesafeEtiketMetni(a, b);
+              const genislik = Math.max(64, metin.length * 6.4 + 14);
+              // Kutunun çizgiye dik yöndeki yarı uzanımı sahnedeki EN GENİŞ mesafe etiketiyle hesaplanır ki farklı
+              // genişlikteki etiketlerin katları da çakışmasın. İlk kat çizgiden ve uç nokta harflerinden ~26 px açıkta
+              // durur; her kat bir öncekinin dış kenarını 4 px aşar.
+              const yariUzanim = Math.abs(nx) * mesafeEtiketiYariGenislik + Math.abs(ny) * 11;
+              const ofs = 26 + yariUzanim + distanceLabelLevel(objects, m.id) * (2 * yariUzanim + 4);
+              const ax = sa.x + nx * ofs;
+              const ay = sa.y + ny * ofs;
+              const bx = sb.x + nx * ofs;
+              const by = sb.y + ny * ofs;
+              const renk = m.color || '#0f766e';
+              return (
+                <g key={m.id} {...et} data-object-id={m.id} data-measurement="distance" onContextMenu={(e) => openContextMenu(e, m)} className="select-none">
+                  <line x1={ax} y1={ay} x2={bx} y2={by} stroke={renk} strokeWidth={1.25} strokeDasharray="4 3" />
+                  <line x1={ax - nx * 5} y1={ay - ny * 5} x2={ax + nx * 5} y2={ay + ny * 5} stroke={renk} strokeWidth={1.25} />
+                  <line x1={bx - nx * 5} y1={by - ny * 5} x2={bx + nx * 5} y2={by + ny * 5} stroke={renk} strokeWidth={1.25} />
+                  <rect
+                    x={(ax + bx) / 2 - genislik / 2}
+                    y={(ay + by) / 2 - 11}
+                    width={genislik}
+                    height={22}
+                    rx={7}
+                    className="fill-background/95 stroke-border"
+                    strokeWidth={1}
+                    style={styleSettings.hideLabelBoxes ? { display: 'none' } : undefined}
+                  />
+                  <text x={(ax + bx) / 2} y={(ay + by) / 2 + 4} textAnchor="middle" fontSize={fs(11, 'measure')} fill={renk} className="font-bold">
+                    {metin}
+                  </text>
+                </g>
+              );
+            }
+
             if (m.kind === 'slope') {
               const [a, b] = noktalar as PointObject[];
               const egim = calculateSlope(a, b);
@@ -3484,7 +3741,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               const genislik = Math.max(70, metin.length * 6.4 + 14);
 
               return (
-                <g key={m.id} {...et} className="select-none">
+                <g key={m.id} {...et} data-object-id={m.id} onContextMenu={(e) => openContextMenu(e, m)} className="select-none">
                   <rect
                     x={ex - genislik / 2}
                     y={ey - 11}
@@ -3536,7 +3793,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             const ey = sk.y - 34;
 
             return (
-              <g key={m.id} {...et} className="select-none">
+              <g key={m.id} {...et} data-object-id={m.id} onContextMenu={(e) => openContextMenu(e, m)} className="select-none">
                 <rect
                   x={ex}
                   y={ey - 14}
@@ -3641,7 +3898,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             return (
               <g
                 key={s.id}
-                onContextMenu={(e) => openContextMenu(e, s)}
+                data-object-id={s.id} onContextMenu={(e) => openContextMenu(e, s)}
                 className="select-none"
               >
                 {/* Taşıyıcı çizgi */}
@@ -3762,22 +4019,23 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             const midAng = geo.startAngle + geo.sweep / 2;
             // Rozet her iki şekilde de yayın DIŞINDA durur; dilimin içindeyken
             // dilimi sürüklemek isteyen kullanıcı rozeti yakalıyordu.
-            const labelR = rPx + 16;
+            const labelR = rPx + 32;
             const labelPos = {
               x: cS.x + labelR * Math.cos(midAng),
               y: cS.y - labelR * Math.sin(midAng),
             };
-            const olcumMetni = isSector
-              ? `${formatTurkishNumber(calculateSectorArea(geo.radius, geo.sweep))} br²`
-              : `${formatTurkishNumber(calculateArcLength(geo.radius, geo.sweep))} br`;
-            const gosterOlcum =
-              showDetails && (isSector ? (shape as SectorObject).showArea : (shape as ArcObject).showArcLength);
+            const olcumler: { kind: MeasurementKind; text: string }[] = [];
+            if (shape.showArcLength) olcumler.push({ kind: 'arcLength', text: 'Yay: ' + formatTurkishNumber(calculateArcLength(geo.radius, geo.sweep)) + ' br' });
+            if (isSector && (shape as SectorObject).showArea) olcumler.push({ kind: 'area', text: 'Alan: ' + formatTurkishNumber(calculateSectorArea(geo.radius, geo.sweep)) + ' br²' });
+            if (isSector && (shape as SectorObject).showPerimeter) olcumler.push({ kind: 'perimeter', text: 'Çevre: ' + formatTurkishNumber(calculateArcLength(geo.radius, geo.sweep) + 2 * geo.radius) + ' br' });
+            if (shape.showRadius) olcumler.push({ kind: 'radius', text: 'r: ' + formatTurkishNumber(geo.radius) + ' br' });
+            if (shape.showChordLength) olcumler.push({ kind: 'chordLength', text: (Math.abs(geo.sweep - Math.PI) < 1e-6 ? 'Çap: ' : 'Kiriş: ') + formatTurkishNumber(2 * geo.radius * Math.sin(geo.sweep / 2)) + ' br' });
 
             return (
               <g
                 key={shape.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, shape)}
-                onContextMenu={(e) => openContextMenu(e, shape)}
+                data-object-id={shape.id} onContextMenu={(e) => openContextMenu(e, shape)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, shape)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -3795,28 +4053,14 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                {gosterOlcum && (
-                  <g {...olcumEtiketi(shape.id, isSector ? 'area' : 'arcLength')}>
-                    <rect
-                      x={labelPos.x - 34}
-                      y={labelPos.y - 11}
-                      width={68}
-                      height={22}
-                      rx={7}
-                      className="fill-background/90 stroke-border"
-                      style={styleSettings.hideLabelBoxes ? { display: 'none' } : undefined}
-                      strokeWidth={1}
-                    />
-                    <text
-                      x={labelPos.x}
-                      y={labelPos.y + 4}
-                      textAnchor="middle"
-                      fontSize={fs(10, 'measure')} className="fill-foreground font-bold"
-                    >
-                      {olcumMetni}
-                    </text>
-                  </g>
-                )}
+                {showDetails && olcumler.map((m, index) => {
+                  const y = labelPos.y + (Math.sin(midAng) >= 0 ? -1 : 1) * index * 26;
+                  const width = Math.max(100, m.text.length * fs(6.5));
+                  return <g key={m.kind} {...olcumEtiketi(shape.id, m.kind)} data-measurement={m.kind}>
+                    <rect x={labelPos.x - width / 2} y={y - 11} width={width} height={22} rx={7} className="fill-background/90 stroke-border" style={styleSettings.hideLabelBoxes ? { display: 'none' } : undefined} />
+                    <text x={labelPos.x} y={y + 4} textAnchor="middle" fontSize={fs(10)} className="fill-foreground font-bold">{m.text}</text>
+                  </g>;
+                })}
 
                 {/* MERKEZ AÇI: kendi ölçüm türü ('centralAngle') ve kendi tıklama kutusu var.
                     Önceden alan/yay uzunluğu etiketiyle AYNI grubun içinde çıplak bir <text>'ti;
@@ -3826,7 +4070,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   // iki etiket birbirinden bağımsız gizlenebildiği için boşluk kalmamalı.
                   // Rozetler birbirine çok yakınken kullanıcı '180°' yerine '6,28 br'
                   // etiketini yakalayabiliyordu; araya kutu yüksekliğinden fazla boşluk konur.
-                  const dy = gosterOlcum ? 28 : 0;
+                  const dy = (Math.sin(midAng) >= 0 ? -1 : 1) * olcumler.length * 26;
                   return (
                   <g {...olcumEtiketi(shape.id, 'centralAngle')}>
                     <rect
@@ -3886,7 +4130,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={elp.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, elp)}
-                onContextMenu={(e) => openContextMenu(e, elp)}
+                data-object-id={elp.id} onContextMenu={(e) => openContextMenu(e, elp)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, elp)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4003,7 +4247,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={circ.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, circ)}
-                onContextMenu={(e) => openContextMenu(e, circ)}
+                data-object-id={circ.id} onContextMenu={(e) => openContextMenu(e, circ)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, circ)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4138,13 +4382,20 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             const labelX = vScreen.x + labelDist * Math.cos(midAngle);
             const labelY = vScreen.y + labelDist * Math.sin(midAngle);
 
-            const isRightAngle = !ang.reflex && Math.abs(icDeg - 90) < 1;
+            // Etiket tam dereceye yuvarlanır; 90° görünen ölçü kare işareti kullanır.
+            const isRightAngle = !ang.reflex && Math.round(deg) === 90;
+            const squareSide = arcR / Math.SQRT2;
+            const squareStart = { x: vScreen.x + squareSide * Math.cos(angle1), y: vScreen.y + squareSide * Math.sin(angle1) };
+            const squareEnd = { x: vScreen.x + squareSide * Math.cos(angle2), y: vScreen.y + squareSide * Math.sin(angle2) };
+            const markerPath = isRightAngle
+              ? `M ${squareStart.x} ${squareStart.y} L ${squareStart.x + squareEnd.x - vScreen.x} ${squareStart.y + squareEnd.y - vScreen.y} L ${squareEnd.x} ${squareEnd.y}`
+              : arcPath;
 
             return (
               <g
                 key={ang.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, ang)}
-                onContextMenu={(e) => openContextMenu(e, ang)}
+                data-object-id={ang.id} onContextMenu={(e) => openContextMenu(e, ang)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, ang)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4158,17 +4409,18 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     Artık yalnızca yayın kendi üzerindeki kalın şerit yakalıyor. */}
                 {/* Açı Yayı: iç açıda küçük, dış açıda büyük yay çizilir */}
                 <path
-                  d={arcPath}
+                  d={markerPath}
+                  data-angle-marker={isRightAngle ? 'right' : 'arc'}
                   fill="none"
                   stroke={isAngleSelected ? '#ec4899' : ang.color || '#f59e0b'}
                   strokeWidth={isAngleSelected ? 3 : 2}
                   strokeLinecap="round"
-                  strokeDasharray={isRightAngle ? '4,2' : undefined}
+                  strokeLinejoin="miter"
                   className="opacity-80"
                 />
                 {/* Yayın üzerinden de tutulabilsin diye görünmez kalın şerit */}
                 <path
-                  d={arcPath}
+                  d={markerPath}
                   fill="none"
                   stroke="transparent"
                   strokeWidth={14}
@@ -4222,13 +4474,14 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                 <g
                   key={seg.id}
                   onMouseDown={(e) => handleObjectMouseDown(e, seg)}
-                onContextMenu={(e) => openContextMenu(e, seg)}
+                data-object-id={seg.id} onContextMenu={(e) => openContextMenu(e, seg)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, seg)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
                 onTouchCancel={() => cancelLongPress()}
                   className={activeTool === 'select' ? 'cursor-move select-none' : 'cursor-pointer'}
                 >
+                  <line x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y} stroke="transparent" strokeWidth={14} />
                   <line
                     x1={s1.x}
                     y1={s1.y}
@@ -4246,8 +4499,19 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     const dx = s2.x - s1.x;
                     const dy = s2.y - s1.y;
                     const boy = Math.hypot(dx, dy) || 1;
-                    const ex = midpointScreen.x + (-dy / boy) * 20;
-                    const ey = midpointScreen.y + (dx / boy) * 20;
+                    // Kısmi uzunluk ('distance') etiketleri ekranda yukarı bakan normale konur; parçanın kendi uzunluğu
+                    // hep KARŞI tarafta durur. Eskiden çizim yönüne bağlıydı: sağdan sola ya da dikey çizilmiş parçada iki
+                    // etiket üst üste biniyordu. Dikey parçada kutu çizgiyi örtmesin diye biraz daha açılır.
+                    let nx = -dy / boy;
+                    let ny = dx / boy;
+                    // Mesafe etiketleriyle AYNI kural (tam dikeyde onlar sağda, bu etiket solda)
+                    if (ny > 1e-9 || (Math.abs(ny) <= 1e-9 && nx < 0)) {
+                      nx = -nx;
+                      ny = -ny;
+                    }
+                    const aralik = 20 + Math.abs(nx) * 16;
+                    const ex = midpointScreen.x - nx * aralik;
+                    const ey = midpointScreen.y - ny * aralik;
                     return (
                       <g {...olcumEtiketi(seg.id, 'length')}>
                         <rect
@@ -4305,13 +4569,14 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                 <g
                   key={line.id}
                   onMouseDown={(e) => handleObjectMouseDown(e, line)}
-                onContextMenu={(e) => openContextMenu(e, line)}
+                data-object-id={line.id} onContextMenu={(e) => openContextMenu(e, line)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, line)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
                 onTouchCancel={() => cancelLongPress()}
                   className={activeTool === 'select' ? 'cursor-move select-none' : 'cursor-pointer'}
                 >
+                  <line x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y} stroke="transparent" strokeWidth={14} />
                   <line
                     x1={s1.x}
                     y1={s1.y}
@@ -4328,6 +4593,15 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     >
                       {eq.equationText}
                     </text>
+                  )}
+                  {line.showLength && showDetails && (
+                    <g {...olcumEtiketi(line.id, 'length')} data-measurement="length">
+                      <text x={worldToScreen({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, viewport).x}
+                        y={worldToScreen({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, viewport).y - 18}
+                        textAnchor="middle" fontSize={fs(11)} stroke="hsl(var(--background))" strokeWidth={4} paintOrder="stroke" className="fill-foreground font-bold">
+                        {'|' + p1.label + p2.label + '| = ' + formatTurkishNumber(calculateDistance(p1, p2)) + ' br'}
+                      </text>
+                    </g>
                   )}
                 </g>
               );
@@ -4350,13 +4624,14 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                 <g
                   key={ray.id}
                   onMouseDown={(e) => handleObjectMouseDown(e, ray)}
-                onContextMenu={(e) => openContextMenu(e, ray)}
+                data-object-id={ray.id} onContextMenu={(e) => openContextMenu(e, ray)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, ray)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
                 onTouchCancel={() => cancelLongPress()}
                   className={activeTool === 'select' ? 'cursor-move select-none' : 'cursor-pointer'}
                 >
+                  <line x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y} stroke="transparent" strokeWidth={14} />
                   <line
                     x1={s1.x}
                     y1={s1.y}
@@ -4365,6 +4640,15 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     stroke={isSelected ? '#ec4899' : ray.color || '#0284c7'}
                     strokeWidth={isSelected ? 3 : 2}
                   />
+                  {ray.showLength && showDetails && (
+                    <g {...olcumEtiketi(ray.id, 'length')} data-measurement="length">
+                      <text x={worldToScreen({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, viewport).x}
+                        y={worldToScreen({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, viewport).y - 18}
+                        textAnchor="middle" fontSize={fs(11)} stroke="hsl(var(--background))" strokeWidth={4} paintOrder="stroke" className="fill-foreground font-bold">
+                        {'|' + p1.label + p2.label + '| = ' + formatTurkishNumber(calculateDistance(p1, p2)) + ' br'}
+                      </text>
+                    </g>
+                  )}
                 </g>
               );
             }
@@ -4390,7 +4674,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                 key={pt.id}
                 className="cursor-grab active:cursor-grabbing group select-none"
                 onMouseDown={(e) => handleObjectMouseDown(e, pt)}
-                onContextMenu={(e) => openContextMenu(e, pt)}
+                data-object-id={pt.id} onContextMenu={(e) => openContextMenu(e, pt)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, pt)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4425,7 +4709,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                     cx={sPos.x}
                     cy={sPos.y}
                     r={(pt.size || styleSettings.pointRadius) + (isSelected ? 1.5 : 0)}
-                    fill={pt.color || '#2563eb'}
+                    fill={isPointLocked(pt, objects) ? '#94a3b8' : pt.color || '#2563eb'}
                     stroke="#ffffff"
                     strokeWidth={isSelected ? 3 : 2}
                     className="transition-all pointer-events-none drop-shadow-sm"
@@ -4476,7 +4760,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={stroke.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, stroke)}
-                onContextMenu={(e) => openContextMenu(e, stroke)}
+                data-object-id={stroke.id} onContextMenu={(e) => openContextMenu(e, stroke)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, stroke)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4642,7 +4926,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={frac.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, frac)}
-                onContextMenu={(e) => openContextMenu(e, frac)}
+                data-object-id={frac.id} onContextMenu={(e) => openContextMenu(e, frac)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, frac)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4693,7 +4977,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={txt.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, txt)}
-                onContextMenu={(e) => openContextMenu(e, txt)}
+                data-object-id={txt.id} onContextMenu={(e) => openContextMenu(e, txt)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, txt)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -4764,7 +5048,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               <g
                 key={img.id}
                 onMouseDown={(e) => handleObjectMouseDown(e, img)}
-                onContextMenu={(e) => openContextMenu(e, img)}
+                data-object-id={img.id} onContextMenu={(e) => openContextMenu(e, img)}
                 onTouchStart={(e) => handleTouchStartOnObject(e, img)}
                 onTouchMove={cancelLongPress}
                 onTouchEnd={() => cancelLongPress()}
@@ -5892,7 +6176,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         y={contextTarget?.y ?? 0}
         title={
           contextTarget
-            ? contextTarget.obj.label || TYPE_LABELS[contextTarget.obj.type] || 'Nesne'
+            ? contextTarget.obj ? contextTarget.obj.label || TYPE_LABELS[contextTarget.obj.type] || 'Nesne' : 'Çizim alanı'
             : ''
         }
         items={contextMenuItems}

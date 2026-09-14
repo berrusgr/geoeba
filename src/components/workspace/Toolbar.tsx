@@ -24,261 +24,14 @@ import {
 } from '@/math/geometry';
 import { formatTurkishNumber } from '@/math/coordinates';
 import { validateMathExpression, extractVariableNames, compileMathExpression, evaluateNumericInput } from '@/math/parser';
-import {
-  MousePointer,
-  Dot,
-  CheckSquare,
-  MousePointerClick,
-  TextCursorInput,
-  Scissors,
-  SeparatorVertical,
-  GitBranch,
-  Equal,
-  X as XIcon,
-  Minus,
-  MoveRight,
-  Ruler,
-  Square,
-  Triangle,
-  Circle as CircleIcon,
-  CircleDot,
-  Spline,
-  PieChart,
-  Egg,
-  PenTool,
-  Trash2,
-  Compass,
-  Sigma,
-  Hexagon,
-  RotateCw,
-  FlipHorizontal,
-  Sparkles,
-  Image as ImageIcon,
-  Type,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Calculator,
-  Shapes,
-  Table,
-  Eye,
-  EyeOff,
-  Plus,
-  TrendingUp,
-  Sliders,
-  Check,
-  X,
-  AlertCircle,
-  Keyboard,
-} from 'lucide-react';
+import { functionDefinitionCycle, functionNameOwner, relabelFunction, undefinedFunctionCalls } from '@/math/functionNames';
+import { Trash2, Search, ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Calculator, Shapes, Table, Eye, EyeOff, Plus, Check, X, AlertCircle, Keyboard } from 'lucide-react';
+import { TOOL_SHORTCUTS } from './toolShortcuts';
+import { TOOL_GROUPS } from './toolDefinitions';
 import { MathKeypad } from '@/components/workspace/MathKeypad';
 
-interface ToolItem {
-  id: ToolMode;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  iconColor: string;
-}
-
-interface ToolGroup {
-  groupName: string;
-  emoji: string;
-  themeColor: string;
-  badgeBg: string;
-  containerBg: string;
-  containerBorder: string;
-  headerTextColor: string;
-  tools: ToolItem[];
-}
-
-const TOOL_GROUPS: ToolGroup[] = [
-  // 1. Temel Çizim Araçları - Kırmızı / Mercan Pastel Arka Plan
-  {
-    groupName: 'Temel Çizim Araçları',
-    emoji: '📐',
-    themeColor: 'from-rose-500 to-red-600',
-    badgeBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
-    containerBg: 'bg-[#fff1f2] dark:bg-rose-950/25',
-    containerBorder: 'border-rose-200/90 dark:border-rose-900/50',
-    headerTextColor: 'text-rose-800 dark:text-rose-200',
-    tools: [
-      { id: 'point', name: 'Nokta', description: 'Tuvale tıklayarak yeni nokta oluşturun.', icon: <Dot className="w-6 h-6" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'segment', name: 'Doğru Parçası', description: 'İki nokta arasına doğru parçası çizin.', icon: <Minus className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'line', name: 'Doğru', description: 'İki noktadan geçen sonsuz doğru çizin.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'ray', name: 'Işın', description: 'Başlangıç noktası ve üzerinden geçen ikinci nokta ile ışın çizin.', icon: <MoveRight className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'segment_length', name: 'Ölçülü Parça', description: 'Bir başlangıç noktasına tıklayın, uzunluğu sayı olarak girin.', icon: <Ruler className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'circle', name: 'Çember', description: 'Merkez ve yarıçap noktasıyla çember çizin.', icon: <CircleIcon className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-      { id: 'pen', name: 'Kalem', description: 'Serbest çizim kalemi.', icon: <PenTool className="w-4 h-4" />, iconBg: 'bg-rose-500/10 dark:bg-rose-500/20', iconColor: 'text-rose-600 dark:text-rose-400' },
-    ],
-  },
-
-  // 2. Düzenleme Araçları - Mavi Pastel Arka Plan
-  {
-    groupName: 'Düzenleme Araçları',
-    emoji: '✂️',
-    themeColor: 'from-blue-500 to-indigo-600',
-    badgeBg: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
-    containerBg: 'bg-[#eff6ff] dark:bg-blue-950/25',
-    containerBorder: 'border-blue-200/90 dark:border-blue-900/50',
-    headerTextColor: 'text-blue-800 dark:text-blue-200',
-    tools: [
-      { id: 'select', name: 'Seç ve Taşı', description: 'Noktaları veya nesneleri seçip sürükleyin.', icon: <MousePointer className="w-4 h-4" />, iconBg: 'bg-blue-500/10 dark:bg-blue-500/20', iconColor: 'text-blue-600 dark:text-blue-400' },
-      { id: 'delete', name: 'Sil', description: 'Silmek istediğiniz nesneye dokunun.', icon: <Trash2 className="w-4 h-4" />, iconBg: 'bg-red-500/10 dark:bg-red-500/20', iconColor: 'text-red-600 dark:text-red-400' },
-    ],
-  },
-
-  // 3. Ölçme Araçları - Nane / Zümrüt Yeşili Pastel Arka Plan
-  {
-    groupName: 'Ölçme Araçları',
-    emoji: '📏',
-    themeColor: 'from-emerald-500 to-teal-600',
-    badgeBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
-    containerBg: 'bg-[#ecfdf5] dark:bg-emerald-950/25',
-    containerBorder: 'border-emerald-200/90 dark:border-emerald-900/50',
-    headerTextColor: 'text-emerald-800 dark:text-emerald-200',
-    tools: [
-      { id: 'measure_distance', name: 'Uzunluk Ölç (cm)', description: 'Mesafe ve uzunluk ölçün.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'unit_measure', name: 'Birimle Ölç (br)', description: 'Birim karelerle ölçüm yapın.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'measure_angle', name: 'Açıölçer', description: 'Açı ölçümü yapın.', icon: <Compass className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'angle', name: 'Açı Oluştur', description: '3 nokta ile açı oluşturun.', icon: <Sigma className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'measure_area', name: 'Alanı Bul', description: 'Kapalı şeklin alanını hesaplayın.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'measure_perimeter', name: 'Çevre Hesapla', description: 'Şeklin çevre uzunluğunu hesaplayın.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'measure_slope', name: 'Eğim Ölç', description: 'İki noktaya tıklayın; aradaki doğrunun eğimini gösterir.', icon: <TrendingUp className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'trig_ratios', name: 'Trig. Oranlar', description: 'Bir kola, AÇININ KÖŞESİNE ve diğer kola tıklayın; sin, cos, tan değerlerini gösterir. Üçgen dikse kenar oranları da yazılır.', icon: <Triangle className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'area_model', name: 'Alanı Modelle', description: 'Alan modelleme ızgarası.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'ruler', name: 'Cetvel', description: 'İnteraktif cetvel aracı.', icon: <Ruler className="w-4 h-4 -rotate-45" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-      { id: 'setsquare', name: 'Gönye', description: 'Dik açı ve gönye aracı.', icon: <Triangle className="w-4 h-4" />, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-    ],
-  },
-
-  // 4. Çokgen Araçları - Sıcak Kehribar / Sarı Pastel Arka Plan
-  // Çember Araçları - Mor / Menekşe Pastel Arka Plan
-  {
-    groupName: 'Çember Araçları',
-    emoji: '⭕',
-    themeColor: 'from-violet-500 to-purple-600',
-    badgeBg: 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30',
-    containerBg: 'bg-[#f5f3ff] dark:bg-violet-950/25',
-    containerBorder: 'border-violet-200/90 dark:border-violet-900/50',
-    headerTextColor: 'text-violet-800 dark:text-violet-200',
-    tools: [
-      { id: 'circle_radius', name: 'Yarıçapla Çember', description: 'Merkeze tıklayın, yarıçapı sayı olarak girin.', icon: <CircleDot className="w-4 h-4" />, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-      { id: 'circle_3points', name: '3 Noktalı Çember', description: 'Üç noktaya tıklayın; bu üç noktadan geçen çember (çevrel çember) çizilir.', icon: <CircleIcon className="w-4 h-4" />, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-      { id: 'arc', name: 'Yay', description: 'Merkez, başlangıç ve bitiş noktasına tıklayın; saat yönünün tersine yay çizilir.', icon: <Spline className="w-4 h-4" />, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-      { id: 'sector', name: 'Daire Dilimi', description: 'Yay ile aynı üç tıklama, ama içi dolu pasta dilimi çizilir.', icon: <PieChart className="w-4 h-4" />, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-      { id: 'ellipse', name: 'Elips', description: 'Tuvalde sürükleyin; sürüklediğiniz kutuya içten teğet elips çizilir.', icon: <Egg className="w-4 h-4" />, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-    ],
-  },
-
-  {
-    groupName: 'Çokgen Araçları',
-    emoji: '⬡',
-    themeColor: 'from-amber-500 to-orange-600',
-    badgeBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
-    containerBg: 'bg-[#fffbeb] dark:bg-amber-950/25',
-    containerBorder: 'border-amber-200/90 dark:border-amber-900/50',
-    headerTextColor: 'text-amber-800 dark:text-amber-200',
-    tools: [
-      { id: 'polygon', name: 'Çokgen', description: 'Köşeleri belirleyerek çokgen çizin.', icon: <Triangle className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-      { id: 'rectangle', name: 'Dikdörtgen', description: 'Dikdörtgen şekli ekleyin.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-      { id: 'square', name: 'Kare', description: 'Sürükleyerek kare çizin.', icon: <Square className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-      { id: 'regular_polygon', name: 'Düzgün Çokgen', description: 'Kenar sayısını girerek düzgün çokgen oluşturun.', icon: <Hexagon className="w-4 h-4" />, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-    ],
-  },
-
-  // 5. Cebir & Fonksiyon Araçları - Gök Mavisi Pastel Arka Plan
-  {
-    groupName: 'Cebir & Fonksiyon',
-    emoji: '𝑓',
-    themeColor: 'from-sky-500 to-cyan-600',
-    badgeBg: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30',
-    containerBg: 'bg-[#f0f9ff] dark:bg-sky-950/25',
-    containerBorder: 'border-sky-200/90 dark:border-sky-900/50',
-    headerTextColor: 'text-sky-800 dark:text-sky-200',
-    tools: [
-      { id: 'function', name: 'Fonksiyon', description: 'f(x) ifadesi girerek grafik çizin.', icon: <TrendingUp className="w-4 h-4" />, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400' },
-      { id: 'slider', name: 'Kaydırıcı', description: 'a, b gibi parametreler için kaydırıcı ekleyin.', icon: <Sliders className="w-4 h-4" />, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400' },
-    ],
-  },
-
-  // 5.5 Klasik Geometri İnşaları - Çivit Mavisi Pastel Arka Plan
-  // Pergel-cetvel geleneğindeki temel inşalar: orta nokta, orta dikme, açıortay,
-  // dik/paralel doğru, pergel ve kesişim. Hepsi tıklanan NOKTALARDAN üretilir.
-  {
-    groupName: 'İnşa Araçları',
-    emoji: '📐',
-    themeColor: 'from-indigo-500 to-blue-600',
-    badgeBg: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
-    containerBg: 'bg-[#eef2ff] dark:bg-indigo-950/25',
-    containerBorder: 'border-indigo-200/90 dark:border-indigo-900/50',
-    headerTextColor: 'text-indigo-800 dark:text-indigo-200',
-    tools: [
-      { id: 'midpoint', name: 'Orta Nokta', description: 'İki noktaya tıklayın; aralarındaki orta nokta oluşur.', icon: <Dot className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'divide_ratio', name: 'Oranda Böl', description: 'İki noktaya tıklayın, sonra m:n oranını girin (örn. 2:1).', icon: <Scissors className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'perp_bisector', name: 'Orta Dikme', description: 'İki noktaya tıklayın; orta noktadan geçen dik doğru çizilir.', icon: <SeparatorVertical className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'angle_bisector', name: 'Açıortay', description: 'Açının bir kolu, köşesi ve diğer kolu: üç noktaya sırayla tıklayın.', icon: <GitBranch className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'perpendicular', name: 'Dik Doğru', description: 'İki nokta doğrultuyu, üçüncü nokta doğrunun geçtiği yeri belirler.', icon: <Plus className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'parallel', name: 'Paralel Doğru', description: 'İki nokta doğrultuyu, üçüncü nokta doğrunun geçtiği yeri belirler.', icon: <Equal className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'compass', name: 'Pergel', description: 'İğneyi saplayın, açıklığı ayarlayın, yayın başlangıcını istediğiniz yere bırakın ve iki yöne de çizin.', icon: <Compass className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-      { id: 'intersect', name: 'Kesiştir', description: 'İki şekle tıklayın; ortak noktalarını oluşturur. Doğru, ışın, doğru parçası, çember ve yay desteklenir; elips yalnızca doğrularla kesiştirilebilir.', icon: <XIcon className="w-4 h-4" />, iconBg: 'bg-indigo-500/10', iconColor: 'text-indigo-600 dark:text-indigo-400' },
-    ],
-  },
-
-  // 6. Dönüşüm & Simetri Araçları (3) - Mor Pastel Arka Plan
-  {
-    groupName: 'Dönüşüm Araçları',
-    emoji: '🔄',
-    themeColor: 'from-purple-500 to-fuchsia-600',
-    badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
-    containerBg: 'bg-[#faf5ff] dark:bg-purple-950/25',
-    containerBorder: 'border-purple-200/90 dark:border-purple-900/50',
-    headerTextColor: 'text-purple-800 dark:text-purple-200',
-    tools: [
-      { id: 'rotate', name: 'Şekli Döndür', description: 'Şekli bir merkez etrafında döndürün.', icon: <RotateCw className="w-4 h-4" />, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400' },
-      { id: 'translate', name: 'Öteleme', description: 'Önce şekli seçin; sonra öteleme vektörünün başlangıç ve bitiş noktasına tıklayın.', icon: <MoveRight className="w-4 h-4" />, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400' },
-      { id: 'reflect', name: 'Yansıt', description: 'Doğruya göre simetri / yansıma.', icon: <FlipHorizontal className="w-4 h-4" />, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400' },
-      { id: 'symmetry', name: 'Simetri Keşfet', description: 'Simetri eksenlerini keşfedin.', icon: <Sparkles className="w-4 h-4" />, iconBg: 'bg-purple-500/10', iconColor: 'text-purple-600 dark:text-purple-400' },
-    ],
-  },
-
-  // 6.5 Etkileşim Araçları — düğme, işaret kutusu, girdi kutusu
-  {
-    groupName: 'Etkileşim Araçları',
-    emoji: '🎛️',
-    themeColor: 'from-teal-500 to-cyan-600',
-    badgeBg: 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30',
-    containerBg: 'bg-[#f0fdfa] dark:bg-teal-950/25',
-    containerBorder: 'border-teal-200/90 dark:border-teal-900/50',
-    headerTextColor: 'text-teal-800 dark:text-teal-200',
-    tools: [
-      { id: 'checkbox', name: 'İşaret Kutusu', description: 'Önce göster/gizle edilecek nesneleri seçin, sonra kutunun yerine tıklayın.', icon: <CheckSquare className="w-4 h-4" />, iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400' },
-      { id: 'button', name: 'Düğme', description: 'Seçili nesneleri gösterip gizleyen ya da kaydırıcıyı oynatan düğme ekler.', icon: <MousePointerClick className="w-4 h-4" />, iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400' },
-      { id: 'input_box', name: 'Girdi Kutusu', description: 'Önce bir kaydırıcı veya fonksiyon seçin, sonra kutunun yerine tıklayın.', icon: <TextCursorInput className="w-4 h-4" />, iconBg: 'bg-teal-500/10', iconColor: 'text-teal-600 dark:text-teal-400' },
-    ],
-  },
-
-  // 7. Kesir & Medya Araçları (3) - Turuncu / Şeftali Pastel Arka Plan
-  {
-    groupName: 'Kesir & Medya',
-    emoji: '🎨',
-    themeColor: 'from-orange-500 to-amber-600',
-    badgeBg: 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30',
-    containerBg: 'bg-[#fff7ed] dark:bg-orange-950/25',
-    containerBorder: 'border-orange-200/90 dark:border-orange-900/50',
-    headerTextColor: 'text-orange-800 dark:text-orange-200',
-    tools: [
-      { id: 'fraction', name: 'Kesir Göster', description: 'Kesir modeli oluşturun.', icon: <span className="font-bold text-xs">½</span>, iconBg: 'bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-      { id: 'image', name: 'Görsel Ekle', description: 'Tuvale görsel ekleyin.', icon: <ImageIcon className="w-4 h-4" />, iconBg: 'bg-orange-500/10', iconColor: 'text-orange-600 dark:text-orange-400' },
-      { id: 'text', name: 'Yazı Ekle', description: 'Tuvale metin kutusu ekleyin.', icon: <Type className="w-4 h-4" />, iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-600 dark:text-cyan-400' },
-    ],
-  },
-];
-
 interface ToolbarProps {
+  onSelectTool?: (tool: ToolMode) => void;
   onOpenFunctionDialog?: () => void;
   onOpenSliderDialog?: () => void;
   /**
@@ -324,7 +77,8 @@ function matchNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObjectDialog }: ToolbarProps) {
+export function Toolbar({ onSelectTool,
+  onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObjectDialog }: ToolbarProps) {
   const {
     activeTool,
     setActiveTool,
@@ -490,7 +244,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
         setRowError(dogrulama.error);
         return;
       }
-      updateObject(obj.id, { expression: ifade, label: `f(x) = ${ifade}` });
+      updateObject(obj.id, { expression: ifade, label: relabelFunction(obj, ifade, objects) });
       cancelRowEdit();
       return;
     }
@@ -622,6 +376,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
   };
 
   const handleToolClick = (toolId: ToolMode) => {
+    if (onSelectTool) { onSelectTool(toolId); return; }
     if (toolId === 'function') {
       onOpenFunctionDialog?.();
       return;
@@ -680,10 +435,10 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
    */
   const atamayiCoz = (
     ifade: string
-  ): { tur: 'kaydirici'; ad: string; sag: string } | { tur: 'fonksiyon'; sag: string } | null => {
-    // f(x) = ... biçimi doğrudan fonksiyondur
-    const fonksiyonTanimi = /^\s*[a-zçğıöşü][a-zçğıöşü0-9]?\s*\(\s*x\s*\)\s*=\s*(.+)$/i.exec(ifade);
-    if (fonksiyonTanimi) return { tur: 'fonksiyon', sag: fonksiyonTanimi[1].trim() };
+  ): { tur: 'kaydirici'; ad: string; sag: string } | { tur: 'fonksiyon'; ad?: string; sag: string } | null => {
+    // f(x) = ... biçimi doğrudan fonksiyondur; adı korunur ("g(x) = f(x) + 1")
+    const fonksiyonTanimi = /^\s*([a-zçğıöşü][a-zçğıöşü0-9]?)\s*\(\s*x\s*\)\s*=\s*(.+)$/i.exec(ifade);
+    if (fonksiyonTanimi) return { tur: 'fonksiyon', ad: fonksiyonTanimi[1].toLowerCase(), sag: fonksiyonTanimi[2].trim() };
 
     const atama = /^\s*([a-zçğıöşü][a-zçğıöşü0-9]?)\s*=\s*(.+)$/i.exec(ifade);
     if (!atama) return null;
@@ -743,14 +498,41 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
       return;
     }
 
-    // 2) Fonksiyon tanımı: "y = x^2" ve "f(x) = x^2" sol tarafı atılarak eklenir
+    // 2) Fonksiyon tanımı: "g(x) = x^2" adıyla eklenir, aynı adlı fonksiyon varsa yeniden tanımlanır.
+    //    "y = x^2" ve yalnız "x^2" sıradaki boş adı alır (f, g, h …).
     const ifade = cozum && cozum.tur === 'fonksiyon' ? cozum.sag : expr;
+    const ad = cozum && cozum.tur === 'fonksiyon' ? cozum.ad : undefined;
     const validation = validateMathExpression(ifade);
     if (!validation.ok) {
       setAlgebraError(validation.error);
       return;
     }
-    addFunction(ifade);
+    const dongu = ad ? functionDefinitionCycle(objects, ad, ifade) : null;
+    if (dongu) {
+      setAlgebraError(`${ad}(x) kendisine bağlı olamaz: ${dongu.map((n) => `${n}(x)`).join(' → ')}.`);
+      return;
+    }
+    const tanimsiz = undefinedFunctionCalls(objects, ifade, ad);
+    if (tanimsiz.length > 0) {
+      setAlgebraError(`${tanimsiz[0]}(x) tanımlı değil. Önce ${tanimsiz[0]}(x) = … yazın; çarpma için ${tanimsiz[0]}*(…) kullanın.`);
+      return;
+    }
+    const sahip = ad ? functionNameOwner(objects, ad) : undefined;
+    if (sahip && sahip.type !== 'function') {
+      setAlgebraError(`"${ad}" adı bir kaydırıcıda kullanılıyor. Fonksiyona başka bir ad verin (örn. g(x) = …).`);
+      return;
+    }
+    if (sahip) {
+      const kaydiricilar = new Set(
+        objects.filter((o) => o.type === 'slider').map((o) => (o as SliderObject).variableName)
+      );
+      for (const eksik of extractVariableNames(ifade)) {
+        if (!kaydiricilar.has(eksik)) assignSliderValue(eksik, 1);
+      }
+      updateObject(sahip.id, { expression: ifade, label: `${ad}(x) = ${ifade}`, visible: true });
+    } else {
+      addFunction(ifade, ad ? `${ad}(x) = ${ifade}` : undefined);
+    }
     setAlgebraInput('');
     setAlgebraError(null);
   };
@@ -897,6 +679,11 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
       case 'measurement': {
         const m = obj as MeasurementObject;
         const nk = (id: string) => objects.find((o) => o.id === id && o.type === 'point') as PointObject | undefined;
+        if (m.kind === 'distance') {
+          const a = nk(m.pointIds[0]);
+          const b = nk(m.pointIds[1]);
+          return a && b ? `|${a.label}${b.label}| = ${formatTurkishNumber(calculateDistance(a, b), 2)} br` : 'Uzunluk';
+        }
         if (m.kind === 'slope') {
           const a = nk(m.pointIds[0]);
           const b = nk(m.pointIds[1]);
@@ -930,7 +717,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
     }
   };
 
-  const normalizedSearch = toolSearch.trim().toLocaleLowerCase('tr');
+  const normalizedSearch = (ikonModu ? '' : toolSearch).trim().toLocaleLowerCase('tr');
 
   return (
     <div className="flex h-full min-h-0 bg-card/95 backdrop-blur-md border-r border-border select-none z-30 overflow-hidden shadow-sm shrink-0">
@@ -1004,7 +791,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
         // İkon modunda panel daralır: amaç tuvale yer açmaktır.
         <div
           className={`h-full flex flex-col min-h-0 overflow-hidden transition-[width] duration-200 ${
-            ikonModu && sidebarTab === 'araclar' ? 'w-[104px]' : 'w-72 sm:w-80'
+            ikonModu && sidebarTab === 'araclar' ? 'w-[144px]' : 'w-72 sm:w-80'
           }`}
         >
 
@@ -1319,8 +1106,8 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
 
               {/* Araç Grupları Listesi */}
               <div className="flex-1 overflow-y-auto p-3 space-y-3.5 scrollbar-thin">
-                {TOOL_GROUPS.map((group) => {
-                  const isExpanded = expandedGroups[group.groupName] ?? true;
+                {TOOL_GROUPS.filter((group) => group.groupName !== 'Düzenleme Araçları').map((group) => {
+                  const isExpanded = normalizedSearch !== '' || (expandedGroups[group.groupName] ?? true);
                   const matchingTools = group.tools.filter(
                     (t) =>
                       normalizedSearch === '' ||
@@ -1335,7 +1122,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
                       key={group.groupName}
                       className={`rounded-2xl ${ikonModu ? 'p-1.5' : 'p-2.5'} ${group.containerBg} border ${group.containerBorder} space-y-2 shadow-sm transition-all`}
                     >
-                      {/* Grup Başlığı — ikon modunda yalnızca emoji, adı ipucunda */}
+                      {/* Grup adı geniş ve dar görünümde okunabilir kalır */}
                       <button
                         onClick={() => toggleGroup(group.groupName)}
                         title={ikonModu ? group.groupName : undefined}
@@ -1346,12 +1133,10 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
                         aria-label={ikonModu ? group.groupName : undefined}
                       >
                         {ikonModu ? (
-                          <span className="text-sm leading-none">{group.emoji}</span>
+                          <span className="min-w-0 text-[10px] font-black leading-snug text-center break-words">{group.groupName}</span>
                         ) : (
                           <>
-                            <div className="flex items-center gap-2">
-                              <span>{group.emoji}</span>
-                              <span className="text-xs font-black">{group.groupName}</span>
+                            <div className="flex items-center gap-2">                              <span className="text-xs font-black">{group.groupName}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${group.badgeBg}`}>
@@ -1379,7 +1164,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
                                 <div
                                   key={tool.id}
                                   onMouseEnter={(e) =>
-                                    baloncukAc(e.currentTarget, tool.id, tool.name, tool.description)
+                                    baloncukAc(e.currentTarget, tool.id, tool.name, `${tool.description} Kısayol: ${TOOL_SHORTCUTS[tool.id]}`)
                                   }
                                   onMouseLeave={() => baloncukKapat(tool.id)}
                                 >
@@ -1394,22 +1179,24 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
                                       )
                                     }
                                     onBlur={() => baloncukKapat(tool.id)}
-                                    title={`${tool.name} — ${tool.description}`}
+                                    title={`${tool.name} (${TOOL_SHORTCUTS[tool.id]}) — ${tool.description}`}
+                                    aria-keyshortcuts={TOOL_SHORTCUTS[tool.id]}
                                     aria-label={tool.name}
                                     aria-pressed={isActive}
-                                    className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
+                                    className={`relative w-full aspect-square min-w-9 min-h-9 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
                                       isActive
                                         ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-transparent shadow-sm ring-2 ring-primary/20'
                                         : 'bg-card hover:bg-background text-foreground border-border/80 hover:border-primary/40 shadow-sm'
                                     }`}
                                   >
                                     <div
-                                      className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 ${
                                         isActive ? 'bg-white/20 text-white' : `${tool.iconBg} ${tool.iconColor}`
                                       }`}
                                     >
                                       {tool.icon}
                                     </div>
+                                    <kbd className="absolute bottom-0.5 inset-x-0 text-center text-[7px] leading-none opacity-70">{TOOL_SHORTCUTS[tool.id]}</kbd>
                                   </button>
 
                                 </div>
@@ -1420,7 +1207,9 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
                               <button
                                 key={tool.id}
                                 onClick={() => handleToolClick(tool.id)}
-                                title={`${tool.name} — ${tool.description}`}
+                                title={`${tool.name} (${TOOL_SHORTCUTS[tool.id]}) — ${tool.description}`}
+                                aria-label={tool.name}
+                                aria-keyshortcuts={TOOL_SHORTCUTS[tool.id]}
                                 aria-pressed={isActive}
                                 className={`flex items-center gap-2.5 p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
                                   isActive
@@ -1429,7 +1218,7 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
                                 }`}
                               >
                                 <div
-                                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform ${
+                                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 shrink-0 transition-transform ${
                                     isActive
                                       ? 'bg-white/20 text-white'
                                       : `${tool.iconBg} ${tool.iconColor}`
@@ -1440,48 +1229,16 @@ export function Toolbar({ onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObj
 
                                 {/* En fazla 2 satır: uzun adlar taşmak yerine kısaltılır, tamamı ipucunda */}
                                 <span
-                                  className={`text-[11px] sm:text-xs font-bold leading-tight break-words hyphens-auto line-clamp-2 ${
+                                  className={`text-[11px] sm:text-xs font-bold leading-tight break-words hyphens-auto ${
                                     isActive ? 'text-white' : 'text-foreground'
                                   }`}
                                 >
                                   {tool.name}
+                                  <kbd className="block text-[9px] leading-tight font-medium opacity-70 mt-1">{TOOL_SHORTCUTS[tool.id]}</kbd>
                                 </span>
                               </button>
                             );
                           })}
-                          {group.groupName === 'Düzenleme Araçları' &&
-                            (ikonModu ? (
-                              <div
-                                className="col-span-2"
-                                onMouseEnter={(e) =>
-                                  baloncukAc(
-                                    e.currentTarget,
-                                    'tumunu-sil',
-                                    'Tümünü Sil / Temizle',
-                                    'Tuvaldeki bütün çizimleri ve şekilleri siler.'
-                                  )
-                                }
-                                onMouseLeave={() => baloncukKapat('tumunu-sil')}
-                              >
-                                <button
-                                  onClick={() => requestClearAll('2D')}
-                                  aria-label="Tümünü Sil / Temizle"
-                                  title="Tüm 2D ekranı ve şekilleri temizle"
-                                  className="w-full aspect-[2/1] flex items-center justify-center rounded-xl text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/60 shadow-sm transition-all cursor-pointer active:scale-95"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => requestClearAll('2D')}
-                                className="col-span-2 flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/60 shadow-sm transition-all cursor-pointer hover:shadow-sm active:scale-95"
-                                title="Tüm 2D ekranı ve şekilleri temizle"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                <span>Tümünü Sil / Temizle</span>
-                              </button>
-                            ))}
                         </div>
                       )}
                     </div>

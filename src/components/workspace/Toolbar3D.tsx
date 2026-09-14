@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { GeometryToolIcon } from './GeometryToolIcon';
 import { Tool3DMode, Solid3DType } from '@/types/workspace3d';
 import {
   MousePointer,
@@ -9,9 +10,7 @@ import {
   Eye,
   Trash2,
   Box,
-  Circle as CircleIcon,
   Cylinder,
-  Layers,
   Plus,
   Crosshair,
   MoveRight,
@@ -22,7 +21,6 @@ import {
   PanelLeftOpen,
   ChevronDown,
   ChevronUp,
-  Triangle,
   Cone,
   Pyramid,
   LayoutGrid,
@@ -51,10 +49,10 @@ interface Toolbar3DProps {
 
 const SOLID_BUTTONS: { type: Solid3DType; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { type: 'cube', label: 'Küp', Icon: Box },
-  { type: 'sphere', label: 'Küre', Icon: CircleIcon },
+  { type: 'sphere', label: 'Küre', Icon: ({ className }) => <GeometryToolIcon kind="sphere" className={className} /> },
   { type: 'cylinder', label: 'Silindir', Icon: Cylinder },
-  { type: 'prism', label: 'Dikdörtgenler Prizması', Icon: Layers },
-  { type: 'triangular_prism', label: 'Üçgen Prizma', Icon: Triangle },
+  { type: 'prism', label: 'Dikdörtgenler Prizması', Icon: ({ className }) => <GeometryToolIcon kind="prism" className={className} /> },
+  { type: 'triangular_prism', label: 'Üçgen Prizma', Icon: ({ className }) => <GeometryToolIcon kind="triangularPrism" className={className} /> },
   { type: 'cone', label: 'Koni', Icon: Cone },
   { type: 'pyramid', label: 'Kare Piramit', Icon: Pyramid },
 ];

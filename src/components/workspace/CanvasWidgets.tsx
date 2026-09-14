@@ -33,7 +33,7 @@ export function CanvasCheckbox({
     <g
       transform={`translate(${ekran.x}, ${ekran.y})`}
       onMouseDown={onMouseDown}
-      onContextMenu={onContextMenu}
+      data-object-id={obj.id} onContextMenu={onContextMenu}
       className="select-none cursor-pointer"
     >
       <rect
@@ -102,7 +102,7 @@ export function CanvasButton({
     <g
       transform={`translate(${ekran.x}, ${ekran.y})`}
       onMouseDown={onMouseDown}
-      onContextMenu={onContextMenu}
+      data-object-id={obj.id} onContextMenu={onContextMenu}
       className="select-none cursor-pointer group/dugme"
     >
       <rect
@@ -180,7 +180,7 @@ export function CanvasInputBox({
     <g
       transform={`translate(${ekran.x}, ${ekran.y})`}
       onMouseDown={onMouseDown}
-      onContextMenu={onContextMenu}
+      data-object-id={obj.id} onContextMenu={onContextMenu}
       className="select-none"
     >
       {etiket && (
