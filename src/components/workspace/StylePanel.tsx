@@ -90,7 +90,7 @@ export function StylePanel() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
+      <div className="flex flex-col gap-4 items-stretch">
         {/* ÇİZGİ KALINLIĞI */}
         <div className="space-y-2 p-3 rounded-2xl bg-muted/30 border border-border/70">
           <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">

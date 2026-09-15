@@ -211,7 +211,7 @@ export function PropertiesPanel({
       {sekme === 'stil' && <StylePanel />}
 
       {sekme === 'ozellikler' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
+        <div className="flex flex-col gap-4 items-stretch">
           {/* GÖRÜNÜM DÜZENİ SEÇİCİ */}
           {onLayoutModeChange && (
             <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
@@ -354,7 +354,7 @@ export function PropertiesPanel({
             ? 'Çizim gri tonlamada; indirilen PNG, SVG, PDF ve Word dosyaları da siyah–beyaz olacak.'
             : 'Açarsanız hem tuval hem de indirilen dosyalar renksiz (baskıya uygun) olur.'}
         </p>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="flex flex-col gap-2">
           {disaAktarimDugmeleri.map((d) => (
             <button
               key={d.id}
