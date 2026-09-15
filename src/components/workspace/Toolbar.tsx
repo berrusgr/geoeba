@@ -316,7 +316,7 @@ export function Toolbar({ onSelectTool,
   );
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(TOOL_GROUPS.map((g) => [g.groupName, true]))
+    Object.fromEntries(TOOL_GROUPS.map((g) => [g.groupName, g.groupName === 'Temel Çizim Araçları']))
   );
 
   /**
@@ -371,7 +371,10 @@ export function Toolbar({ onSelectTool,
   const baloncukKapat = (id: string) => setVurgulanan((v) => (v && v.id === id ? null : v));
 
   const toggleGroup = (groupName: string) => {
-    setExpandedGroups((prev) => ({ ...prev, [groupName]: !(prev[groupName] ?? true) }));
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupName]: !(prev[groupName] ?? (groupName === 'Temel Çizim Araçları')),
+    }));
   };
 
   const handleToolClick = (toolId: ToolMode) => {
@@ -1075,7 +1078,9 @@ export function Toolbar({ onSelectTool,
               {/* Araç Grupları Listesi */}
               <div className="flex-1 overflow-y-auto p-3 space-y-3.5 scrollbar-thin">
                 {TOOL_GROUPS.filter((group) => group.groupName !== 'Düzenleme Araçları').map((group) => {
-                  const isExpanded = normalizedSearch !== '' || (expandedGroups[group.groupName] ?? true);
+                  const isExpanded =
+                    normalizedSearch !== '' ||
+                    (expandedGroups[group.groupName] ?? (group.groupName === 'Temel Çizim Araçları'));
                   const matchingTools = group.tools.filter(
                     (t) =>
                       normalizedSearch === '' ||
