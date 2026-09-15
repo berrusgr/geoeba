@@ -4558,8 +4558,11 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               // Sonsuz doğruyu ekran sınırlarına genişlet
               const dx = p2.x - p1.x;
               const dy = p2.y - p1.y;
-              const pStart = { x: p1.x - dx * 100, y: p1.y - dy * 100 };
-              const pEnd = { x: p2.x + dx * 100, y: p2.y + dy * 100 };
+              const len = Math.hypot(dx, dy);
+              if (len === 0) return null;
+              const extendWorld = Math.max(viewport.width, viewport.height) * 2 / viewport.zoom;
+              const pStart = { x: p1.x - (dx / len) * extendWorld, y: p1.y - (dy / len) * extendWorld };
+              const pEnd = { x: p2.x + (dx / len) * extendWorld, y: p2.y + (dy / len) * extendWorld };
 
               const s1 = worldToScreen(pStart, viewport);
               const s2 = worldToScreen(pEnd, viewport);
@@ -4615,7 +4618,10 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
 
               const dx = p2.x - p1.x;
               const dy = p2.y - p1.y;
-              const pEnd = { x: p1.x + dx * 100, y: p1.y + dy * 100 };
+              const len = Math.hypot(dx, dy);
+              if (len === 0) return null;
+              const extendWorld = Math.max(viewport.width, viewport.height) * 2 / viewport.zoom;
+              const pEnd = { x: p1.x + (dx / len) * extendWorld, y: p1.y + (dy / len) * extendWorld };
 
               const s1 = worldToScreen(p1, viewport);
               const s2 = worldToScreen(pEnd, viewport);
