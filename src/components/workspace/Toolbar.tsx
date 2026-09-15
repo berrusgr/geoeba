@@ -1028,12 +1028,10 @@ export function Toolbar({ onSelectTool,
           {/* B. ARAÇLAR GÖRÜNÜMÜ */}
           {sidebarTab === 'araclar' && (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
-                {!ikonModu && (
-                  <h3 className="text-xs font-black text-foreground tracking-tight">Geometri Araçları</h3>
-                )}
+              <div className={`p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0 ${ikonModu ? 'hidden' : ''}`}>
+                <h3 className="text-xs font-black text-foreground tracking-tight">Geometri Araçları</h3>
                 <div className="flex items-center gap-1 ml-auto">
-                  {objects.length > 0 && !ikonModu && (
+                  {objects.length > 0 && (
                     <button
                       onClick={() => requestClearAll('2D')}
                       className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 flex items-center gap-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2 py-1 rounded-lg transition-colors cursor-pointer"
@@ -1043,7 +1041,6 @@ export function Toolbar({ onSelectTool,
                       <span>Tümünü Sil</span>
                     </button>
                   )}
-
                 </div>
               </div>
 
