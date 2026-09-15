@@ -230,7 +230,7 @@ export function GradeSelector() {
                       {grade.themes.length} Tema
                     </span>
                     <span className="px-2.5 py-1 rounded-full bg-white/80 dark:bg-slate-900/80 text-[11px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
-                      {totalActs || 18} Görev
+                      {totalActs} Görev
                     </span>
                   </div>
                 </div>
