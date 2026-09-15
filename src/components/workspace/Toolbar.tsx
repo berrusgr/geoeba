@@ -99,7 +99,6 @@ export function Toolbar({ onSelectTool,
   } = useWorkspace();
 
   const [toolSearch, setToolSearch] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<'cebir' | 'araclar' | 'tablo'>('araclar');
 
   // Cebir Input State
@@ -731,11 +730,10 @@ export function Toolbar({ onSelectTool,
           <button
             onClick={() => {
               setSidebarTab('cebir');
-              setIsCollapsed(false);
             }}
             title="Cebir Görünümü (Cebirsel İfadeler & Fonksiyonlar)"
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-              sidebarTab === 'cebir' && !isCollapsed
+              sidebarTab === 'cebir'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
@@ -747,11 +745,10 @@ export function Toolbar({ onSelectTool,
           <button
             onClick={() => {
               setSidebarTab('araclar');
-              setIsCollapsed(false);
             }}
             title="Araçlar Görünümü (Geometrik Çizim Araçları)"
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-              sidebarTab === 'araclar' && !isCollapsed
+              sidebarTab === 'araclar'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
@@ -763,11 +760,10 @@ export function Toolbar({ onSelectTool,
           <button
             onClick={() => {
               setSidebarTab('tablo');
-              setIsCollapsed(false);
             }}
             title="Hesap Tablosu Görünümü (Spreadsheet)"
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-              sidebarTab === 'tablo' && !isCollapsed
+              sidebarTab === 'tablo'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
@@ -779,7 +775,7 @@ export function Toolbar({ onSelectTool,
       </div>
 
       {/* 2. SAĞ KISIM: İÇERİK PANELİ */}
-      {!isCollapsed && (
+      {true && (
         // İkon modunda panel daralır: amaç tuvale yer açmaktır.
         <div
           className={`h-full flex flex-col min-h-0 overflow-hidden transition-[width] duration-200 ${
@@ -1306,12 +1302,12 @@ export function Toolbar({ onSelectTool,
 
       {/* Kapatma Kulakçığı */}
       <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={ikonModuDegistir}
         className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-12 rounded-r-md bg-card border border-l-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group z-40"
         style={{ left: '100%' }}
-        title={isCollapsed ? 'Araç Çubuğunu Aç (›)' : 'Araç Çubuğunu Daralt (‹)'}
+        title={ikonModu ? 'Araç Çubuğunu Genişlet (›)' : 'Araç Çubuğunu Daralt (‹)'}
       >
-        {isCollapsed ? (
+        {ikonModu ? (
           <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         ) : (
           <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
