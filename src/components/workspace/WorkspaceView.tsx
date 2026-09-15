@@ -759,13 +759,18 @@ export function WorkspaceView() {
               onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
             />
           )}
+          {/* Adobe Stili Sol Panel Kenar Aç/Kapa Düğmesi (< / >) */}
           <button
             onClick={() => setShowToolbar(!showToolbar)}
-            className="hidden lg:flex absolute top-16 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
-            style={{ left: showToolbar ? 'calc(100% + 8px)' : '8px' }}
-            title={showToolbar ? 'Araç Çubuğunu Gizle' : 'Araç Çubuğunu Göster'}
+            className="absolute top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-5 h-12 rounded-r-md bg-card border border-l-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
+            style={{ left: showToolbar ? '100%' : '0px' }}
+            title={showToolbar ? 'Araç Çubuğunu Daralt (‹)' : 'Araç Çubuğunu Aç (›)'}
           >
-            {showToolbar ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
+            {showToolbar ? (
+              <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            )}
           </button>
         </div>
 
@@ -888,15 +893,20 @@ export function WorkspaceView() {
           )}
         </div>
 
-        {/* SAĞ ÖZELLİKLER PANELİ */}
+        {/* SAĞ ÖZELLİKLER & STİL PANELİ */}
         <div className="relative flex shrink-0 h-full min-h-0">
+          {/* Adobe Stili Sağ Panel Kenar Aç/Kapa Düğmesi (< / >) */}
           <button
             onClick={() => setShowProperties(!showProperties)}
-            className="hidden lg:flex absolute top-16 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
-            style={{ right: showProperties ? 'calc(100% + 8px)' : '8px' }}
-            title={showProperties ? 'Özellikler Panelini Gizle' : 'Özellikler Panelini Göster'}
+            className="absolute top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
+            style={{ right: showProperties ? '100%' : '0px' }}
+            title={showProperties ? 'Özellikler Panelini Daralt (›)' : 'Özellikler Panelini Aç (‹)'}
           >
-            {showProperties ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
+            {showProperties ? (
+              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            ) : (
+              <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            )}
           </button>
           {showProperties &&
             (layoutMode === '3d_only' || layoutMode === 'algebra_3d' ? (
@@ -906,6 +916,7 @@ export function WorkspaceView() {
                 onDeleteSolid={handleDeleteSolid}
                 layoutMode={layoutMode}
                 onLayoutModeChange={setLayoutMode}
+                onClose={() => setShowProperties(false)}
               />
             ) : (
               <PropertiesPanel
@@ -913,6 +924,7 @@ export function WorkspaceView() {
                 onLayoutModeChange={setLayoutMode}
                 activeTab={propertiesTab}
                 onTabChange={setPropertiesTab}
+                onClose={() => setShowProperties(false)}
               />
             ))}
         </div>

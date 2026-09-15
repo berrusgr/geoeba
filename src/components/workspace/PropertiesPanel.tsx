@@ -37,6 +37,8 @@ import {
   LayoutGrid,
   Columns2,
   Box,
+  Palette,
+  ChevronRight,
 } from 'lucide-react';
 
 export type LayoutMode = 'default' | 'algebra_2d' | '2d_3d' | 'three_col' | 'algebra_3d' | '2d_only' | '3d_only';
@@ -46,6 +48,7 @@ interface PropertiesPanelProps {
   onLayoutModeChange?: (mode: LayoutMode) => void;
   activeTab?: 'ozellikler' | 'stil';
   onTabChange?: (tab: 'ozellikler' | 'stil') => void;
+  onClose?: () => void;
 }
 
 const COLOR_PRESETS = [
@@ -64,6 +67,7 @@ export function PropertiesPanel({
   onLayoutModeChange,
   activeTab,
   onTabChange,
+  onClose,
 }: PropertiesPanelProps) {
   /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi? */
   const [localTab, setLocalTab] = useState<'ozellikler' | 'stil'>('ozellikler');
@@ -177,27 +181,29 @@ export function PropertiesPanel({
   ];
 
   return (
-    <div className="w-full lg:w-72 bg-card border-t lg:border-t-0 lg:border-l border-border p-4 space-y-6 overflow-y-auto shrink-0 h-full min-h-0 select-none">
-      {/* SEKME ÇUBUĞU */}
-      <div role="tablist" aria-label="Sağ panel sekmeleri" className="flex gap-1 p-1 rounded-2xl bg-muted/60 border border-border/70">
-        {([
-          { id: 'ozellikler' as const, ad: 'Özellikler' },
-          { id: 'stil' as const, ad: 'Stil' },
-        ]).map((t) => (
+    <div className="w-full lg:w-72 bg-card border-t lg:border-t-0 lg:border-l border-border p-4 space-y-5 overflow-y-auto shrink-0 h-full min-h-0 select-none">
+      {/* PANEL BAŞLIĞI & DARALTMA BUTONU */}
+      <div className="flex items-center justify-between pb-2.5 border-b border-border/70">
+        <div className="flex items-center gap-2">
+          {sekme === 'stil' ? (
+            <Palette className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+          ) : (
+            <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          )}
+          <span className="text-xs font-black uppercase tracking-wider text-foreground">
+            {sekme === 'stil' ? 'Çizim Stili' : 'Özellikler'}
+          </span>
+        </div>
+        {onClose && (
           <button
-            key={t.id}
-            role="tab"
-            aria-selected={sekme === t.id}
-            onClick={() => setSekme(t.id)}
-            className={`flex-1 px-3 py-1.5 rounded-xl text-[11px] font-black transition-colors cursor-pointer ${
-              sekme === t.id
-                ? 'bg-card text-primary shadow-sm border border-border'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            onClick={onClose}
+            className="px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+            title="Paneli Kapat"
           >
-            {t.ad}
+            <span>Kapat</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
-        ))}
+        )}
       </div>
 
       {sekme === 'stil' && <StylePanel />}

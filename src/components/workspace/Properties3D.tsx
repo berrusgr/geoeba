@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Solid3DObject } from '@/types/workspace3d';
 import { calculate3DVolume, calculate3DSurfaceArea, getSolidPropertyCounts, generateSolidMesh, computeFaceArea } from '@/math/geometry3d';
 import { formatTurkishNumber } from '@/math/coordinates';
-import { Box, Sparkles, Trash2, CheckCircle2, RotateCw, ScanSearch, LayoutGrid, Columns2, Maximize2 } from 'lucide-react';
+import { Box, Sparkles, Trash2, CheckCircle2, RotateCw, ScanSearch, LayoutGrid, Columns2, Maximize2, ChevronRight } from 'lucide-react';
 import { LayoutMode } from './PropertiesPanel';
 
 interface Properties3DProps {
@@ -13,6 +13,7 @@ interface Properties3DProps {
   onDeleteSolid: () => void;
   layoutMode?: LayoutMode;
   onLayoutModeChange?: (mode: LayoutMode) => void;
+  onClose?: () => void;
 }
 
 const PRESET_COLORS = [
@@ -147,6 +148,7 @@ export function Properties3D({
   onDeleteSolid,
   layoutMode = '3d_only',
   onLayoutModeChange,
+  onClose,
 }: Properties3DProps) {
   const renderLayoutSelector = onLayoutModeChange && (
     <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70 text-left">
@@ -208,7 +210,7 @@ export function Properties3D({
               : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
           }`}
         >
-          <Columns2 className="w-3.5 h-3.5 shrink-0" />
+          <Columns2 className="w-3.5 h-3.5 shrink-0 text-blue-500" />
           <span className="text-[11px] truncate">Cebir + 2D</span>
         </button>
 
@@ -221,7 +223,7 @@ export function Properties3D({
               : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
           }`}
         >
-          <Columns2 className="w-3.5 h-3.5 shrink-0 text-blue-400" />
+          <Columns2 className="w-3.5 h-3.5 shrink-0 text-purple-500" />
           <span className="text-[11px] truncate">2D + 3D</span>
         </button>
 
@@ -270,6 +272,19 @@ export function Properties3D({
   if (!selectedSolid) {
     return (
       <div className="flex flex-col bg-card border-l border-border w-20 lg:w-72 shrink-0 h-full min-h-0 select-none overflow-y-auto p-4 space-y-4 text-center justify-start items-center">
+        {onClose && (
+          <div className="w-full flex items-center justify-between pb-2 border-b border-border/70">
+            <span className="text-xs font-black uppercase tracking-wider text-foreground">3D Özellikler</span>
+            <button
+              onClick={onClose}
+              className="px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+              title="Paneli Kapat"
+            >
+              <span>Kapat</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         <div className="w-full">{renderLayoutSelector}</div>
         <div className="w-14 h-14 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-1 mt-4">
           <Box className="w-7 h-7" />
@@ -314,6 +329,19 @@ export function Properties3D({
 
   return (
     <div className="flex flex-col bg-card border-l border-border w-20 lg:w-80 shrink-0 h-full min-h-0 select-none overflow-y-auto p-4 space-y-4">
+      {onClose && (
+        <div className="flex items-center justify-between pb-2 border-b border-border/70">
+          <span className="text-xs font-black uppercase tracking-wider text-foreground">3D Özellikler</span>
+          <button
+            onClick={onClose}
+            className="px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+            title="Paneli Kapat"
+          >
+            <span>Kapat</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
       {renderLayoutSelector}
       {/* 1. BAŞLIK */}
       <div className="flex items-center justify-between pb-2 border-b border-border">
