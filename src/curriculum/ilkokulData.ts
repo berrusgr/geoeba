@@ -10,33 +10,54 @@ export const ilkokulLevel: Level = {
     {
       "gradeNumber": 1,
       "title": "1. Sınıf",
-      "subtitle": "Oyunlu & Görsel Görev Dünyası",
-      "description": "Okuma yazma gerektirmeyen meyve-hayvan saymaca oyunları, labirent yön bulma, paralarımız, şekiller ve nesne grafiği.",
+      "subtitle": "1. Sınıf Matematik",
+      "description": "1. Sınıf öğretim programı kazanımları.",
       "themes": [
         {
-          "id": "tymm-1-geo-1",
-          "code": "MAT.1.3",
+          "id": "theme-1-1",
+          "code": "MAT.1.1",
           "orderNumber": 1,
-          "themeName": "Nesnelerin Geometrisi (1)",
-          "fullTitle": "MAT.1.3. Nesnelerin Geometrisi (1)",
-          "lessonHours": 15,
+          "themeName": "NESNELERİN GEOMETRİSİ (1)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (1)",
+          "lessonHours": 10,
           "outcomeCount": 2,
-          "description": "Yer, yön, konum bildiren kavramlar (altında, üstünde, sağında, solunda) ve eş nesneler.",
+          "description": "",
           "colorTheme": "#10b981",
           "topics": [
             {
-              "id": "1-geo-yon-konum",
-              "title": "Yer, Yön ve Konum Bulmaca",
-              "code": "MAT.1.3.1",
+              "id": "topic-1-1-1-yer-yon-ve-konum-bildiren-i-fa",
+              "title": "Yer, Yön ve Konum Bildiren İfadeler",
+              "code": "MAT.1.1.1",
               "category": "geometri",
-              "badge": "Konum & Yön",
-              "description": "Sevimli tavşanı havuç hedefine ulaştırmak için yön yönergelerini takip edin.",
-              "learningOutcomes": [
-                "Hedefe ulaşmak için mesafeleri ve yönleri içeren yönergeleri çözümler."
-              ],
+              "badge": "Yer, Yön ve Kon",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-geo-yon-konum-ornek",
+                  "id": "act-1-1-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-1-2-eslik",
+              "title": "Eşlik",
+              "code": "MAT.1.1.2",
+              "category": "geometri",
+              "badge": "Eşlik",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-1-2-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
                   "description": "",
@@ -52,29 +73,188 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-1-sayilar-1",
-          "code": "MAT.1.1",
+          "id": "theme-1-2",
+          "code": "MAT.1.2",
           "orderNumber": 2,
-          "themeName": "Sayılar ve Nicelikler (1)",
-          "fullTitle": "MAT.1.1. Sayılar ve Nicelikler (1)",
-          "lessonHours": 57,
-          "outcomeCount": 7,
-          "description": "20’ye kadar olan sayılar, kardinal değer, ritmik sayma, azalan-artan örüntüler ve tahmin.",
+          "themeName": "SAYILAR VE NİCELİKLER (1)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (1)",
+          "lessonHours": 10,
+          "outcomeCount": 8,
+          "description": "",
           "colorTheme": "#f43f5e",
           "topics": [
             {
-              "id": "1-sayi-sayma-20",
-              "title": "20’ye Kadar Nesne Sayma & Örüntüler",
-              "code": "MAT.1.1.1",
+              "id": "topic-1-2-1-rakamlar",
+              "title": "Rakamlar",
+              "code": "MAT.1.2.1",
               "category": "sayi",
-              "badge": "Sayılar",
-              "description": "Elmalar, yıldızlar ve renkli toplarla 20’ye kadar sayma ve örüntü tamamlama.",
-              "learningOutcomes": [
-                "Rakamları ve 20’ye kadar olan sayıları nicelikleri temsil etmek için kullanır."
-              ],
+              "badge": "Rakamlar",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-sayi-sayma-20-ornek",
+                  "id": "act-1-2-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-2-sayilar",
+              "title": "Sayılar",
+              "code": "MAT.1.2.2",
+              "category": "sayi",
+              "badge": "Sayılar",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-3-nesne-sayilarini-belirleme",
+              "title": "Nesne Sayılarını Belirleme",
+              "code": "MAT.1.2.3",
+              "category": "sayi",
+              "badge": "Nesne Sayıların",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-4-nesnelerin-sira-sayisi",
+              "title": "Nesnelerin Sıra Sayısı",
+              "code": "MAT.1.2.4",
+              "category": "sayi",
+              "badge": "Nesnelerin Sıra",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-5-nesne-sayilarini-karsilastirma",
+              "title": "Nesne Sayılarını Karşılaştırma",
+              "code": "MAT.1.2.5",
+              "category": "sayi",
+              "badge": "Nesne Sayıların",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-6-i-leriye-ve-geriye-ritmik-saym",
+              "title": "İleriye ve Geriye Ritmik Sayma",
+              "code": "MAT.1.2.6",
+              "category": "sayi",
+              "badge": "İleriye ve Geri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-7-sayi-ve-sekil-oruntuleri",
+              "title": "Sayı ve Şekil Örüntüleri",
+              "code": "MAT.1.2.7",
+              "category": "sayi",
+              "badge": "Sayı ve Şekil Ö",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-2-8-nesne-sayisini-tahmin-etme",
+              "title": "Nesne Sayısını Tahmin Etme",
+              "code": "MAT.1.2.8",
+              "category": "sayi",
+              "badge": "Nesne Sayısını ",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-2-8-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
                   "description": "",
@@ -90,31 +270,29 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-1-olcme-1",
-          "code": "MAT.1.1",
+          "id": "theme-1-3",
+          "code": "MAT.1.3",
           "orderNumber": 3,
-          "themeName": "Sayılar ve Nicelikler (2) — Ölçme",
-          "fullTitle": "MAT.1.1. Sayılar ve Nicelikler (2) — Standart Olmayan Ölçme",
-          "lessonHours": 18,
+          "themeName": "SAYILAR VE NİCELİKLER (2)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (2)",
+          "lessonHours": 10,
           "outcomeCount": 1,
-          "description": "Parmak, karış, ayak, adım ile uzunluk ölçme; tahterevalli ile ağır-hafif kütle karşılaştırması.",
+          "description": "",
           "colorTheme": "#f59e0b",
           "topics": [
             {
-              "id": "1-olcme-karis-adim",
-              "title": "Karış, Adım ve Tahterevalli Dengesi",
-              "code": "MAT.1.1.8",
-              "category": "olcme",
-              "badge": "Ölçme & Tartma",
-              "description": "Masayı karışla, sınıfı adımla ölçme; tahterevallide fil ve kuşu dengeleme.",
-              "learningOutcomes": [
-                "Standart olmayan ölçme araçları ile uzunluk ve kütleyi tahmin eder."
-              ],
+              "id": "topic-1-3-1-uzunluk-ve-kutle-olcme",
+              "title": "Uzunluk ve Kütle Ölçme",
+              "code": "MAT.1.3.1",
+              "category": "sayi",
+              "badge": "Uzunluk ve Kütl",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-olcme-karis-adim-ornek",
+                  "id": "act-1-3-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "olcme",
+                  "category": "sayi",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#f59e0b",
@@ -128,31 +306,98 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-1-cebir-1",
-          "code": "MAT.1.2",
+          "id": "theme-1-4",
+          "code": "MAT.1.4",
           "orderNumber": 4,
-          "themeName": "İşlemlerden Cebirsel Düşünmeye",
-          "fullTitle": "MAT.1.2. İşlemlerden Cebirsel Düşünmeye",
-          "lessonHours": 50,
+          "themeName": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "fullTitle": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "lessonHours": 10,
           "outcomeCount": 4,
-          "description": "20’ye kadar toplama ve çıkarma, terazi eşitlik modeli, zihinden işlem stratejileri.",
+          "description": "",
           "colorTheme": "#3b82f6",
           "topics": [
             {
-              "id": "1-cebir-toplama-cikarma",
-              "title": "Resimli Toplama, Çıkarma & Terazi Eşitliği",
-              "code": "MAT.1.2.1",
-              "category": "islemler",
-              "badge": "Dört İşlem",
-              "description": "Meyveleri bir araya getirme (+), sepetten meyve eksiltme (-) ve terazide eşitlik sağlama.",
-              "learningOutcomes": [
-                "Günlük yaşamın içerdiği toplama ve çıkarma işlemlerini çözümler."
-              ],
+              "id": "topic-1-4-1-toplama-ve-cikarma-i-slemi",
+              "title": "Toplama ve Çıkarma İşlemi",
+              "code": "MAT.1.4.1",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-cebir-toplama-cikarma-ornek",
+                  "id": "act-1-4-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "islemler",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-4-2-toplama-ve-cikarma-i-sleminde-",
+              "title": "Toplama ve Çıkarma İşleminde Tahmin ve Zihinden İşlem",
+              "code": "MAT.1.4.2",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-4-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-4-3-esit-i-sareti",
+              "title": "Eşit İşareti",
+              "code": "MAT.1.4.3",
+              "category": "hepsi",
+              "badge": "Eşit İşareti",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-4-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-4-4-toplama-ve-cikarma-i-liskisi",
+              "title": "Toplama ve Çıkarma İlişkisi",
+              "code": "MAT.1.4.4",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-4-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#3b82f6",
@@ -166,29 +411,27 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-1-para-1",
-          "code": "MAT.1.1",
+          "id": "theme-1-5",
+          "code": "MAT.1.5",
           "orderNumber": 5,
-          "themeName": "Sayılar ve Nicelikler (3) — Paralarımız",
-          "fullTitle": "MAT.1.1. Sayılar ve Nicelikler (3) — Paralarımız",
-          "lessonHours": 7,
+          "themeName": "SAYILAR VE NİCELİKLER (3)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (3)",
+          "lessonHours": 10,
           "outcomeCount": 1,
-          "description": "1 TL, 5 TL, 10 TL, 20 TL, 50 TL, 100 TL ve 200 TL madeni ve kâğıt paralarımızın tanıtımı.",
+          "description": "",
           "colorTheme": "#eab308",
           "topics": [
             {
-              "id": "1-para-tanima",
-              "title": "Paralarımızı Tanıyalım & Alışveriş İstasyonu",
-              "code": "MAT.1.1.9",
+              "id": "topic-1-5-1-paralarimiz",
+              "title": "Paralarımız",
+              "code": "MAT.1.5.1",
               "category": "sayi",
               "badge": "Paralarımız",
-              "description": "Türk lirasını tanıma, kumbarada para biriktirme ve manavdan alışveriş yapma.",
-              "learningOutcomes": [
-                "Paraların temsil ettiği büyüklükleri tanır."
-              ],
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-para-tanima-ornek",
+                  "id": "act-1-5-1-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
                   "description": "",
@@ -204,29 +447,73 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-1-geo-2",
-          "code": "MAT.1.3",
+          "id": "theme-1-6",
+          "code": "MAT.1.6",
           "orderNumber": 6,
-          "themeName": "Nesnelerin Geometrisi (2)",
-          "fullTitle": "MAT.1.3. Nesnelerin Geometrisi (2) — Şekiller",
-          "lessonHours": 15,
+          "themeName": "NESNELERİN GEOMETRİSİ (2)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (2)",
+          "lessonHours": 10,
           "outcomeCount": 3,
-          "description": "Yuvarlak ve köşeli nesneler; üçgen, kare, dikdörtgen ve çemberin biçimsel özellikleri.",
+          "description": "",
           "colorTheme": "#8b5cf6",
           "topics": [
             {
-              "id": "1-geo-sekil-kose",
-              "title": "Üçgen, Kare, Dikdörtgen & Çember",
-              "code": "MAT.1.3.3",
+              "id": "topic-1-6-1-nesnelerin-ozellikleri",
+              "title": "Nesnelerin Özellikleri",
+              "code": "MAT.1.6.1",
               "category": "geometri",
-              "badge": "Geometrik Şekiller",
-              "description": "Köşesi olan ve olmayan nesneleri ayırma, şekillerden ev ve robot tasarlama.",
-              "learningOutcomes": [
-                "Biçimsel özelliklerine göre geometrik şekilleri sınıflandırır."
-              ],
+              "badge": "Nesnelerin Özel",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-geo-sekil-kose-ornek",
+                  "id": "act-1-6-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#8b5cf6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-6-2-geometrik-yapilar",
+              "title": "Geometrik Yapılar",
+              "code": "MAT.1.6.2",
+              "category": "geometri",
+              "badge": "Geometrik Yapıl",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-6-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#8b5cf6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-1-6-3-geometrik-sekiller",
+              "title": "Geometrik Şekiller",
+              "code": "MAT.1.6.3",
+              "category": "geometri",
+              "badge": "Geometrik Şekil",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-1-6-3-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
                   "description": "",
@@ -242,29 +529,27 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-1-veri-1",
-          "code": "MAT.1.4",
+          "id": "theme-1-7",
+          "code": "MAT.1.7",
           "orderNumber": 7,
-          "themeName": "Veriye Dayalı Araştırma",
-          "fullTitle": "MAT.1.4. Veriye Dayalı Araştırma — Nesne Grafiği",
+          "themeName": "VERİYE DAYALI ARAŞTIRMA",
+          "fullTitle": "VERİYE DAYALI ARAŞTIRMA",
           "lessonHours": 10,
           "outcomeCount": 1,
-          "description": "Kategorik veriye dayalı tek veri grubuna yönelik çetele, sıklık tablosu ve nesne grafiği.",
+          "description": "",
           "colorTheme": "#06b6d4",
           "topics": [
             {
-              "id": "1-veri-nesne-grafigi",
-              "title": "Çetele & Nesne Grafiği Oluşturma",
-              "code": "MAT.1.4.1",
+              "id": "topic-1-7-1-veri",
+              "title": "Veri",
+              "code": "MAT.1.7.1",
               "category": "istatistik",
-              "badge": "Veri & Grafik",
-              "description": "Sınıfımızdaki en sevilen meyveleri sayarak nesne grafiğine yerleştirelim.",
-              "learningOutcomes": [
-                "Kategorik veriye dayalı temel veri grubu ile çalışır ve nesne grafiği çizer."
-              ],
+              "badge": "Veri",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-1-veri-nesne-grafigi-ornek",
+                  "id": "act-1-7-1-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
                   "description": "",
@@ -285,33 +570,123 @@ export const ilkokulLevel: Level = {
     {
       "gradeNumber": 2,
       "title": "2. Sınıf",
-      "subtitle": "Etkileşimli Matematik",
-      "description": "100’e kadar sayılar, basamak değeri, bütün-yarım-çeyrek, çarpma ve bölmeye giriş, saatler ve simetri.",
+      "subtitle": "2. Sınıf Matematik",
+      "description": "2. Sınıf öğretim programı kazanımları.",
       "themes": [
         {
-          "id": "tymm-2-geo-1",
-          "code": "MAT.2.3",
+          "id": "theme-2-1",
+          "code": "MAT.2.1",
           "orderNumber": 1,
-          "themeName": "Nesnelerin Geometrisi (1)",
-          "fullTitle": "MAT.2.3. Nesnelerin Geometrisi (1) — 3D Cisimler",
-          "lessonHours": 25,
+          "themeName": "NESNELERİN GEOMETRİSİ (1)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (1)",
+          "lessonHours": 10,
           "outcomeCount": 5,
-          "description": "Küp, kare prizma, dikdörtgen prizma, üçgen prizma, küre, silindir ve sıvı ölçme.",
+          "description": "",
           "colorTheme": "#10b981",
           "topics": [
             {
-              "id": "2-geo-cisimler",
-              "title": "Geometrik Cisimler & Sıvı Ölçme",
-              "code": "MAT.2.3.1",
+              "id": "topic-2-1-1-geometrik-cisimler",
+              "title": "Geometrik Cisimler",
+              "code": "MAT.2.1.1",
               "category": "geometri",
-              "badge": "3D Cisimler",
-              "description": "Günlük nesneleri küp, silindir, küre olarak tanıma ve kaplarla sıvı miktarını tahmin etme.",
-              "learningOutcomes": [
-                "Geometrik cisimleri sınıflandırır ve sıvı miktarını tahmin eder."
-              ],
+              "badge": "Geometrik Cisim",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-2-geo-cisimler-ornek",
+                  "id": "act-2-1-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-1-2-geometrik-yapilar",
+              "title": "Geometrik Yapılar",
+              "code": "MAT.2.1.2",
+              "category": "geometri",
+              "badge": "Geometrik Yapıl",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-1-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-1-3-geometrik-sekiller",
+              "title": "Geometrik Şekiller",
+              "code": "MAT.2.1.3",
+              "category": "geometri",
+              "badge": "Geometrik Şekil",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-1-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-1-4-bicimsel-ozellikler",
+              "title": "Biçimsel Özellikler",
+              "code": "MAT.2.1.4",
+              "category": "geometri",
+              "badge": "Biçimsel Özelli",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-1-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-1-5-sivi-olcme",
+              "title": "Sıvı Ölçme",
+              "code": "MAT.2.1.5",
+              "category": "geometri",
+              "badge": "Sıvı Ölçme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-1-5-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
                   "description": "",
@@ -327,31 +702,341 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-2-sayilar-1",
-          "code": "MAT.2.1",
+          "id": "theme-2-2",
+          "code": "MAT.2.2",
           "orderNumber": 2,
-          "themeName": "Sayılar ve Nicelikler (1)",
-          "fullTitle": "MAT.2.1. Sayılar ve Nicelikler (1) — 100’e Kadar Sayılar",
-          "lessonHours": 41,
+          "themeName": "SAYILAR VE NİCELİKLER (1)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (1)",
+          "lessonHours": 10,
           "outcomeCount": 6,
-          "description": "100’e kadar sayılar, basamak değeri (onluk-birlik), 2-3-4-5 ritmik sayma, sayı doğrusu ve yuvarlama.",
+          "description": "",
+          "colorTheme": "#f43f5e",
+          "topics": [
+            {
+              "id": "topic-2-2-1-sayilar",
+              "title": "Sayılar",
+              "code": "MAT.2.2.1",
+              "category": "sayi",
+              "badge": "Sayılar",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-2-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-2-2-sayilari-cozumleme",
+              "title": "Sayıları Çözümleme",
+              "code": "MAT.2.2.2",
+              "category": "sayi",
+              "badge": "Sayıları Çözüml",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-2-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-2-3-sayilarin-sirasi",
+              "title": "Sayıların Sırası",
+              "code": "MAT.2.2.3",
+              "category": "sayi",
+              "badge": "Sayıların Sıras",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-2-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-2-4-ritmik-sayma",
+              "title": "Ritmik Sayma",
+              "code": "MAT.2.2.4",
+              "category": "sayi",
+              "badge": "Ritmik Sayma",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-2-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-2-5-sayi-oruntuleri",
+              "title": "Sayı Örüntüleri",
+              "code": "MAT.2.2.5",
+              "category": "sayi",
+              "badge": "Sayı Örüntüleri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-2-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-2-6-nesne-sayisini-tahmin-etme",
+              "title": "Nesne Sayısını Tahmin Etme",
+              "code": "MAT.2.2.6",
+              "category": "sayi",
+              "badge": "Nesne Sayısını ",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-2-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-2-3",
+          "code": "MAT.2.3",
+          "orderNumber": 3,
+          "themeName": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "fullTitle": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "lessonHours": 10,
+          "outcomeCount": 8,
+          "description": "",
           "colorTheme": "#f59e0b",
           "topics": [
             {
-              "id": "2-sayi-onluk-birlik",
-              "title": "Onluk-Birlik Basamak & Ritmik Sayma",
-              "code": "MAT.2.1.1",
-              "category": "sayi",
-              "badge": "Basamak Değeri",
-              "description": "Onluk taban blokları, yüzlük tablo, sayı doğrusu ve en yakın onluğa yuvarlama.",
-              "learningOutcomes": [
-                "100’e kadar olan niceliklerin sembolik temsillerinden yararlanır ve sayıları çözümler."
-              ],
+              "id": "topic-2-3-1-toplama-ve-cikarma-i-slemleri",
+              "title": "Toplama ve Çıkarma İşlemleri",
+              "code": "MAT.2.3.1",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-2-sayi-onluk-birlik-ornek",
+                  "id": "act-2-3-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "sayi",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-2-i-slem-sonucunu-tahmin-etme",
+              "title": "İşlem Sonucunu Tahmin Etme",
+              "code": "MAT.2.3.2",
+              "category": "hepsi",
+              "badge": "İşlem Sonucunu ",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-3-zihinden-toplama-ve-cikarma",
+              "title": "Zihinden Toplama ve Çıkarma",
+              "code": "MAT.2.3.3",
+              "category": "hepsi",
+              "badge": "Zihinden Toplam",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-4-toplama-ve-cikarma-i-liskisi",
+              "title": "Toplama ve Çıkarma İlişkisi",
+              "code": "MAT.2.3.4",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-5-carpma-i-slemi",
+              "title": "Çarpma İşlemi",
+              "code": "MAT.2.3.5",
+              "category": "hepsi",
+              "badge": "Çarpma İşlemi",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-6-bolme-i-slemi",
+              "title": "Bölme İşlemi",
+              "code": "MAT.2.3.6",
+              "category": "hepsi",
+              "badge": "Bölme İşlemi",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-7-carpma-ve-bolmeyi-yorumlama",
+              "title": "Çarpma ve Bölmeyi Yorumlama",
+              "code": "MAT.2.3.7",
+              "category": "hepsi",
+              "badge": "Çarpma ve Bölme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-3-8-esitlik",
+              "title": "Eşitlik",
+              "code": "MAT.2.3.8",
+              "category": "hepsi",
+              "badge": "Eşitlik",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-3-8-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#f59e0b",
@@ -365,31 +1050,121 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-2-cebir-1",
-          "code": "MAT.2.2",
-          "orderNumber": 3,
-          "themeName": "İşlemlerden Cebirsel Düşünmeye",
-          "fullTitle": "MAT.2.2. İşlemlerden Cebirsel Düşünmeye",
-          "lessonHours": 55,
-          "outcomeCount": 6,
-          "description": "Eldeli toplama, onluk bozarak çıkarma, çarpma (tekrarlı toplama) ve bölme (ardışık çıkarma).",
+          "id": "theme-2-4",
+          "code": "MAT.2.4",
+          "orderNumber": 4,
+          "themeName": "SAYILAR VE NİCELİKLER (2)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (2)",
+          "lessonHours": 10,
+          "outcomeCount": 5,
+          "description": "",
           "colorTheme": "#3b82f6",
           "topics": [
             {
-              "id": "2-cebir-dortislem",
-              "title": "Toplama, Çıkarma, Çarpma & Bölme",
-              "code": "MAT.2.2.1",
-              "category": "islemler",
-              "badge": "Dört İşlem",
-              "description": "Problem çözme, eldeli toplama, çarpım tablosuna giriş (1-5) ve eşit paylaştırma.",
-              "learningOutcomes": [
-                "Toplama, çıkarma, çarpma ve bölme işlemlerini anlamlandırır ve problem çözer."
-              ],
+              "id": "topic-2-4-1-butun-yarim-ve-ceyrek",
+              "title": "Bütün, Yarım ve Çeyrek",
+              "code": "MAT.2.4.1",
+              "category": "sayi",
+              "badge": "Bütün, Yarım ve",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-2-cebir-dortislem-ornek",
+                  "id": "act-2-4-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "islemler",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-4-2-paralar",
+              "title": "Paralar",
+              "code": "MAT.2.4.2",
+              "category": "sayi",
+              "badge": "Paralar",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-4-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-4-3-zaman-olcme",
+              "title": "Zaman Ölçme",
+              "code": "MAT.2.4.3",
+              "category": "sayi",
+              "badge": "Zaman Ölçme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-4-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-4-4-uzunluk-kutle-olcme",
+              "title": "Uzunluk Kütle Ölçme",
+              "code": "MAT.2.4.4",
+              "category": "sayi",
+              "badge": "Uzunluk Kütle Ö",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-4-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-4-5-uzunluk-kutle-tahmini",
+              "title": "Uzunluk-Kütle Tahmini",
+              "code": "MAT.2.4.5",
+              "category": "sayi",
+              "badge": "Uzunluk-Kütle T",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-4-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#3b82f6",
@@ -403,72 +1178,55 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-2-sayilar-2",
-          "code": "MAT.2.1",
-          "orderNumber": 4,
-          "themeName": "Sayılar ve Nicelikler (2)",
-          "fullTitle": "MAT.2.1. Sayılar ve Nicelikler (2) — Kesirler, Para & Zaman",
-          "lessonHours": 30,
-          "outcomeCount": 5,
-          "description": "Bütün-yarım-çeyrek, paralarımız (TL-Kuruş dönüşümü), analog ve dijital saat okuma, metre/cm, kg/g.",
-          "colorTheme": "#ec4899",
-          "topics": [
-            {
-              "id": "2-kesir-para-zaman",
-              "title": "Kesirler, Saatler, Paralarımız & Metre",
-              "code": "MAT.2.1.7",
-              "category": "olcme",
-              "badge": "Kesir & Zaman",
-              "description": "Pizzada bütün/yarım/çeyrek, analog saat akrep-yelkovan, kuruş-TL ve metre cetveli.",
-              "learningOutcomes": [
-                "Bütün, yarım ve çeyreği çözümler; saatleri ve paraları okur."
-              ],
-              "activities": [
-                {
-                  "id": "act-2-kesir-para-zaman-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "olcme",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#ec4899",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-2-geo-2",
-          "code": "MAT.2.3",
+          "id": "theme-2-5",
+          "code": "MAT.2.5",
           "orderNumber": 5,
-          "themeName": "Nesnelerin Geometrisi (2)",
-          "fullTitle": "MAT.2.3. Nesnelerin Geometrisi (2) — Harita & Simetri",
-          "lessonHours": 11,
+          "themeName": "NESNELERİN GEOMETRİSİ (2)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (2)",
+          "lessonHours": 10,
           "outcomeCount": 2,
-          "description": "Mesafe ve yönlerle hedefe ulaşma haritası, katlama çizgisi ile ayna simetrisi.",
-          "colorTheme": "#8b5cf6",
+          "description": "",
+          "colorTheme": "#eab308",
           "topics": [
             {
-              "id": "2-geo-simetri-harita",
-              "title": "Harita ile Yön Bulma & Simetri Doğrusu",
-              "code": "MAT.2.3.6",
+              "id": "topic-2-5-1-uzamsal-i-liskiler",
+              "title": "Uzamsal İlişkiler",
+              "code": "MAT.2.5.1",
               "category": "geometri",
-              "badge": "Simetri & Harita",
-              "description": "Kroki üzerinde okul yolunu bulma ve kelebek kanadında simetri doğrusunu katlama.",
-              "learningOutcomes": [
-                "Hedefe ulaşmak için strateji seçer ve simetrik şekilleri ayırt eder."
-              ],
+              "badge": "Uzamsal İlişkil",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-2-geo-simetri-harita-ornek",
+                  "id": "act-2-5-1-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
                   "description": "",
                   "learningGoal": "",
-                  "folderColor": "#8b5cf6",
+                  "folderColor": "#eab308",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-2-5-2-simetrik-sekiller",
+              "title": "Simetrik Şekiller",
+              "code": "MAT.2.5.2",
+              "category": "geometri",
+              "badge": "Simetrik Şekill",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-2-5-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#eab308",
                   "initialObjects": [],
                   "steps": [],
                   "validationRules": [],
@@ -479,34 +1237,32 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-2-veri-1",
-          "code": "MAT.2.4",
+          "id": "theme-2-6",
+          "code": "MAT.2.6",
           "orderNumber": 6,
-          "themeName": "Veriye Dayalı Araştırma",
-          "fullTitle": "MAT.2.4. Veriye Dayalı Araştırma — Şekil Grafiği",
+          "themeName": "VERİYE DAYALI ARAŞTIRMA",
+          "fullTitle": "VERİYE DAYALI ARAŞTIRMA",
           "lessonHours": 10,
           "outcomeCount": 1,
-          "description": "İki veri grubuna yönelik çetele, sıklık tablosu ve şekil grafiği oluşturma ve yorumlama.",
-          "colorTheme": "#06b6d4",
+          "description": "",
+          "colorTheme": "#8b5cf6",
           "topics": [
             {
-              "id": "2-veri-sekil-grafigi",
-              "title": "İki Veri Grubu & Şekil Grafiği",
-              "code": "MAT.2.4.1",
+              "id": "topic-2-6-1-kategorik-veri",
+              "title": "Kategorik Veri",
+              "code": "MAT.2.6.1",
               "category": "istatistik",
-              "badge": "Şekil Grafiği",
-              "description": "Kız ve erkek öğrencilerin sevdikleri mevsimleri şekil grafiğinde karşılaştıralım.",
-              "learningOutcomes": [
-                "Kategorik veriye dayalı iki veri grubu ile çalışır ve şekil grafiği çizer."
-              ],
+              "badge": "Kategorik Veri",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-2-veri-sekil-grafigi-ornek",
+                  "id": "act-2-6-1-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
                   "description": "",
                   "learningGoal": "",
-                  "folderColor": "#06b6d4",
+                  "folderColor": "#8b5cf6",
                   "initialObjects": [],
                   "steps": [],
                   "validationRules": [],
@@ -522,149 +1278,194 @@ export const ilkokulLevel: Level = {
     {
       "gradeNumber": 3,
       "title": "3. Sınıf",
-      "subtitle": "Etkileşimli Matematik",
-      "description": "1000’e kadar sayılar, birim kesirler, tek/çift sayılar, geometrik cisimlerin köşe-yüz-ayrıtları, çevre uzunluğu ve nokta grafiği.",
+      "subtitle": "3. Sınıf Matematik",
+      "description": "3. Sınıf öğretim programı kazanımları.",
       "themes": [
         {
-          "id": "tymm-3-sayilar-1",
+          "id": "theme-3-1",
           "code": "MAT.3.1",
           "orderNumber": 1,
-          "themeName": "Sayılar ve Nicelikler (1)",
-          "fullTitle": "MAT.3.1. Sayılar ve Nicelikler (1) — 1000’e Kadar Sayılar",
-          "lessonHours": 26,
+          "themeName": "SAYILAR VE NİCELİKLER (1)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (1)",
+          "lessonHours": 10,
           "outcomeCount": 8,
-          "description": "3 basamaklı sayılar, basamak değeri, tek-çift sayıların toplamı, 6-7-8-9 ritmik sayma.",
-          "colorTheme": "#f59e0b",
-          "topics": [
-            {
-              "id": "3-sayi-1000",
-              "title": "3 Basamaklı Sayılar, Tek/Çift & Ritmik Sayma",
-              "code": "MAT.3.1.1",
-              "category": "sayi",
-              "badge": "3 Basamaklı Sayılar",
-              "description": "Yüzlük bloklar, tek-çift sayı genellemeleri ve 1000 içinde yüzer ritmik sayma.",
-              "learningOutcomes": [
-                "1000’e kadar olan sayıları çözümler, tek-çift ilişkisini açıklar."
-              ],
-              "activities": [
-                {
-                  "id": "act-3-sayi-1000-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "sayi",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#f59e0b",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-3-sayilar-2",
-          "code": "MAT.3.1",
-          "orderNumber": 2,
-          "themeName": "Sayılar ve Nicelikler (2) — Kesirler & Ölçme",
-          "fullTitle": "MAT.3.1. Sayılar ve Nicelikler (2) — Birim Kesir & Zaman/Ölçme",
-          "lessonHours": 45,
-          "outcomeCount": 8,
-          "description": "Birim kesirler (1/n), pay-payda ilişkisi, saat-dakika-saniye, kilometre, ton ve para dönüşümleri.",
-          "colorTheme": "#ec4899",
-          "topics": [
-            {
-              "id": "3-kesir-birim",
-              "title": "Birim Kesirler & Pay-Payda İlişkisi",
-              "code": "MAT.3.1.9",
-              "category": "sayi",
-              "badge": "Birim Kesir",
-              "description": "Bir bütünü 4 eş parçaya bölüp 1/4 birim kesrini sayı doğrusunda ve modelde gösterme.",
-              "learningOutcomes": [
-                "Birim kesirleri modeller ve pay-payda ilişkisini çözümler."
-              ],
-              "activities": [
-                {
-                  "id": "act-3-kesir-birim-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "sayi",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#ec4899",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-3-cebir-1",
-          "code": "MAT.3.2",
-          "orderNumber": 3,
-          "themeName": "İşlemlerden Cebirsel Düşünmeye",
-          "fullTitle": "MAT.3.2. İşlemlerden Cebirsel Düşünmeye",
-          "lessonHours": 55,
-          "outcomeCount": 8,
-          "description": "3 basamaklı 4 işlem, zihinden işlem stratejileri, kısa yoldan 10 ve 100 ile çarpma/bölme, yönergeler.",
-          "colorTheme": "#3b82f6",
-          "topics": [
-            {
-              "id": "3-cebir-dortislem",
-              "title": "3 Basamaklı Dört İşlem & Kısa Yollar",
-              "code": "MAT.3.2.1",
-              "category": "islemler",
-              "badge": "Dört İşlem",
-              "description": "Eldeli toplama, onluk bozarak çıkarma, 10/100 ile kısa yoldan çarpma ve problem kurma.",
-              "learningOutcomes": [
-                "3 basamaklı sayılarla dört işlem yapar ve problem durumlarını yapılandırır."
-              ],
-              "activities": [
-                {
-                  "id": "act-3-cebir-dortislem-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "islemler",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#3b82f6",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-3-geo-1",
-          "code": "MAT.3.3",
-          "orderNumber": 4,
-          "themeName": "Nesnelerin Geometrisi (1)",
-          "fullTitle": "MAT.3.3. Nesnelerin Geometrisi (1) — Şekil ve Çevre",
-          "lessonHours": 21,
-          "outcomeCount": 5,
-          "description": "Geometrik cisimlerin köşe-yüz-ayrıtları; çokgenler (üçgen, dörtgen, beşgen, altıgen, sekizgen), köşegenler, çevre uzunluğu ve litre.",
+          "description": "",
           "colorTheme": "#10b981",
           "topics": [
             {
-              "id": "3-geo-kose-yuz-ayrit",
-              "title": "Köşe, Yüz, Ayrıt, Çokgenler & Çevre",
-              "code": "MAT.3.3.1",
-              "category": "geometri",
-              "badge": "Çokgenler & Çevre",
-              "description": "Küpün 6 yüzü, 8 köşesi, 12 ayrıtı; çokgenlerin kenar sayıları, köşegenler ve çevre uzunluğu.",
-              "learningOutcomes": [
-                "Geometrik cisimlerin özelliklerini yorumlar ve şekillerin çevre uzunluğunu hesaplar."
-              ],
+              "id": "topic-3-1-1-sayilar",
+              "title": "Sayılar",
+              "code": "MAT.3.1.1",
+              "category": "sayi",
+              "badge": "Sayılar",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-3-geo-kose-yuz-ayrit-ornek",
+                  "id": "act-3-1-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "geometri",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-2-sayilari-cozumleme",
+              "title": "Sayıları Çözümleme",
+              "code": "MAT.3.1.2",
+              "category": "sayi",
+              "badge": "Sayıları Çözüml",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-3-sayilarin-sirasi",
+              "title": "Sayıların Sırası",
+              "code": "MAT.3.1.3",
+              "category": "sayi",
+              "badge": "Sayıların Sıras",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-4-ritmik-sayma",
+              "title": "Ritmik Sayma",
+              "code": "MAT.3.1.4",
+              "category": "sayi",
+              "badge": "Ritmik Sayma",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-5-tek-ve-cift-sayilar",
+              "title": "Tek ve Çift Sayılar",
+              "code": "MAT.3.1.5",
+              "category": "sayi",
+              "badge": "Tek ve Çift Say",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-6-tek-ve-cift-sayilarin-toplami",
+              "title": "Tek ve Çift Sayıların Toplamı",
+              "code": "MAT.3.1.6",
+              "category": "sayi",
+              "badge": "Tek ve Çift Say",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-7-oruntuler",
+              "title": "Örüntüler",
+              "code": "MAT.3.1.7",
+              "category": "sayi",
+              "badge": "Örüntüler",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-1-8-nesne-sayisini-tahmin-etme",
+              "title": "Nesne Sayısını Tahmin Etme",
+              "code": "MAT.3.1.8",
+              "category": "sayi",
+              "badge": "Nesne Sayısını ",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-1-8-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#10b981",
@@ -678,34 +1479,216 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-3-geo-2",
-          "code": "MAT.3.3",
-          "orderNumber": 5,
-          "themeName": "Nesnelerin Geometrisi (2) — Simetri & Kodlama",
-          "fullTitle": "MAT.3.3. Nesnelerin Geometrisi (2) — Simetri ve Kodlama",
+          "id": "theme-3-2",
+          "code": "MAT.3.2",
+          "orderNumber": 2,
+          "themeName": "SAYILAR VE NİCELİKLER (2)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (2)",
           "lessonHours": 10,
-          "outcomeCount": 3,
-          "description": "Birden fazla simetri doğrusu olan şekiller, simetrik şekli tamamlama, yönergelerle kodlama.",
-          "colorTheme": "#8b5cf6",
+          "outcomeCount": 9,
+          "description": "",
+          "colorTheme": "#f43f5e",
           "topics": [
             {
-              "id": "3-geo-simetri-kodlama",
-              "title": "Çoklu Simetri Doğruları & Şekil Kodlama",
-              "code": "MAT.3.3.6",
-              "category": "geometri",
-              "badge": "Simetri & Kodlama",
-              "description": "Karenin 4, dikdörtgenin 2, dairenin sonsuz simetri doğrusu; yarım şekli simetriğine tamamlama.",
-              "learningOutcomes": [
-                "Birden fazla simetri doğrusunu çözümler ve kodlama ile simetrik şekil oluşturur."
-              ],
+              "id": "topic-3-2-1-butun-yarim-ve-ceyrek",
+              "title": "Bütün, Yarım ve Çeyrek",
+              "code": "MAT.3.2.1",
+              "category": "sayi",
+              "badge": "Bütün, Yarım ve",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-3-geo-simetri-kodlama-ornek",
+                  "id": "act-3-2-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "geometri",
+                  "category": "sayi",
                   "description": "",
                   "learningGoal": "",
-                  "folderColor": "#8b5cf6",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-2-birim-kesir",
+              "title": "Birim Kesir",
+              "code": "MAT.3.2.2",
+              "category": "sayi",
+              "badge": "Birim Kesir",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-3-pay-ve-payda",
+              "title": "Pay ve Payda",
+              "code": "MAT.3.2.3",
+              "category": "sayi",
+              "badge": "Pay ve Payda",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-4-zamani-okuma",
+              "title": "Zamanı Okuma",
+              "code": "MAT.3.2.4",
+              "category": "sayi",
+              "badge": "Zamanı Okuma",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-5-zaman-olcu-birimleri",
+              "title": "Zaman Ölçü Birimleri",
+              "code": "MAT.3.2.5",
+              "category": "sayi",
+              "badge": "Zaman Ölçü Biri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-6-olus-sureleri",
+              "title": "Oluş Süreleri",
+              "code": "MAT.3.2.6",
+              "category": "sayi",
+              "badge": "Oluş Süreleri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-7-uzunluk-birimleri",
+              "title": "Uzunluk Birimleri",
+              "code": "MAT.3.2.7",
+              "category": "sayi",
+              "badge": "Uzunluk Birimle",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-8-kutle-birimleri",
+              "title": "Kütle Birimleri",
+              "code": "MAT.3.2.8",
+              "category": "sayi",
+              "badge": "Kütle Birimleri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-8-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-2-9-paralarimiz",
+              "title": "Paralarımız",
+              "code": "MAT.3.2.9",
+              "category": "sayi",
+              "badge": "Paralarımız",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-2-9-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
                   "initialObjects": [],
                   "steps": [],
                   "validationRules": [],
@@ -716,34 +1699,416 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-3-veri-1",
-          "code": "MAT.3.4",
-          "orderNumber": 6,
-          "themeName": "Veriye Dayalı Araştırma",
-          "fullTitle": "MAT.3.4. Veriye Dayalı Araştırma — Nokta Grafiği",
-          "lessonHours": 15,
-          "outcomeCount": 1,
-          "description": "Kategorik ve sayma ile elde edilen nicel veriye dayalı tek veri grubuna yönelik nokta grafiği.",
-          "colorTheme": "#06b6d4",
+          "id": "theme-3-3",
+          "code": "MAT.3.3",
+          "orderNumber": 3,
+          "themeName": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "fullTitle": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "lessonHours": 10,
+          "outcomeCount": 9,
+          "description": "",
+          "colorTheme": "#f59e0b",
           "topics": [
             {
-              "id": "3-veri-nokta-grafigi",
-              "title": "Nokta Grafiği ile Veri Analizi",
-              "code": "MAT.3.4.1",
-              "category": "istatistik",
-              "badge": "Nokta Grafiği",
-              "description": "Öğrencilerin kardeş sayılarını ve kitap okuma miktarlarını nokta grafiğiyle gösterelim.",
-              "learningOutcomes": [
-                "Nokta grafiğini seçer, verileri analiz eder ve yorumlar."
-              ],
+              "id": "topic-3-3-1-toplama-ve-cikarma-i-slemleri",
+              "title": "Toplama ve Çıkarma İşlemleri",
+              "code": "MAT.3.3.1",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-3-veri-nokta-grafigi-ornek",
+                  "id": "act-3-3-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-2-tahmin-ve-zihinden-i-slem-topl",
+              "title": "Tahmin ve Zihinden İşlem (Toplama-Çıkarma)",
+              "code": "MAT.3.3.2",
+              "category": "hepsi",
+              "badge": "Tahmin ve Zihin",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-3-toplama-ve-cikarma-yorumlama",
+              "title": "Toplama ve Çıkarma Yorumlama",
+              "code": "MAT.3.3.3",
+              "category": "hepsi",
+              "badge": "Toplama ve Çıka",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-4-carpma-ve-bolme-i-slemleri",
+              "title": "Çarpma ve Bölme İşlemleri",
+              "code": "MAT.3.3.4",
+              "category": "hepsi",
+              "badge": "Çarpma ve Bölme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-5-tahmin-ve-zihinden-i-slem-carp",
+              "title": "Tahmin ve Zihinden İşlem (Çarpma ve Bölme)",
+              "code": "MAT.3.3.5",
+              "category": "hepsi",
+              "badge": "Tahmin ve Zihin",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-6-carpma-ve-bolme-yorumlama",
+              "title": "Çarpma ve Bölme Yorumlama",
+              "code": "MAT.3.3.6",
+              "category": "hepsi",
+              "badge": "Çarpma ve Bölme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-7-dort-i-slem-problemleri-1",
+              "title": "Dört İşlem Problemleri- 1",
+              "code": "MAT.3.3.7",
+              "category": "hepsi",
+              "badge": "Dört İşlem Prob",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-8-dort-i-slem-problemleri-2",
+              "title": "Dört İşlem Problemleri– 2",
+              "code": "MAT.3.3.8",
+              "category": "hepsi",
+              "badge": "Dört İşlem Prob",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-8-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-3-9-esitlik",
+              "title": "Eşitlik",
+              "code": "MAT.3.3.9",
+              "category": "hepsi",
+              "badge": "Eşitlik",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-3-9-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-3-4",
+          "code": "MAT.3.4",
+          "orderNumber": 4,
+          "themeName": "NESNELERİN GEOMETRİSİ (1)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (1)",
+          "lessonHours": 10,
+          "outcomeCount": 4,
+          "description": "",
+          "colorTheme": "#3b82f6",
+          "topics": [
+            {
+              "id": "topic-3-4-1-geometrik-cisimler",
+              "title": "Geometrik Cisimler",
+              "code": "MAT.3.4.1",
+              "category": "geometri",
+              "badge": "Geometrik Cisim",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-4-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-4-2-geometrik-sekiller-cisim-ve-se",
+              "title": "Geometrik Şekiller, Cisim ve Şekil Çizme",
+              "code": "MAT.3.4.2",
+              "category": "geometri",
+              "badge": "Geometrik Şekil",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-4-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-4-3-cevre-uzunlugu",
+              "title": "Çevre Uzunluğu",
+              "code": "MAT.3.4.3",
+              "category": "geometri",
+              "badge": "Çevre Uzunluğu",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-4-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-4-4-sivi-olcme",
+              "title": "Sıvı Ölçme",
+              "code": "MAT.3.4.4",
+              "category": "geometri",
+              "badge": "Sıvı Ölçme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-4-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-3-5",
+          "code": "MAT.3.5",
+          "orderNumber": 5,
+          "themeName": "NESNELERİN GEOMETRİSİ (2)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (2)",
+          "lessonHours": 10,
+          "outcomeCount": 2,
+          "description": "",
+          "colorTheme": "#eab308",
+          "topics": [
+            {
+              "id": "topic-3-5-1-simetri",
+              "title": "Simetri",
+              "code": "MAT.3.5.1",
+              "category": "geometri",
+              "badge": "Simetri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-5-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#eab308",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-3-5-2-simetri-olusturma",
+              "title": "Simetri Oluşturma",
+              "code": "MAT.3.5.2",
+              "category": "geometri",
+              "badge": "Simetri Oluştur",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-5-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#eab308",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-3-6",
+          "code": "MAT.3.6",
+          "orderNumber": 6,
+          "themeName": "VERİYE DAYALI ARAŞTIRMA",
+          "fullTitle": "VERİYE DAYALI ARAŞTIRMA",
+          "lessonHours": 10,
+          "outcomeCount": 1,
+          "description": "",
+          "colorTheme": "#8b5cf6",
+          "topics": [
+            {
+              "id": "topic-3-6-1-cetele-ve-siklik-tablosu-nokta",
+              "title": "Çetele ve Sıklık Tablosu, Nokta Grafiği",
+              "code": "MAT.3.6.1",
+              "category": "istatistik",
+              "badge": "Çetele ve Sıklı",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-3-6-1-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
                   "description": "",
                   "learningGoal": "",
-                  "folderColor": "#06b6d4",
+                  "folderColor": "#8b5cf6",
                   "initialObjects": [],
                   "steps": [],
                   "validationRules": [],
@@ -759,149 +2124,148 @@ export const ilkokulLevel: Level = {
     {
       "gradeNumber": 4,
       "title": "4. Sınıf",
-      "subtitle": "Etkileşimli Matematik",
-      "description": "6 basamaklı sayılar, basit/bileşik/denk kesirler, 4 basamaklı dört işlem, açılar dönme miktarı, açınımlar, ayna simetrisi ve olasılık.",
+      "subtitle": "4. Sınıf Matematik",
+      "description": "4. Sınıf öğretim programı kazanımları.",
       "themes": [
         {
-          "id": "tymm-4-sayilar-1",
+          "id": "theme-4-1",
           "code": "MAT.4.1",
           "orderNumber": 1,
-          "themeName": "Sayılar ve Nicelikler (1)",
-          "fullTitle": "MAT.4.1. Sayılar ve Nicelikler (1) — 6 Basamaklı Sayılar",
-          "lessonHours": 23,
-          "outcomeCount": 5,
-          "description": "6 basamaklı sayılar, bölükler (Birler ve Binler bölüğü), 1.000.000, yüzer ve biner ritmik sayma.",
-          "colorTheme": "#f59e0b",
-          "topics": [
-            {
-              "id": "4-sayi-6basamak",
-              "title": "6 Basamaklı Sayılar, Bölükler & Ritmik Sayma",
-              "code": "MAT.4.1.1",
-              "category": "sayi",
-              "badge": "Bölükler & Milyon",
-              "description": "Basamak ve bölük tablosu (Birler ve Binler bölüğü), yüzer/biner sayma ve örüntüler.",
-              "learningOutcomes": [
-                "En fazla altı basamaklı sayıları okur, yazar, basamak ve bölüklerini belirler."
-              ],
-              "activities": [
-                {
-                  "id": "act-4-sayi-6basamak-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "sayi",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#f59e0b",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-4-sayilar-2",
-          "code": "MAT.4.1",
-          "orderNumber": 2,
-          "themeName": "Sayılar ve Nicelikler (2) — Kesirler & Ölçme",
-          "fullTitle": "MAT.4.1. Sayılar ve Nicelikler (2) — Kesir Çeşitleri & Denk Kesirler",
-          "lessonHours": 43,
-          "outcomeCount": 8,
-          "description": "Basit, bileşik, tam sayılı kesirler, denk kesirler, paydaları eşit kesirlerle toplama/çıkarma, mm/km/ton/g dönüşümleri.",
-          "colorTheme": "#ec4899",
-          "topics": [
-            {
-              "id": "4-kesir-cesitleri-denk",
-              "title": "Basit, Bileşik, Tam Sayılı & Denk Kesirler",
-              "code": "MAT.4.1.6",
-              "category": "sayi",
-              "badge": "Kesirler",
-              "description": "Kesir şeritleri, denk kesir katlama, paydaları eşit kesirlerle toplama ve çıkarma.",
-              "learningOutcomes": [
-                "Basit, bileşik, tam sayılı ve denk kesirleri modeller; paydaları eşit kesirlerle işlem yapar."
-              ],
-              "activities": [
-                {
-                  "id": "act-4-kesir-cesitleri-denk-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "sayi",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#ec4899",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-4-cebir-1",
-          "code": "MAT.4.2",
-          "orderNumber": 3,
-          "themeName": "İşlemlerden Cebirsel Düşünmeye",
-          "fullTitle": "MAT.4.2. İşlemlerden Cebirsel Düşünmeye",
-          "lessonHours": 50,
-          "outcomeCount": 9,
-          "description": "4 basamaklı 4 işlem, kısa yoldan 10/100/1000 çarpma ve bölme, 5 adımlı algoritmik yönergeler, eşitlik.",
-          "colorTheme": "#3b82f6",
-          "topics": [
-            {
-              "id": "4-cebir-dortislem-kisa",
-              "title": "4 Basamaklı Dört İşlem & Kısa Yollar",
-              "code": "MAT.4.2.1",
-              "category": "islemler",
-              "badge": "Dört İşlem",
-              "description": "4 basamaklı sayılarla işlemler, kısa yoldan 10/100/1000 çarpma/bölme ve eşitlik analizi.",
-              "learningOutcomes": [
-                "En çok dört basamaklı sayılarla dört işlem yapar ve eşitlik kavramını yorumlar."
-              ],
-              "activities": [
-                {
-                  "id": "act-4-cebir-dortislem-kisa-ornek",
-                  "title": "Örnek Görev Kartı",
-                  "category": "islemler",
-                  "description": "",
-                  "learningGoal": "",
-                  "folderColor": "#3b82f6",
-                  "initialObjects": [],
-                  "steps": [],
-                  "validationRules": [],
-                  "completedMessage": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-4-geo-1",
-          "code": "MAT.4.3",
-          "orderNumber": 4,
-          "themeName": "Nesnelerin Geometrisi (1)",
-          "fullTitle": "MAT.4.3. Nesnelerin Geometrisi (1) — Açınımlar, Üçgenler & Alan",
-          "lessonHours": 17,
-          "outcomeCount": 4,
-          "description": "Geometrik cisim açınımları, kenarlarına göre üçgen çeşitleri (çeşitkenar, ikizkenar, eşkenar), çevre ve birim kare alan.",
+          "themeName": "SAYILAR VE NİCELİKLER (1)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (1)",
+          "lessonHours": 10,
+          "outcomeCount": 6,
+          "description": "",
           "colorTheme": "#10b981",
           "topics": [
             {
-              "id": "4-geo-acınım-ucgen-alan",
-              "title": "Cisim Açınımları, Üçgen Çeşitleri & Birim Kare Alan",
-              "code": "MAT.4.3.1",
-              "category": "geometri",
-              "badge": "Açınım & Alan",
-              "description": "Küp ve prizma açınımı katlama, üçgen çeşitleri ve birim karelerle alan kaplama.",
-              "learningOutcomes": [
-                "Geometrik cisimlerin açınımlarını yapılandırır ve şekillerin alanını tahmin eder."
-              ],
+              "id": "topic-4-1-1-4-5-ve-6-basamakli-sayilar",
+              "title": "4, 5 ve 6 Basamaklı Sayılar",
+              "code": "MAT.4.1.1",
+              "category": "sayi",
+              "badge": "4, 5 ve 6 Basam",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-4-geo-acınım-ucgen-alan-ornek",
+                  "id": "act-4-1-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "geometri",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-1-2-sayilari-cozumleme",
+              "title": "Sayıları Çözümleme",
+              "code": "MAT.4.1.2",
+              "category": "sayi",
+              "badge": "Sayıları Çözüml",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-1-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-1-3-sayilarin-siralama",
+              "title": "Sayıların Sıralama",
+              "code": "MAT.4.1.3",
+              "category": "sayi",
+              "badge": "Sayıların Sıral",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-1-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-1-4-sayilari-yuvarlama",
+              "title": "Sayıları Yuvarlama",
+              "code": "MAT.4.1.4",
+              "category": "sayi",
+              "badge": "Sayıları Yuvarl",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-1-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-1-5-ritmik-sayma",
+              "title": "Ritmik Sayma",
+              "code": "MAT.4.1.5",
+              "category": "sayi",
+              "badge": "Ritmik Sayma",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-1-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#10b981",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-1-6-oruntuler",
+              "title": "Örüntüler",
+              "code": "MAT.4.1.6",
+              "category": "sayi",
+              "badge": "Örüntüler",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-1-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#10b981",
@@ -915,29 +2279,700 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-4-geo-2",
+          "id": "theme-4-2",
+          "code": "MAT.4.2",
+          "orderNumber": 2,
+          "themeName": "SAYILAR VE NİCELİKLER (2)",
+          "fullTitle": "SAYILAR VE NİCELİKLER (2)",
+          "lessonHours": 10,
+          "outcomeCount": 9,
+          "description": "",
+          "colorTheme": "#f43f5e",
+          "topics": [
+            {
+              "id": "topic-4-2-1-basit-bilesik-ve-tam-sayili-ke",
+              "title": "Basit, Bileşik ve Tam Sayılı Kesir",
+              "code": "MAT.4.2.1",
+              "category": "sayi",
+              "badge": "Basit, Bileşik ",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-2-denk-kesir",
+              "title": "Denk Kesir",
+              "code": "MAT.4.2.2",
+              "category": "sayi",
+              "badge": "Denk Kesir",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-3-birim-kesirleri-siralama",
+              "title": "Birim Kesirleri Sıralama",
+              "code": "MAT.4.2.3",
+              "category": "sayi",
+              "badge": "Birim Kesirleri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-4-kesirleri-siralama",
+              "title": "Kesirleri Sıralama",
+              "code": "MAT.4.2.4",
+              "category": "sayi",
+              "badge": "Kesirleri Sıral",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-5-bir-coklugun-basit-kesir-kadar",
+              "title": "Bir Çokluğun Basit Kesir Kadarı ve Basit Kasir Kadarı Verilen Çokluk",
+              "code": "MAT.4.2.5",
+              "category": "sayi",
+              "badge": "Bir Çokluğun Ba",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-6-kesirlerle-toplama-ve-cikarma-",
+              "title": "Kesirlerle Toplama ve Çıkarma İşlemi",
+              "code": "MAT.4.2.6",
+              "category": "sayi",
+              "badge": "Kesirlerle Topl",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-7-kesirlerle-toplama-ve-cikarma-",
+              "title": "Kesirlerle Toplama ve Çıkarma İşlemi Problemleri",
+              "code": "MAT.4.2.7",
+              "category": "sayi",
+              "badge": "Kesirlerle Topl",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-8-uzunluk-birimleri",
+              "title": "Uzunluk Birimleri",
+              "code": "MAT.4.2.8",
+              "category": "sayi",
+              "badge": "Uzunluk Birimle",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-8-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-2-9-kutle-birimleri",
+              "title": "Kütle Birimleri",
+              "code": "MAT.4.2.9",
+              "category": "sayi",
+              "badge": "Kütle Birimleri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-2-9-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "sayi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f43f5e",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-4-3",
           "code": "MAT.4.3",
+          "orderNumber": 3,
+          "themeName": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "fullTitle": "İŞLEMLERDEN CEBİRSEL DÜŞÜNMEYE",
+          "lessonHours": 10,
+          "outcomeCount": 10,
+          "description": "",
+          "colorTheme": "#f59e0b",
+          "topics": [
+            {
+              "id": "topic-4-3-1-zihinden-toplama-ve-cikarma",
+              "title": "Zihinden Toplama ve Çıkarma",
+              "code": "MAT.4.3.1",
+              "category": "hepsi",
+              "badge": "Zihinden Toplam",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-2-toplama-i-slemi",
+              "title": "Toplama İşlemi",
+              "code": "MAT.4.3.2",
+              "category": "hepsi",
+              "badge": "Toplama İşlemi",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-3-cikarma-i-slemi",
+              "title": "Çıkarma İşlemi",
+              "code": "MAT.4.3.3",
+              "category": "hepsi",
+              "badge": "Çıkarma İşlemi",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-4-carpma-ve-bolme-tahmin",
+              "title": "Çarpma ve Bölme Tahmin",
+              "code": "MAT.4.3.4",
+              "category": "hepsi",
+              "badge": "Çarpma ve Bölme",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-5-zihinden-carpma-ve-bolme",
+              "title": "Zihinden Çarpma ve Bölme",
+              "code": "MAT.4.3.5",
+              "category": "hepsi",
+              "badge": "Zihinden Çarpma",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-5-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-6-carpma-i-slemi",
+              "title": "Çarpma İşlemi",
+              "code": "MAT.4.3.6",
+              "category": "hepsi",
+              "badge": "Çarpma İşlemi",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-6-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-7-bolme-i-slemi",
+              "title": "Bölme İşlemi",
+              "code": "MAT.4.3.7",
+              "category": "hepsi",
+              "badge": "Bölme İşlemi",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-7-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-8-dort-i-slem-problemleri-1",
+              "title": "Dört İşlem Problemleri- 1",
+              "code": "MAT.4.3.8",
+              "category": "hepsi",
+              "badge": "Dört İşlem Prob",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-8-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-9-dort-i-slem-problemleri-2",
+              "title": "Dört İşlem Problemleri- 2",
+              "code": "MAT.4.3.9",
+              "category": "hepsi",
+              "badge": "Dört İşlem Prob",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-9-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-3-10-esitlik",
+              "title": "Eşitlik",
+              "code": "MAT.4.3.10",
+              "category": "hepsi",
+              "badge": "Eşitlik",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-3-10-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "hepsi",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#f59e0b",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-4-4",
+          "code": "MAT.4.4",
+          "orderNumber": 4,
+          "themeName": "NESNELERİN GEOMETRİSİ (1)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (1)",
+          "lessonHours": 10,
+          "outcomeCount": 4,
+          "description": "",
+          "colorTheme": "#3b82f6",
+          "topics": [
+            {
+              "id": "topic-4-4-1-geometrik-cisimler",
+              "title": "Geometrik Cisimler",
+              "code": "MAT.4.4.1",
+              "category": "geometri",
+              "badge": "Geometrik Cisim",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-4-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-4-2-geometrik-sekiller",
+              "title": "Geometrik Şekiller",
+              "code": "MAT.4.4.2",
+              "category": "geometri",
+              "badge": "Geometrik Şekil",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-4-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-4-3-geometrik-sekillerin-cevresi",
+              "title": "Geometrik Şekillerin Çevresi",
+              "code": "MAT.4.4.3",
+              "category": "geometri",
+              "badge": "Geometrik Şekil",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-4-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-4-4-sekillerin-alani",
+              "title": "Şekillerin Alanı",
+              "code": "MAT.4.4.4",
+              "category": "geometri",
+              "badge": "Şekillerin Alan",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-4-4-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#3b82f6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-4-5",
+          "code": "MAT.4.5",
           "orderNumber": 5,
-          "themeName": "Nesnelerin Geometrisi (2) — Açı",
-          "fullTitle": "MAT.4.3. Nesnelerin Geometrisi (2) — Açılar Bir Dönme Miktarıdır",
-          "lessonHours": 11,
+          "themeName": "NESNELERİN GEOMETRİSİ (2)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (2)",
+          "lessonHours": 10,
           "outcomeCount": 3,
-          "description": "Açı kavramı bir dönme miktarıdır; dik açı (90° referans), dar açı (<90°), geniş açı (>90°), gönye kullanımı.",
+          "description": "",
+          "colorTheme": "#eab308",
+          "topics": [
+            {
+              "id": "topic-4-5-1-aci",
+              "title": "Açı",
+              "code": "MAT.4.5.1",
+              "category": "geometri",
+              "badge": "Açı",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-5-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#eab308",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-5-2-aci-olcusu",
+              "title": "Açı Ölçüsü",
+              "code": "MAT.4.5.2",
+              "category": "geometri",
+              "badge": "Açı Ölçüsü",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-5-2-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#eab308",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-5-3-aci-cesitleri",
+              "title": "Açı Çeşitleri",
+              "code": "MAT.4.5.3",
+              "category": "geometri",
+              "badge": "Açı Çeşitleri",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-5-3-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#eab308",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "theme-4-6",
+          "code": "MAT.4.6",
+          "orderNumber": 6,
+          "themeName": "NESNELERİN GEOMETRİSİ (3)",
+          "fullTitle": "NESNELERİN GEOMETRİSİ (3)",
+          "lessonHours": 10,
+          "outcomeCount": 2,
+          "description": "",
           "colorTheme": "#8b5cf6",
           "topics": [
             {
-              "id": "4-geo-aci-donme",
-              "title": "Açı Bir Dönme Miktarıdır: Dik, Dar, Geniş Açı",
-              "code": "MAT.4.3.5",
+              "id": "topic-4-6-1-simetri",
+              "title": "Simetri",
+              "code": "MAT.4.6.1",
               "category": "geometri",
-              "badge": "Açılar",
-              "description": "Kapı menteşesi ve saat yelkovanının dönme miktarı, dik açı referansı ve gönye ile sınıflandırma.",
-              "learningOutcomes": [
-                "Açıyı bir dönme miktarı olarak yorumlar; dik açıyı referans alarak açıları dar ve geniş olarak sınıflandırır."
-              ],
+              "badge": "Simetri",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-4-geo-aci-donme-ornek",
+                  "id": "act-4-6-1-ornek",
+                  "title": "Örnek Görev Kartı",
+                  "category": "geometri",
+                  "description": "",
+                  "learningGoal": "",
+                  "folderColor": "#8b5cf6",
+                  "initialObjects": [],
+                  "steps": [],
+                  "validationRules": [],
+                  "completedMessage": ""
+                }
+              ]
+            },
+            {
+              "id": "topic-4-6-2-geometrik-yapilar",
+              "title": "Geometrik Yapılar",
+              "code": "MAT.4.6.2",
+              "category": "geometri",
+              "badge": "Geometrik Yapıl",
+              "description": "",
+              "learningOutcomes": [],
+              "activities": [
+                {
+                  "id": "act-4-6-2-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
                   "description": "",
@@ -953,69 +2988,52 @@ export const ilkokulLevel: Level = {
           ]
         },
         {
-          "id": "tymm-4-geo-3",
-          "code": "MAT.4.3",
-          "orderNumber": 6,
-          "themeName": "Nesnelerin Geometrisi (3) — Ayna Simetrisi & FeTeMM",
-          "fullTitle": "MAT.4.3. Nesnelerin Geometrisi (3) — Ayna Simetrisi ve Kodlama",
-          "lessonHours": 13,
-          "outcomeCount": 3,
-          "description": "Ayna simetrisi (doğruya göre yansıma), noktalı kâğıtta simetri çizimi, FeTeMM köprü tasarımı.",
-          "colorTheme": "#ec4899",
+          "id": "theme-4-7",
+          "code": "MAT.4.7",
+          "orderNumber": 7,
+          "themeName": "VERİYE DAYALI ARAŞTIRMA",
+          "fullTitle": "VERİYE DAYALI ARAŞTIRMA",
+          "lessonHours": 10,
+          "outcomeCount": 2,
+          "description": "",
+          "colorTheme": "#06b6d4",
           "topics": [
             {
-              "id": "4-geo-ayna-simetrisi",
-              "title": "Ayna Simetrisi & FeTeMM Köprü Tasarımı",
-              "code": "MAT.4.3.8",
-              "category": "geometri",
-              "badge": "Ayna Simetrisi",
-              "description": "Aynadaki görüntü ile doğruya göre simetri ilişkisi, kilim motifleri ve dayanıklı köprü modeli.",
-              "learningOutcomes": [
-                "Aynaya göre simetriyi yorumlar ve FeTeMM kapsamında simetrik yapılar tasarlar."
-              ],
+              "id": "topic-4-7-1-olasilik",
+              "title": "Olasılık",
+              "code": "MAT.4.7.1",
+              "category": "istatistik",
+              "badge": "Olasılık",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-4-geo-ayna-simetrisi-ornek",
+                  "id": "act-4-7-1-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "geometri",
+                  "category": "istatistik",
                   "description": "",
                   "learningGoal": "",
-                  "folderColor": "#ec4899",
+                  "folderColor": "#06b6d4",
                   "initialObjects": [],
                   "steps": [],
                   "validationRules": [],
                   "completedMessage": ""
                 }
               ]
-            }
-          ]
-        },
-        {
-          "id": "tymm-4-olasilik-veri",
-          "code": "MAT.4.4",
-          "orderNumber": 7,
-          "themeName": "Olayların Olasılığı ve Veriye Dayalı Araştırma",
-          "fullTitle": "MAT.4.4. Olayların Olasılığı ve Veriye Dayalı Araştırma",
-          "lessonHours": 15,
-          "outcomeCount": 2,
-          "description": "İmkânsız, olabilir, kesin olasılık kavramları; kategorik ve nicel 2 veri grubu grafikleri (nesne, şekil, nokta, çetele).",
-          "colorTheme": "#06b6d4",
-          "topics": [
+            },
             {
-              "id": "4-olasilik-veri-analizi",
-              "title": "İmkânsız, Olabilir, Kesin & 2 Veri Grubu Grafiği",
-              "code": "MAT.4.4.1",
-              "category": "olasilik",
-              "badge": "Olasılık & Veri",
-              "description": "Olasılık çarkı, şeffaf torbadan bilye çekme ve iki sınıfın boy/kilo verilerini karşılaştırma.",
-              "learningOutcomes": [
-                "Olayların olma olasılığını imkânsız, olabilir, kesin olarak belirler ve iki veri grubu grafiği çizer."
-              ],
+              "id": "topic-4-7-2-veri",
+              "title": "Veri",
+              "code": "MAT.4.7.2",
+              "category": "istatistik",
+              "badge": "Veri",
+              "description": "",
+              "learningOutcomes": [],
               "activities": [
                 {
-                  "id": "act-4-olasilik-veri-analizi-ornek",
+                  "id": "act-4-7-2-ornek",
                   "title": "Örnek Görev Kartı",
-                  "category": "olasilik",
+                  "category": "istatistik",
                   "description": "",
                   "learningGoal": "",
                   "folderColor": "#06b6d4",
