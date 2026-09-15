@@ -349,41 +349,7 @@ export function TeachingPortal() {
           </div>
         </div>
 
-        {/* 3. KATEGORİ FİLTRE ŞERİDİ (Sığacak Şekilde Kompakt & Scrollsuz) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full select-none">
-          {CATEGORY_TABS.map((tab) => {
-            const isActive = selectedCategory === tab.id;
-            const count = categoryCounts[tab.id] ?? 0;
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedCategory(tab.id)}
-                className={`flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-xl text-xs font-black transition-all shadow-sm cursor-pointer ${
-                  isActive
-                    ? `bg-card text-foreground border-2 ${tab.activeBorder} shadow-sm ring-1 ring-primary/20 scale-105`
-                    : 'bg-card text-muted-foreground hover:text-foreground border border-border/80 hover:border-border'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${tab.badgeBg} shadow-sm shrink-0 text-[10px]`}>
-                    {tab.icon}
-                  </div>
-                  <span className="truncate">{tab.label}</span>
-                </div>
-                {count > 0 && (
-                  <span
-                    className={`px-1.5 py-0.5 text-[10px] rounded-md font-black shrink-0 ${
-                      isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
 
         {/* 5. TYMM TEMALARI VE ALT KONU LİSTESİ (MEB 2026 Resmî Sıralama) */}
         <div className="space-y-4 pt-1">
