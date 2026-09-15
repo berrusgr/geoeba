@@ -200,16 +200,6 @@ export function PropertiesPanel({
             {sekme === 'stil' ? 'Çizim Stili' : 'Özellikler'}
           </span>
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="px-2.5 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex items-center gap-1.5 text-[11px] font-bold cursor-pointer"
-            title="Paneli Kapat"
-          >
-            <span>Kapat</span>
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-        )}
       </div>
 
       {sekme === 'stil' && <StylePanel />}
