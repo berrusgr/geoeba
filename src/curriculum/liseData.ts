@@ -41,18 +41,13 @@ export const liseLevel: Level = {
                   "id": "act-h-dogrusal-iliski-modelleri-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Doğrusal İlişkiler ve Grafiksel Modeller konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Doğrusal İlişkiler ve Grafiksel Modeller konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -86,18 +81,13 @@ export const liseLevel: Level = {
                   "id": "act-h-mantiksal-cikarim-stratejileri-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
-                  "description": "Mantıksal Çıkarım ve Çözüm Stratejileri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Mantıksal Çıkarım ve Çözüm Stratejileri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ec4899",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -132,18 +122,13 @@ export const liseLevel: Level = {
                   "id": "act-h-oruntu-kriptoloji-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "cebir",
-                  "description": "Sayı Örüntüleri, Şifreleme ve Kriptoloji konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Sayı Örüntüleri, Şifreleme ve Kriptoloji konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#06b6d4",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -178,18 +163,13 @@ export const liseLevel: Level = {
                   "id": "act-h-geometrik-insa-ve-fraktal-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Geometrik İnşa, Özel Dörtgenler ve Fraktallar konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Geometrik İnşa, Özel Dörtgenler ve Fraktallar konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#10b981",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -223,18 +203,13 @@ export const liseLevel: Level = {
                   "id": "act-h-istatistiksel-elestirel-bakis-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
-                  "description": "İstatistiksel Sonuç ve Yorumları Eleştirel Değerlendirme konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "İstatistiksel Sonuç ve Yorumları Eleştirel Değerlendirme konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#f59e0b",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -276,18 +251,13 @@ export const liseLevel: Level = {
                   "id": "act-9-sayilar-us-kok-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
-                  "description": "Üslü ve Köklü Gösterimlerle Muhakeme konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Üslü ve Köklü Gösterimlerle Muhakeme konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             },
@@ -307,18 +277,13 @@ export const liseLevel: Level = {
                   "id": "act-9-sayi-kumeleri-aralik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
-                  "description": "Sayı Aralıkları ve Küme Gösterimleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Sayı Aralıkları ve Küme Gösterimleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -351,18 +316,13 @@ export const liseLevel: Level = {
                   "id": "act-9-fonk-dogrusal-donusum-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Doğrusal Referans Fonksiyon ve Dönüşümleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Doğrusal Referans Fonksiyon ve Dönüşümleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#06b6d4",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             },
@@ -382,18 +342,13 @@ export const liseLevel: Level = {
                   "id": "act-9-fonk-isaret-esitsizlik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "cebir",
-                  "description": "İşaret Tablosu ve Doğrusal Eşitsizlikler konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "İşaret Tablosu ve Doğrusal Eşitsizlikler konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#06b6d4",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -426,18 +381,13 @@ export const liseLevel: Level = {
                   "id": "act-9-geo-ucgen-bagintilari-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Üçgende Açılar ve Üçgen Eşitsizliği konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Üçgende Açılar ve Üçgen Eşitsizliği konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ef4444",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -470,18 +420,13 @@ export const liseLevel: Level = {
                   "id": "act-9-geo-donusumler-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Geometrik Dönüşümler ve Eşlik konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Geometrik Dönüşümler ve Eşlik konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#f59e0b",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             },
@@ -501,18 +446,13 @@ export const liseLevel: Level = {
                   "id": "act-9-geo-tales-oklid-pisagor-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Tales, Öklid ve Pisagor Teoremleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Tales, Öklid ve Pisagor Teoremleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#f59e0b",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -545,18 +485,13 @@ export const liseLevel: Level = {
                   "id": "act-9-bilisim-algoritma-cizge-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "cebir",
-                  "description": "Algoritmik Düşünme ve Çizge Kuramı konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Algoritmik Düşünme ve Çizge Kuramı konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#10b981",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -589,18 +524,13 @@ export const liseLevel: Level = {
                   "id": "act-9-ist-nicel-veri-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
-                  "description": "Tek Nicel Değişkenli Veri Dağılımları konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Tek Nicel Değişkenli Veri Dağılımları konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#6366f1",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -633,18 +563,13 @@ export const liseLevel: Level = {
                   "id": "act-9-olas-deneysel-teorik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "olasilik",
-                  "description": "Deneysel ve Teorik Olasılık konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Deneysel ve Teorik Olasılık konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ec4899",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -686,18 +611,13 @@ export const liseLevel: Level = {
                   "id": "act-10-trig-oran-birim-cember-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "trigonometri",
-                  "description": "Birim Çember ve Trigonometrik Oranlar konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Birim Çember ve Trigonometrik Oranlar konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             },
@@ -717,18 +637,13 @@ export const liseLevel: Level = {
                   "id": "act-10-geo-yardimci-elemanlar-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Üçgenin Yardımcı Elemanları ve Merkezleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Üçgenin Yardımcı Elemanları ve Merkezleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             },
@@ -748,18 +663,13 @@ export const liseLevel: Level = {
                   "id": "act-10-geo-sin-cos-teoremleri-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "trigonometri",
-                  "description": "Sinüs ve Kosinüs Teoremleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Sinüs ve Kosinüs Teoremleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -792,18 +702,13 @@ export const liseLevel: Level = {
                   "id": "act-10-ist-iki-kategorik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
-                  "description": "İki Yönlü Tablolar ve Koşullu Göreli Sıklıklar konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "İki Yönlü Tablolar ve Koşullu Göreli Sıklıklar konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#06b6d4",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -836,18 +741,13 @@ export const liseLevel: Level = {
                   "id": "act-10-sayilar-ebob-ekok-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
-                  "description": "EBOB, EKOK ve Asal Çarpanlar konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "EBOB, EKOK ve Asal Çarpanlar konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#10b981",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -880,18 +780,13 @@ export const liseLevel: Level = {
                   "id": "act-10-fonk-parabol-donusum-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Karesel Fonksiyonlar ve Parabolün Geometrisi konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Karesel Fonksiyonlar ve Parabolün Geometrisi konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ec4899",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -924,18 +819,13 @@ export const liseLevel: Level = {
                   "id": "act-10-sayma-kombinasyon-pascal-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "cebir",
-                  "description": "Seçme Sayısı (Kombinasyon) ve Pascal Üçgeni konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Seçme Sayısı (Kombinasyon) ve Pascal Üçgeni konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#f59e0b",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -968,18 +858,13 @@ export const liseLevel: Level = {
                   "id": "act-10-analitik-nokta-dogru-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Noktanın ve Doğrunun Analitik İncelenmesi konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Noktanın ve Doğrunun Analitik İncelenmesi konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#3b82f6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1012,18 +897,13 @@ export const liseLevel: Level = {
                   "id": "act-10-olas-kosullu-bayes-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "olasilik",
-                  "description": "Koşullu Olasılık ve Bayes Teoremi konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Koşullu Olasılık ve Bayes Teoremi konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ef4444",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1065,18 +945,13 @@ export const liseLevel: Level = {
                   "id": "act-11-ist-sacilim-korelasyon-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "istatistik",
-                  "description": "Serpme Diyagramı ve Korelasyon Katsayısı konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Serpme Diyagramı ve Korelasyon Katsayısı konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#6366f1",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1109,18 +984,13 @@ export const liseLevel: Level = {
                   "id": "act-11-geo-dortgen-ozel-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Özel Dörtgenler Hiyerarşisi ve Alan Bağıntıları konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Özel Dörtgenler Hiyerarşisi ve Alan Bağıntıları konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#10b981",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             },
@@ -1140,18 +1010,13 @@ export const liseLevel: Level = {
                   "id": "act-11-geo-duzgun-cokgen-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Düzgün Çokgenler ve Simetri Eksenleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Düzgün Çokgenler ve Simetri Eksenleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#10b981",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1184,18 +1049,13 @@ export const liseLevel: Level = {
                   "id": "act-11-trig-fonk-grafik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "trigonometri",
-                  "description": "Trigonometrik Fonksiyon Grafikleri ve Periyot konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Trigonometrik Fonksiyon Grafikleri ve Periyot konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1228,18 +1088,13 @@ export const liseLevel: Level = {
                   "id": "act-11-ustel-log-ters-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Üstel Fonksiyon, e Sayısı ve Logaritma konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Üstel Fonksiyon, e Sayısı ve Logaritma konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ec4899",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1272,18 +1127,13 @@ export const liseLevel: Level = {
                   "id": "act-11-fonk-bileske-islem-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Bileşke Fonksiyon ve Fonksiyonel İşlemler konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Bileşke Fonksiyon ve Fonksiyonel İşlemler konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#f59e0b",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1325,18 +1175,13 @@ export const liseLevel: Level = {
                   "id": "act-12-dizi-aritmetik-geometrik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "sayi",
-                  "description": "Aritmetik ve Geometrik Dizi Toplamları konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Aritmetik ve Geometrik Dizi Toplamları konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#8b5cf6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1369,18 +1214,13 @@ export const liseLevel: Level = {
                   "id": "act-12-polinom-nitel-grafik-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Polinom Fonksiyonların Nitel Özellikleri ve Kökleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Polinom Fonksiyonların Nitel Özellikleri ve Kökleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#06b6d4",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1413,18 +1253,13 @@ export const liseLevel: Level = {
                   "id": "act-12-geo-cember-acilar-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Çemberde Açılar ve Teğet-Kiriş Özellikleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Çemberde Açılar ve Teğet-Kiriş Özellikleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#10b981",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1457,18 +1292,13 @@ export const liseLevel: Level = {
                   "id": "act-12-geo-kati-cisim-hacim-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "geometri",
-                  "description": "Katı Cisimlerin Açınımları, Alan ve Hacimleri konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Katı Cisimlerin Açınımları, Alan ve Hacimleri konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#f59e0b",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1502,18 +1332,13 @@ export const liseLevel: Level = {
                   "id": "act-12-kalkulus-limit-tanimi-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Yaklaşım Fikri, Limit ve 0/0 Belirsizliği konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Yaklaşım Fikri, Limit ve 0/0 Belirsizliği konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#ec4899",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1547,18 +1372,13 @@ export const liseLevel: Level = {
                   "id": "act-12-kalkulus-anlik-degisim-turev-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Anlık Değişim Oranı ve Türevin Limit Tanımı konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Anlık Değişim Oranı ve Türevin Limit Tanımı konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#06b6d4",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1591,18 +1411,13 @@ export const liseLevel: Level = {
                   "id": "act-12-kalkulus-teget-ekstremum-optimizasyon-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "fonksiyon",
-                  "description": "Teğet Eğimi, Ekstremum Noktalar ve Optimizasyon konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Teğet Eğimi, Ekstremum Noktalar ve Optimizasyon konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#3b82f6",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }
@@ -1635,18 +1450,13 @@ export const liseLevel: Level = {
                   "id": "act-12-ist-hazir-veri-analiz-ornek",
                   "title": "Örnek Görev Kartı",
                   "category": "veri",
-                  "description": "Hazır Veriye Dayalı İstatistiksel Araştırma konusu için örnek interaktif matematik görevi.",
-                  "learningGoal": "Hazır Veriye Dayalı İstatistiksel Araştırma konusundaki temel kavram ve bağıntıları keşfetmek.",
+                  "description": "",
+                  "learningGoal": "",
                   "folderColor": "#6366f1",
                   "initialObjects": [],
-                  "steps": [
-                    {
-                      "stepNumber": 1,
-                      "instruction": "Çalışma alanındaki matematiksel araçları kullanarak konuyu keşfedin."
-                    }
-                  ],
+                  "steps": [],
                   "validationRules": [],
-                  "completedMessage": "Tebrikler! Örnek görevi başarıyla tamamladınız."
+                  "completedMessage": ""
                 }
               ]
             }

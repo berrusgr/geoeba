@@ -510,7 +510,8 @@ export function CurriculumProvider({ children }: { children: React.ReactNode }) 
       if (parentTopic) setActiveModalTopicState(parentTopic);
     }
 
-    const targetScreen: AppScreen = openAsMission ? 'mission' : 'workspace';
+    const hasMissionContent = (activity.steps && activity.steps.length > 0) || !!activity.mission;
+    const targetScreen: AppScreen = openAsMission && hasMissionContent ? 'mission' : 'workspace';
     setCurrentScreen(targetScreen);
 
     pushBrowserHistory({
