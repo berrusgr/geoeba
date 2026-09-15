@@ -216,7 +216,7 @@ export function WelcomeScreen() {
             </div>
             <div>
               <h3 className="text-lg sm:text-2xl font-bold text-[#15803d] dark:text-emerald-400">
-                Serbest Çalışma Stüdyosu
+                Serbest Çizim Stüdyosu
               </h3>
               <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-normal mt-1 sm:mt-1.5">
                 Dinamik 2D şekiller, açılar, alanlar ve 3D prizma laboratuvarı
