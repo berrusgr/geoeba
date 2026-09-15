@@ -3283,8 +3283,9 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               const isMainAxis = xVal === 0;
               const isMajor = Math.abs(xVal % 5) < 0.001;
               const isInteger = Math.abs(Math.round(xVal) - xVal) < 0.001;
-
-              if (isMainAxis) return null; // Ana eksenler aşağıda ayrıca çiziliyor
+              // Ana eksenler (x=0, y=0) yalnızca eksenler açıkken ayrıca çizilir;
+              // Kareli düzlemde (eksenler kapalıyken) ızgara çizgisi olarak eksiksiz çizilir.
+              if (isMainAxis && viewport.showAxes) return null;
 
               return (
                 <line
@@ -3311,7 +3312,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
               const isMajor = Math.abs(yVal % 5) < 0.001;
               const isInteger = Math.abs(Math.round(yVal) - yVal) < 0.001;
 
-              if (isMainAxis) return null; // Ana eksenler aşağıda ayrıca çiziliyor
+              if (isMainAxis && viewport.showAxes) return null;
 
               return (
                 <line
