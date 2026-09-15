@@ -38,8 +38,8 @@ import {
   Columns2,
   Box,
   Palette,
-  ChevronRight,
   ChevronDown,
+  ChevronUp,
   X,
 } from 'lucide-react';
 
@@ -71,6 +71,10 @@ export function PropertiesPanel({
   onTabChange,
   onClose,
 }: PropertiesPanelProps) {
+  const [isLayoutOpen, setIsLayoutOpen] = useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+
   /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi? */
   const [localTab, setLocalTab] = useState<'ozellikler' | 'stil'>('ozellikler');
   const sekme = activeTab ?? localTab;
@@ -215,168 +219,195 @@ export function PropertiesPanel({
           {/* GÖRÜNÜM DÜZENİ SEÇİCİ */}
           {onLayoutModeChange && (
             <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
-              <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsLayoutOpen(!isLayoutOpen)}
+                className="flex items-center justify-between w-full cursor-pointer group"
+              >
                 <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <LayoutGrid className="w-3.5 h-3.5 text-primary" />
                   <span>Görünüm Düzeni</span>
                 </h3>
-                <span className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
-                  {layoutMode === '2d_only'
-                    ? '2D Grafik'
-                    : layoutMode === '3d_only'
-                    ? '3D Grafik'
-                    : layoutMode === 'default'
-                    ? 'Çoklu Görünüm'
-                    : layoutMode === 'algebra_2d'
-                    ? 'Cebir + 2D'
-                    : layoutMode === '2d_3d'
-                    ? '2D + 3D'
-                    : layoutMode === 'three_col'
-                    ? '3 Sütun'
-                    : 'Cebir + 3D'}
-                </span>
-              </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+                    {layoutMode === '2d_only'
+                      ? '2D Grafik'
+                      : layoutMode === '3d_only'
+                      ? '3D Grafik'
+                      : layoutMode === 'default'
+                      ? 'Çoklu Görünüm'
+                      : layoutMode === 'algebra_2d'
+                      ? 'Cebir + 2D'
+                      : layoutMode === '2d_3d'
+                      ? '2D + 3D'
+                      : layoutMode === 'three_col'
+                      ? '3 Sütun'
+                      : 'Cebir + 3D'}
+                  </span>
+                  {isLayoutOpen ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  )}
+                </div>
+              </button>
 
-              <div className="grid grid-cols-2 gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('2d_only')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                    layoutMode === '2d_only'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <Maximize2 className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[11px] truncate">Sadece 2D</span>
-                </button>
+              {isLayoutOpen && (
+                <div className="grid grid-cols-2 gap-1.5 text-xs pt-1">
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('2d_only')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      layoutMode === '2d_only'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[11px] truncate">Sadece 2D</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('default')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                    layoutMode === 'default'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[11px] truncate">2D + Cebir/3D</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('default')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      layoutMode === 'default'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[11px] truncate">2D + Cebir/3D</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('algebra_2d')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                    layoutMode === 'algebra_2d'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <Columns2 className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[11px] truncate">Cebir + 2D</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('algebra_2d')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      layoutMode === 'algebra_2d'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <Columns2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[11px] truncate">Cebir + 2D</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('2d_3d')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                    layoutMode === '2d_3d'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <Columns2 className="w-3.5 h-3.5 shrink-0 text-blue-400" />
-                  <span className="text-[11px] truncate">2D + 3D</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('2d_3d')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      layoutMode === '2d_3d'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <Columns2 className="w-3.5 h-3.5 shrink-0 text-blue-400" />
+                    <span className="text-[11px] truncate">2D + 3D</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('three_col')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                    layoutMode === 'three_col'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <Columns2 className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[11px] truncate">3 Sütun</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('three_col')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      layoutMode === 'three_col'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <Columns2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[11px] truncate">3 Sütun</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('algebra_3d')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                    layoutMode === 'algebra_3d'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <Columns2 className="w-3.5 h-3.5 shrink-0 text-purple-400" />
-                  <span className="text-[11px] truncate">Cebir + 3D</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('algebra_3d')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      layoutMode === 'algebra_3d'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <Columns2 className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+                    <span className="text-[11px] truncate">Cebir + 3D</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => onLayoutModeChange('3d_only')}
-                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer col-span-2 ${
-                    layoutMode === '3d_only'
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
-                  }`}
-                >
-                  <Box className="w-3.5 h-3.5 shrink-0 text-purple-400" />
-                  <span className="text-[11px] truncate">Sadece 3D Grafik</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => onLayoutModeChange('3d_only')}
+                    className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer col-span-2 ${
+                      layoutMode === '3d_only'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                  >
+                    <Box className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+                    <span className="text-[11px] truncate">Sadece 3D Grafik</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {/* 0. ÇİZİMİ DIŞA AKTAR */}
           <div className="space-y-2">
-            <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Download className="w-3.5 h-3.5" />
-              <span>Çizimi İndir</span>
-            </h3>
-
-        {/* Siyah–beyaz mod: ekranda ne görünüyorsa indirilen dosya da öyle olur */}
-        <label className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-muted/40 border border-border/60 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={viewport.blackWhite === true}
-            onChange={(e) => setViewport((prev) => ({ ...prev, blackWhite: e.target.checked }))}
-            className="w-3.5 h-3.5 accent-slate-600 cursor-pointer"
-          />
-          <span className="text-[11px] font-bold text-foreground">Siyah–beyaz mod</span>
-        </label>
-        <p className="text-[10px] text-muted-foreground leading-snug px-1">
-          {viewport.blackWhite
-            ? 'Çizim gri tonlamada; indirilen PNG, SVG, PDF ve Word dosyaları da siyah–beyaz olacak.'
-            : 'Açarsanız hem tuval hem de indirilen dosyalar renksiz (baskıya uygun) olur.'}
-        </p>
-        <div className="flex flex-col gap-2">
-          {disaAktarimDugmeleri.map((d) => (
             <button
-              key={d.id}
-              onClick={() => disaAktar(d.id)}
-              disabled={disaAktariliyor !== null}
-              title={d.ipucu}
-              className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${d.renk}`}
+              onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+              className="flex items-center justify-between w-full cursor-pointer group"
             >
-              {disaAktariliyor === d.id ? (
-                <span className="text-[10px] font-semibold text-muted-foreground">Hazırlanıyor…</span>
+              <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Download className="w-3.5 h-3.5" />
+                <span>Çizimi İndir</span>
+              </h3>
+              {isDownloadOpen ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               ) : (
-                <span className="truncate">{d.etiket}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               )}
             </button>
-          ))}
-        </div>
-        {disaAktarimHatasi && (
-          <p role="alert" className="text-[11px] text-destructive font-semibold">
-            {disaAktarimHatasi}
-          </p>
-        )}
-      </div>
+
+            {isDownloadOpen && (
+              <div className="space-y-2 pt-1">
+                {/* Siyah–beyaz mod: ekranda ne görünüyorsa indirilen dosya da öyle olur */}
+                <label className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-muted/40 border border-border/60 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={viewport.blackWhite === true}
+                    onChange={(e) => setViewport((prev) => ({ ...prev, blackWhite: e.target.checked }))}
+                    className="w-3.5 h-3.5 accent-slate-600 cursor-pointer"
+                  />
+                  <span className="text-[11px] font-bold text-foreground">Siyah–beyaz mod</span>
+                </label>
+                <p className="text-[10px] text-muted-foreground leading-snug px-1">
+                  {viewport.blackWhite
+                    ? 'Çizim gri tonlamada; indirilen PNG, SVG, PDF ve Word dosyaları da siyah–beyaz olacak.'
+                    : 'Açarsanız hem tuval hem de indirilen dosyalar renksiz (baskıya uygun) olur.'}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {disaAktarimDugmeleri.map((d) => (
+                    <button
+                      key={d.id}
+                      onClick={() => disaAktar(d.id)}
+                      disabled={disaAktariliyor !== null}
+                      title={d.ipucu}
+                      className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 text-[11px] font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${d.renk}`}
+                    >
+                      {disaAktariliyor === d.id ? (
+                        <span className="text-[10px] font-semibold text-muted-foreground">Hazırlanıyor…</span>
+                      ) : (
+                        <span className="truncate">{d.etiket}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {disaAktarimHatasi && (
+                  <p role="alert" className="text-[11px] text-destructive font-semibold">
+                    {disaAktarimHatasi}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
       {/* 1. SEÇİLİ NESNE BİLGİ VE ÖZELLİK PANELİ */}
       {selectedObject ? (
@@ -967,81 +998,93 @@ export function PropertiesPanel({
 
       {/* 3. GÖRÜNÜM VE IZGARA AYARLARI */}
       <div className="space-y-3 pt-2">
-        <div className="flex items-center gap-1.5 text-xs font-black text-foreground uppercase tracking-wider">
-          <Settings className="w-3.5 h-3.5 text-primary" />
-          <span>Görünüm & Koordinat Ayarları</span>
-        </div>
+        <button
+          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+          className="flex items-center justify-between w-full cursor-pointer group"
+        >
+          <div className="flex items-center gap-1.5 text-xs font-black text-foreground uppercase tracking-wider">
+            <Settings className="w-3.5 h-3.5 text-primary" />
+            <span>Görünüm & Koordinat Ayarları</span>
+          </div>
+          {isSettingsOpen ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          )}
+        </button>
 
-        <div className="space-y-2 text-xs">
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-            <div className="flex items-center gap-2">
-              <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-foreground font-bold">Izgara Çizgileri</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={viewport.showGrid}
-              onChange={(e) => setViewport((prev) => ({ ...prev, showGrid: e.target.checked }))}
-              className="w-4 h-4 accent-primary rounded cursor-pointer"
-            />
-          </label>
+        {isSettingsOpen && (
+          <div className="space-y-2 text-xs pt-1">
+            <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+              <div className="flex items-center gap-2">
+                <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-foreground font-bold">Izgara Çizgileri</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={viewport.showGrid}
+                onChange={(e) => setViewport((prev) => ({ ...prev, showGrid: e.target.checked }))}
+                className="w-4 h-4 accent-primary rounded cursor-pointer"
+              />
+            </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-            <div className="flex items-center gap-2">
-              <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-              <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={viewport.showAxes}
-              onChange={(e) => setViewport((prev) => ({ ...prev, showAxes: e.target.checked }))}
-              className="w-4 h-4 accent-cyan-600 rounded cursor-pointer"
-            />
-          </label>
+            <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={viewport.showAxes}
+                onChange={(e) => setViewport((prev) => ({ ...prev, showAxes: e.target.checked }))}
+                className="w-4 h-4 accent-cyan-600 rounded cursor-pointer"
+              />
+            </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-            <div className="flex items-center gap-2">
-              <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="text-foreground font-bold">Nokta Koordinatları</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={viewport.showCoordinates}
-              onChange={(e) =>
-                setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))
-              }
-              className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
-            />
-          </label>
+            <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+              <div className="flex items-center gap-2">
+                <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-foreground font-bold">Nokta Koordinatları</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={viewport.showCoordinates}
+                onChange={(e) =>
+                  setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))
+                }
+                className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+              />
+            </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
-              <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={viewport.showQuadrants ?? false}
-              onChange={(e) =>
-                setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))
-              }
-              className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
-            />
-          </label>
+            <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
+                <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={viewport.showQuadrants ?? false}
+                onChange={(e) =>
+                  setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))
+                }
+                className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
+              />
+            </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">🧲</span>
-              <span className="text-foreground font-bold">Izgaraya Yapış (Snap)</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={viewport.snapToGrid}
-              onChange={(e) => setViewport((prev) => ({ ...prev, snapToGrid: e.target.checked }))}
-              className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
-            />
-          </label>
-        </div>
+            <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🧲</span>
+                <span className="text-foreground font-bold">Izgaraya Yapış (Snap)</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={viewport.snapToGrid}
+                onChange={(e) => setViewport((prev) => ({ ...prev, snapToGrid: e.target.checked }))}
+                className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+              />
+            </label>
+          </div>
+        )}
       </div>
         </div>
       )}
