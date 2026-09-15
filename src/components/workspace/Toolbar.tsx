@@ -1055,24 +1055,7 @@ export function Toolbar({ onSelectTool,
                       <span>Tümünü Sil</span>
                     </button>
                   )}
-                  {/* Panelin SAĞ ÜST köşesindeki daralt/genişlet düğmesi */}
-                  <button
-                    onClick={ikonModuDegistir}
-                    aria-pressed={ikonModu}
-                    title={
-                      ikonModu
-                        ? 'Araç adlarını göster (paneli genişlet)'
-                        : 'Yalnızca ikonları göster (paneli daralt)'
-                    }
-                    aria-label={ikonModu ? 'Paneli genişlet' : 'Paneli daralt'}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
-                  >
-                    {ikonModu ? (
-                      <PanelLeftOpen className="w-4 h-4" />
-                    ) : (
-                      <PanelLeftClose className="w-4 h-4" />
-                    )}
-                  </button>
+
                 </div>
               </div>
 
