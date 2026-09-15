@@ -370,7 +370,7 @@ export function Header() {
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
               >
                 <Shapes className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Serbest Çizim Masasında Aç</span>
+                <span>Serbest Çizim Stüdyosunda Aç</span>
               </button>
             </div>
           )}
@@ -505,7 +505,7 @@ export function Header() {
             className="w-full text-left px-3.5 py-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-2.5"
           >
             <Layers className="w-4 h-4 text-emerald-500" />
-            <span>Serbest Çizim Masası</span>
+            <span>Serbest Çizim Stüdyosu</span>
           </button>
         </div>
       </Modal>
