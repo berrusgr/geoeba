@@ -248,7 +248,7 @@ export function WorkspaceView() {
   const [isAddObjectDialogOpen, setIsAddObjectDialogOpen] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showProperties, setShowProperties] = useState(false);
-  const [propertiesTab, setPropertiesTab] = useState<'ozellikler' | 'stil'>('ozellikler');
+  const [propertiesTab, setPropertiesTab] = useState<'ozellikler' | 'stil' | 'ayarlar'>('ozellikler');
 
   // 3D Stüdyo Durumları (geçmiş destekli)
   const [scene, dispatch] = useReducer(sceneReducer, null, () => ({
