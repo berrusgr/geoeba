@@ -25,7 +25,7 @@ import {
 import { formatTurkishNumber } from '@/math/coordinates';
 import { validateMathExpression, extractVariableNames, compileMathExpression, evaluateNumericInput } from '@/math/parser';
 import { functionDefinitionCycle, functionNameOwner, relabelFunction, undefinedFunctionCalls } from '@/math/functionNames';
-import { Trash2, Search, ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Calculator, Shapes, Table, Eye, EyeOff, Plus, Check, X, AlertCircle, Keyboard } from 'lucide-react';
+import { Trash2, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Calculator, Shapes, Table, Eye, EyeOff, Plus, Check, X, AlertCircle, Keyboard } from 'lucide-react';
 import { TOOL_SHORTCUTS } from './toolShortcuts';
 import { TOOL_GROUPS } from './toolDefinitions';
 import { MathKeypad } from '@/components/workspace/MathKeypad';
@@ -720,7 +720,7 @@ export function Toolbar({ onSelectTool,
   const normalizedSearch = (ikonModu ? '' : toolSearch).trim().toLocaleLowerCase('tr');
 
   return (
-    <div className="flex h-full min-h-0 bg-card/95 backdrop-blur-md border-r border-border select-none z-30 overflow-hidden shadow-sm shrink-0">
+    <div className="flex h-full min-h-0 bg-card/95 backdrop-blur-md border-r border-border select-none z-30 shadow-sm shrink-0 relative">
 
       {/* 1. SOL DİKEY MENÜ SEÇİCİ (GeoGebra Birebir Stil) */}
       <div className="w-14 shrink-0 h-full border-r border-border flex flex-col items-center py-4 justify-between bg-slate-50/70 dark:bg-slate-900/60">
@@ -776,14 +776,6 @@ export function Toolbar({ onSelectTool,
           </button>
         </div>
 
-        {/* Alt Kısım: Daraltma / Genişletme */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Genişlet" : "Daralt"}
-          className="w-10 h-10 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
-        >
-          {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-        </button>
       </div>
 
       {/* 2. SAĞ KISIM: İÇERİK PANELİ */}
@@ -1311,6 +1303,20 @@ export function Toolbar({ onSelectTool,
           </div>,
           document.body
         )}
+
+      {/* Kapatma Kulakçığı */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-12 rounded-r-md bg-card border border-l-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group z-40"
+        style={{ left: '100%' }}
+        title={isCollapsed ? 'Araç Çubuğunu Aç (›)' : 'Araç Çubuğunu Daralt (‹)'}
+      >
+        {isCollapsed ? (
+          <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+        ) : (
+          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+        )}
+      </button>
 
     </div>
   );

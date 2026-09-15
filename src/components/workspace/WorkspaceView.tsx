@@ -776,27 +776,12 @@ export function WorkspaceView() {
       {/* ANA ÇALIŞMA ALANI */}
       <div className="flex flex-1 min-h-0 relative overflow-hidden">
         {/* SOL ARAÇ ÇUBUĞU */}
-        <div className="relative flex shrink-0 h-full min-h-0">
-          {showToolbar && (
-            <Toolbar
-              onSelectTool={activateTool}
-              onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
-              onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
-            />
-          )}
-          {/* Adobe Stili Sol Panel Kenar Aç/Kapa Düğmesi (< / >) */}
-          <button
-            onClick={() => setShowToolbar(!showToolbar)}
-            className="absolute top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-5 h-12 rounded-r-md bg-card border border-l-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
-            style={{ left: showToolbar ? '100%' : '0px' }}
-            title={showToolbar ? 'Araç Çubuğunu Daralt (‹)' : 'Araç Çubuğunu Aç (›)'}
-          >
-            {showToolbar ? (
-              <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            )}
-          </button>
+        <div className="relative flex shrink-0 h-full min-h-0 z-30">
+          <Toolbar
+            onSelectTool={activateTool}
+            onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
+            onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
+          />
         </div>
 
         {/* ÇOKLU GÖRÜNÜM MERKEZİ ALAN */}
