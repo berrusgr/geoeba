@@ -448,13 +448,7 @@ export function TeachingPortal() {
                         {String(index + 1).padStart(2, '0')}
                       </div>
 
-                      <div className="flex flex-col items-end text-[10px] font-bold text-muted-foreground leading-tight">
-                        <span className="flex items-center gap-1 text-foreground">
-                          <Clock className="w-3 h-3 text-primary" />
-                          {theme.lessonHours} Saat
-                        </span>
-                        <span>{theme.outcomeCount} Çıktı</span>
-                      </div>
+
                     </div>
 
                     {/* Başlık */}
@@ -480,9 +474,7 @@ export function TeachingPortal() {
                   {/* TEMA ALT KONULARI VE GÖREV KARTLARI */}
                   {isExpanded && (
                     <div className="p-4 bg-muted/40 border-t border-border space-y-3 animate-in fade-in duration-200">
-                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                        Alt Modüller
-                      </div>
+
 
                       <div className="grid grid-cols-1 gap-2">
                         {theme.topics.map((topic) => (
