@@ -576,14 +576,14 @@ export function WorkspaceView() {
   // 2. 2D GRAFİK PANELİ
   const render2DPanel = (
     <div className="flex flex-col h-full w-full bg-background relative overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/40 border-b border-border/50 shrink-0 z-10 select-none">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/40 border-b border-border/50 shrink-0 z-10 select-none min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
           <span className="text-xs font-bold tracking-wider text-foreground uppercase">2D GRAFİK</span>
         </div>
 
         {/* Adobe Stili Kontrol & Açılır Menü Butonları */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
           {/* Görünümü Ortala */}
           <button
             onClick={resetViewport}
@@ -613,7 +613,7 @@ export function WorkspaceView() {
             </span>
           </button>
 
-          {/* Özellikler Butonu */}
+          {/* Özellikler Butonu (Altta Açar) */}
           <button
             onClick={() => {
               if (showProperties && propertiesTab === 'ozellikler') {
@@ -631,17 +631,17 @@ export function WorkspaceView() {
             title={
               showProperties && propertiesTab === 'ozellikler'
                 ? 'Özellikler Panelini Kapat'
-                : 'Özellikler Panelini Aç'
+                : 'Özellikler Panelini Altta Aç'
             }
           >
             <Sliders className="w-3 h-3" />
             <span>Özellikler</span>
-            <span className="text-[10px] opacity-70 ml-0.5 font-bold">
-              {showProperties && propertiesTab === 'ozellikler' ? '›' : '‹'}
+            <span className="text-[9px] opacity-70 ml-0.5 font-bold">
+              {showProperties && propertiesTab === 'ozellikler' ? '▲' : '▼'}
             </span>
           </button>
 
-          {/* Stil Butonu */}
+          {/* Stil Butonu (Altta Açar) */}
           <button
             onClick={() => {
               if (showProperties && propertiesTab === 'stil') {
@@ -659,13 +659,13 @@ export function WorkspaceView() {
             title={
               showProperties && propertiesTab === 'stil'
                 ? 'Stil Panelini Kapat'
-                : 'Stil Panelini Aç'
+                : 'Stil Panelini Altta Aç'
             }
           >
             <Palette className="w-3 h-3" />
             <span>Stil</span>
-            <span className="text-[10px] opacity-70 ml-0.5 font-bold">
-              {showProperties && propertiesTab === 'stil' ? '›' : '‹'}
+            <span className="text-[9px] opacity-70 ml-0.5 font-bold">
+              {showProperties && propertiesTab === 'stil' ? '▲' : '▼'}
             </span>
           </button>
         </div>
@@ -893,23 +893,10 @@ export function WorkspaceView() {
           )}
         </div>
 
-        {/* SAĞ ÖZELLİKLER & STİL PANELİ */}
-        <div className="relative flex shrink-0 h-full min-h-0">
-          {/* Adobe Stili Sağ Panel Kenar Aç/Kapa Düğmesi (< / >) */}
-          <button
-            onClick={() => setShowProperties(!showProperties)}
-            className="absolute top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
-            style={{ right: showProperties ? '100%' : '0px' }}
-            title={showProperties ? 'Özellikler Panelini Daralt (›)' : 'Özellikler Panelini Aç (‹)'}
-          >
-            {showProperties ? (
-              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            ) : (
-              <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-            )}
-          </button>
-          {showProperties &&
-            (layoutMode === '3d_only' || layoutMode === 'algebra_3d' ? (
+        {/* ALTTAN AÇILAN ÖZELLİKLER & STİL PANELİ (Üstteki butonları ve 2D genişliğini asla kaydırmaz) */}
+        {showProperties && (
+          <div className="w-full shrink-0 h-64 sm:h-72 border-t border-border bg-card shadow-xl z-20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
+            {layoutMode === '3d_only' || layoutMode === 'algebra_3d' ? (
               <Properties3D
                 selectedSolid={selectedSolid}
                 onUpdateSolid={handleUpdateSolid}
@@ -926,8 +913,9 @@ export function WorkspaceView() {
                 onTabChange={setPropertiesTab}
                 onClose={() => setShowProperties(false)}
               />
-            ))}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2D & 3D Modalları */}

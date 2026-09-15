@@ -89,151 +89,149 @@ export function StylePanel() {
     );
 
   return (
-    <div className="space-y-5">
-      {/* ÇİZGİ KALINLIĞI */}
-      <div className="space-y-2">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Minus className="w-3.5 h-3.5" />
-          <span>Çizgi Kalınlığı</span>
-        </h3>
-        <AyarKaydirici
-          etiket="Şekil kenarları"
-          ipucu="Çokgen, çember, elips, yay ve doğru parçalarının kalınlığı. Izgara ve araç çubuğu etkilenmez."
-          deger={styleSettings.strokeScale}
-          min={0.5}
-          max={3}
-          adim={0.1}
-          birim="carpan"
-          onChange={(v) => guncelle('strokeScale', v)}
-        />
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
+        {/* ÇİZGİ KALINLIĞI */}
+        <div className="space-y-2 p-3 rounded-2xl bg-muted/30 border border-border/70">
+          <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Minus className="w-3.5 h-3.5" />
+            <span>Çizgi Kalınlığı</span>
+          </h3>
+          <AyarKaydirici
+            etiket="Şekil kenarları"
+            ipucu="Çokgen, çember, elips, yay ve doğru parçalarının kalınlığı."
+            deger={styleSettings.strokeScale}
+            min={0.5}
+            max={3}
+            adim={0.1}
+            birim="carpan"
+            onChange={(v) => guncelle('strokeScale', v)}
+          />
+        </div>
+
+        {/* NOKTA / PİVOT BOYUTU */}
+        <div className="space-y-2 p-3 rounded-2xl bg-muted/30 border border-border/70">
+          <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <CircleDot className="w-3.5 h-3.5" />
+            <span>Nokta (Pivot) Boyutu</span>
+          </h3>
+          <AyarKaydirici
+            etiket="Nokta yarıçapı"
+            ipucu="Kendi boyutu ayarlanmış noktalar bu ayardan etkilenmez."
+            deger={styleSettings.pointRadius}
+            min={3}
+            max={14}
+            adim={0.5}
+            birim="px"
+            onChange={(v) => guncelle('pointRadius', v)}
+          />
+        </div>
+
+        {/* YAZI BOYUTLARI */}
+        <div className="space-y-2 p-3 rounded-2xl bg-muted/30 border border-border/70">
+          <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Type className="w-3.5 h-3.5" />
+            <span>Yazı Boyutları</span>
+          </h3>
+          <AyarKaydirici
+            etiket="Tüm yazılar (orantılı)"
+            ipucu="Tuvaldeki bütün yazıları aynı oranda büyütür veya küçültür."
+            deger={styleSettings.fontScale}
+            min={0.6}
+            max={2}
+            adim={0.05}
+            birim="carpan"
+            onChange={(v) => guncelle('fontScale', v)}
+          />
+
+          {/* AKORDİYON: gruplara özel ince ayar */}
+          <button
+            type="button"
+            onClick={() => setYaziAcik((a) => !a)}
+            aria-expanded={yaziAcik}
+            className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 transition-colors cursor-pointer"
+          >
+            <span className="text-[11px] font-bold text-foreground">Ayrıntılı boyutlandırma</span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${yaziAcik ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {yaziAcik && (
+            <div className="space-y-3 pl-2.5 pt-1 border-l-2 border-border/70">
+              <AyarKaydirici
+                etiket="Nokta adları ve koordinatları"
+                deger={styleSettings.pointLabelScale}
+                min={0.6}
+                max={2}
+                adim={0.05}
+                birim="carpan"
+                onChange={(v) => guncelle('pointLabelScale', v)}
+              />
+              <AyarKaydirici
+                etiket="Ölçüm kutuları (cm, °)"
+                ipucu="Uzunluk, alan, çevre ve açı etiketleri."
+                deger={styleSettings.measurementScale}
+                min={0.6}
+                max={2}
+                adim={0.05}
+                birim="carpan"
+                onChange={(v) => guncelle('measurementScale', v)}
+              />
+              <AyarKaydirici
+                etiket="Eksen sayıları ve bölge adları"
+                deger={styleSettings.axisScale}
+                min={0.6}
+                max={2}
+                adim={0.05}
+                birim="carpan"
+                onChange={(v) => guncelle('axisScale', v)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* SADELEŞTİRME & DİĞER */}
+        <div className="space-y-2 p-3 rounded-2xl bg-muted/30 border border-border/70">
+          <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Eye className="w-3.5 h-3.5" />
+            <span>Sadeleştirme</span>
+          </h3>
+          <AyarOnay
+            etiket="Etiket kutularını kaldır"
+            ipucu="Ölçüm yazıları arka plan kutusu olmadan, düz metin olarak görünür."
+            isaretli={styleSettings.hideLabelBoxes}
+            onChange={(v) => guncelle('hideLabelBoxes', v)}
+          />
+          <AyarOnay
+            etiket="Dolgu rengini kaldır"
+            ipucu="Çokgen, çember ve elipsin içi boş kalır."
+            isaretli={styleSettings.hideFills}
+            onChange={(v) => guncelle('hideFills', v)}
+          />
+          <AyarOnay
+            etiket="Nokta koordinatlarını kaldır"
+            ipucu="Noktaların yanındaki (x; y) yazıları gizlenir."
+            isaretli={viewport.showCoordinates === false}
+            onChange={(v) => setViewport((prev) => ({ ...prev, showCoordinates: !v }))}
+          />
+        </div>
       </div>
 
-      {/* NOKTA / PİVOT BOYUTU */}
-      <div className="space-y-2">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <CircleDot className="w-3.5 h-3.5" />
-          <span>Nokta (Pivot) Boyutu</span>
-        </h3>
-        <AyarKaydirici
-          etiket="Nokta yarıçapı"
-          ipucu="Kendi boyutu ayarlanmış noktalar bu ayardan etkilenmez."
-          deger={styleSettings.pointRadius}
-          min={3}
-          max={14}
-          adim={0.5}
-          birim="px"
-          onChange={(v) => guncelle('pointRadius', v)}
-        />
-      </div>
-
-      {/* YAZI BOYUTLARI */}
-      <div className="space-y-2">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Type className="w-3.5 h-3.5" />
-          <span>Yazı Boyutları</span>
-        </h3>
-        <AyarKaydirici
-          etiket="Tüm yazılar (orantılı)"
-          ipucu="Tuvaldeki bütün yazıları aynı oranda büyütür veya küçültür."
-          deger={styleSettings.fontScale}
-          min={0.6}
-          max={2}
-          adim={0.05}
-          birim="carpan"
-          onChange={(v) => guncelle('fontScale', v)}
-        />
-
-        {/* AKORDİYON: gruplara özel ince ayar */}
+      <div className="flex justify-end pt-1">
         <button
           type="button"
-          onClick={() => setYaziAcik((a) => !a)}
-          aria-expanded={yaziAcik}
-          className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 transition-colors cursor-pointer"
+          onClick={() => {
+            setStyleSettings(DEFAULT_STYLE_SETTINGS);
+            setViewport((prev) => ({ ...prev, showCoordinates: true }));
+          }}
+          disabled={varsayilanMi && viewport.showCoordinates !== false}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 text-[11px] font-bold text-muted-foreground transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <span className="text-[11px] font-bold text-foreground">Ayrıntılı boyutlandırma</span>
-          <ChevronDown
-            className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${yaziAcik ? 'rotate-180' : ''}`}
-          />
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Varsayılan Stile Dön</span>
         </button>
-
-        {yaziAcik && (
-          <div className="space-y-3 pl-2.5 pt-1 border-l-2 border-border/70">
-            <p className="text-[10px] text-muted-foreground leading-snug">
-              Bu değerler genel oranla <strong>çarpılır</strong>: genel ayar hepsini birden,
-              buradakiler tek bir grubu değiştirir.
-            </p>
-            <AyarKaydirici
-              etiket="Nokta adları ve koordinatları"
-              deger={styleSettings.pointLabelScale}
-              min={0.6}
-              max={2}
-              adim={0.05}
-              birim="carpan"
-              onChange={(v) => guncelle('pointLabelScale', v)}
-            />
-            <AyarKaydirici
-              etiket="Ölçüm kutuları"
-              ipucu="Uzunluk, alan, çevre ve açı etiketleri."
-              deger={styleSettings.measurementScale}
-              min={0.6}
-              max={2}
-              adim={0.05}
-              birim="carpan"
-              onChange={(v) => guncelle('measurementScale', v)}
-            />
-            <AyarKaydirici
-              etiket="Eksen sayıları ve bölge adları"
-              deger={styleSettings.axisScale}
-              min={0.6}
-              max={2}
-              adim={0.05}
-              birim="carpan"
-              onChange={(v) => guncelle('axisScale', v)}
-            />
-          </div>
-        )}
       </div>
-
-      {/* GÖRÜNÜM SADELEŞTİRME */}
-      <div className="space-y-2">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Eye className="w-3.5 h-3.5" />
-          <span>Sadeleştirme</span>
-        </h3>
-        <AyarOnay
-          etiket="Etiket kutularını kaldır"
-          ipucu="Ölçüm yazıları arka plan kutusu olmadan, düz metin olarak görünür."
-          isaretli={styleSettings.hideLabelBoxes}
-          onChange={(v) => guncelle('hideLabelBoxes', v)}
-        />
-        <AyarOnay
-          etiket="Dolgu rengini kaldır"
-          ipucu="Çokgen, çember, elips ve daire diliminin içi boş kalır; yalnızca kenar çizgileri görünür."
-          isaretli={styleSettings.hideFills}
-          onChange={(v) => guncelle('hideFills', v)}
-        />
-        {/* Koordinat gösterimi görünüm ayarlarında da var; burada "kaldır" yönünde sunulur.
-            Aynı duruma bağlı olduğu için iki yer birbiriyle her zaman tutarlı kalır. */}
-        <AyarOnay
-          etiket="Nokta koordinatlarını kaldır"
-          ipucu="Noktaların yanındaki (x; y) yazıları gizlenir; nokta adları (A, B…) kalır."
-          isaretli={viewport.showCoordinates === false}
-          onChange={(v) => setViewport((prev) => ({ ...prev, showCoordinates: !v }))}
-        />
-      </div>
-
-      <button
-        type="button"
-        onClick={() => {
-          setStyleSettings(DEFAULT_STYLE_SETTINGS);
-          setViewport((prev) => ({ ...prev, showCoordinates: true }));
-        }}
-        disabled={varsayilanMi && viewport.showCoordinates !== false}
-        className="w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-muted/50 hover:bg-muted border border-border/70 text-[11px] font-bold text-muted-foreground transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <RotateCcw className="w-3.5 h-3.5" />
-        <span>Varsayılana dön</span>
-      </button>
     </div>
   );
 }
