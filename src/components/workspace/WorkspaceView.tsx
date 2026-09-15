@@ -21,8 +21,22 @@ import { ConfirmClearModal } from './ConfirmClearModal';
 import { Toolbar3D } from './Toolbar3D';
 import { Canvas3D } from './Canvas3D';
 import { Properties3D } from './Properties3D';
+import { AlgebraView } from './AlgebraView';
 import { Solid3DObject, Solid3DType, Tool3DMode, Camera3D, Point3D } from '@/types/workspace3d';
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  LayoutGrid,
+  Columns2,
+  Rows2,
+  Maximize2,
+  Box,
+  Sliders,
+  RotateCcw,
+  Eye,
+} from 'lucide-react';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import { syncUserFunctions } from '@/math/functionNames';
 import { createId } from '@/state/ids';
@@ -30,6 +44,8 @@ import { createId } from '@/state/ids';
 const SCENE_STORAGE_KEY = 'matematik_3d_sahne_v1';
 const HISTORY_LIMIT = 80;
 const COALESCE_MS = 700;
+
+export type LayoutMode = 'default' | 'algebra_2d' | '2d_3d' | 'three_col' | 'algebra_3d' | '2d_only' | '3d_only';
 
 const DEFAULT_CAMERA_3D: Camera3D = {
   rotX: 25,
@@ -61,10 +77,8 @@ interface SceneState {
   solids: Solid3DObject[];
   past: Solid3DObject[][];
   future: Solid3DObject[][];
-  // Zaman penceresiyle birleşen güncellemeler (kaydırıcı, özellik alanı) için
   lastKey: string | null;
   lastTime: number;
-  // Süren sürükleme oturumu; boyunca geçmişe YENİ kayıt yazılmaz
   dragKey: string | null;
 }
 
@@ -88,12 +102,8 @@ function pushPast(past: Solid3DObject[][], snapshot: Solid3DObject[]): Solid3DOb
 function sceneReducer(state: SceneState, action: SceneAction): SceneState {
   switch (action.type) {
     case 'set': {
-      // Güncelleyici, REDUCER'IN kendi güncel durumuna uygulanır. Böylece aynı tick içinde
-      // art arda gelen çağrılar (üç cismi hızlıca eklemek gibi) birbirini ezmez.
       const nextSolids = action.updater(state.solids);
       if (nextSolids === state.solids) return state;
-      // Kaydırıcı gibi hızlı ardışık güncellemeler tek geçmiş adımında birleşir:
-      // değişiklik öncesi durum zaten 'past'a yazıldı, burada yalnızca cisimler tazelenir.
       const coalesce = !!action.key && state.lastKey === action.key && action.now - state.lastTime < COALESCE_MS;
       if (coalesce) {
         return { ...state, solids: nextSolids, lastTime: action.now, dragKey: null };
@@ -108,8 +118,6 @@ function sceneReducer(state: SceneState, action: SceneAction): SceneState {
       };
     }
     case 'drag': {
-      // Sürükleme TEK geçmiş adımıdır: başlangıç durumu bir kez 'past'a yazılır, sürükleme
-      // boyunca (kaç cisim ve kaç fare karesi olursa olsun) yalnızca 'solids' güncellenir.
       const nextSolids = action.updater(state.solids);
       if (nextSolids === state.solids) return state;
       if (state.dragKey === action.key) {
@@ -125,14 +133,10 @@ function sceneReducer(state: SceneState, action: SceneAction): SceneState {
       };
     }
     case 'dragEnd': {
-      // Fare bırakıldı: son konum artık geçerli durumdur, sonraki eylem yeni bir adım açar.
       if (state.dragKey === null) return state;
       return { ...state, dragKey: null };
     }
     case 'dragCancel': {
-      // Sürükleme Esc ile iptal edildi: 'drag' aksiyonunun geçmişe yazdığı sürükleme öncesi
-      // anlık görüntüyü geri yükle ve o kaydı geçmişten kaldır. Böylece iptalden sonra
-      // Ctrl+Z hiçbir şey yapmayan boş bir adım harcamaz ve konumlar birebir eski değerine döner.
       if (state.dragKey === null || state.past.length === 0) {
         return state.dragKey === null ? state : { ...state, dragKey: null };
       }
@@ -145,8 +149,6 @@ function sceneReducer(state: SceneState, action: SceneAction): SceneState {
       };
     }
     case 'restore': {
-      // Kayıtlı sahnenin geri yüklenmesi bir kullanıcı eylemi DEĞİLDİR; geçmişe yazılmaz.
-      // (StrictMode'da efekt iki kez çalışsa da past/future boş kalır.)
       return { solids: action.solids, past: [], future: [], lastKey: null, lastTime: 0, dragKey: null };
     }
     case 'undo': {
@@ -214,10 +216,20 @@ export function WorkspaceView() {
     isCircleRadiusDialogOpen,
     circleRadiusPos,
     setIsCircleRadiusDialogOpen,
+    resetViewport,
   } = useWorkspace();
 
-  // Adlı fonksiyonlar (f, g …) tuval çizilmeden önce ayrıştırıcıya bildirilir: "g(x) = f(x) + 1" ve "f(5)" çalışsın.
+  // Adlı fonksiyonlar (f, g …) tuval çizilmeden önce ayrıştırıcıya bildirilir
   syncUserFunctions(objects);
+
+  // Düzen ve Panel Durumları
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('default');
+  const [splitY, setSplitY] = useState<number>(54); // Üst 2D panel yüksekliği yüzdesi (Varsayılan düzende)
+  const [splitX, setSplitX] = useState<number>(44); // Alt/Sol Cebir paneli genişliği yüzdesi
+  const [isDraggingY, setIsDraggingY] = useState(false);
+  const [isDraggingX, setIsDraggingX] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 2D & 3D Dialog ve Panel Durumları
   const [isFunctionDialogOpen, setIsFunctionDialogOpen] = useState(false);
@@ -238,14 +250,14 @@ export function WorkspaceView() {
   const solids = scene.solids;
   const [sceneLoaded, setSceneLoaded] = useState(false);
 
-  // Kayıtlı sahneyi geri yükle (geçmişe kayıt DÜŞMEZ; açılışta Geri Al sahneyi silmemeli)
+  // Kayıtlı sahneyi geri yükle
   useEffect(() => {
     const saved = loadSavedScene();
     if (saved.length > 0) dispatch({ type: 'restore', solids: saved });
     setSceneLoaded(true);
   }, []);
 
-  // Sahneyi kaydet (kısa gecikmeyle)
+  // Sahneyi kaydet
   useEffect(() => {
     if (!sceneLoaded) return;
     const handle = window.setTimeout(() => {
@@ -258,22 +270,17 @@ export function WorkspaceView() {
     return () => window.clearTimeout(handle);
   }, [solids, sceneLoaded]);
 
-  // Süren sürükleme oturumunun anahtarı (fare bırakılınca sıfırlanır)
   const dragKeyRef = useRef<string | null>(null);
 
   const setSolids = useCallback(
     (updater: Solid3DObject[] | SceneUpdater, key?: string) => {
       const fn: SceneUpdater = typeof updater === 'function' ? updater : () => updater;
-      // Sürükleme dışı her değişiklik açık kalmış bir sürükleme oturumunu kapatır
       dragKeyRef.current = null;
       dispatch({ type: 'set', updater: fn, key, now: Date.now() });
     },
     []
   );
 
-  // Sürükleme sırasındaki konum güncellemeleri. Canvas3D her fare karesinde SEÇİLİ HER CİSİM
-  // için ayrı ayrı çağırır; hepsi aynı oturum anahtarını paylaştığı için sürükleme başına
-  // geçmişe yalnızca TEK adım (sürükleme öncesi durum) yazılır.
   const dragSolids = useCallback((updater: SceneUpdater) => {
     if (dragKeyRef.current === null) dragKeyRef.current = createId('drag');
     dispatch({ type: 'drag', updater, key: dragKeyRef.current });
@@ -284,7 +291,6 @@ export function WorkspaceView() {
     dispatch({ type: 'dragEnd' });
   }, []);
 
-  // Esc ile iptal edilen sürükleme: konumlar sürükleme öncesine döner, geçmişte iz kalmaz
   const handleDragCancel = useCallback(() => {
     dragKeyRef.current = null;
     dispatch({ type: 'dragCancel' });
@@ -308,6 +314,57 @@ export function WorkspaceView() {
     });
   }, [solids]);
 
+  /* ------------------- Bölücüleri Fare ile Boyutlandırma ------------------- */
+  const handleMouseDownSplitterY = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDraggingY(true);
+  }, []);
+
+  const handleMouseDownSplitterX = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDraggingX(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isDraggingY && !isDraggingX) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+
+      if (isDraggingY) {
+        const relativeY = e.clientY - rect.top;
+        const percentY = Math.min(80, Math.max(20, (relativeY / rect.height) * 100));
+        setSplitY(percentY);
+      }
+
+      if (isDraggingX) {
+        const relativeX = e.clientX - rect.left;
+        const percentX = Math.min(80, Math.max(18, (relativeX / rect.width) * 100));
+        setSplitX(percentX);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingY(false);
+      setIsDraggingX(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    if (isDraggingY) document.body.style.cursor = 'row-resize';
+    if (isDraggingX) document.body.style.cursor = 'col-resize';
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingY, isDraggingX]);
+
   /* ------------------------------ 3D Eylemler ------------------------------ */
 
   const handleAddSolid = (
@@ -330,14 +387,11 @@ export function WorkspaceView() {
       dims.radius = dims.width / 2;
     }
 
-    // Kimlik dışarıda üretilir (seçimi hemen ayarlayabilmek için); ad, renk ve konum
-    // güncelleyicinin İÇİNDE hesaplanır, böylece aynı tick'te eklenen cisimler çakışmaz.
     const newId = createId(`solid-${type}`);
 
     setSolids((prev) => {
       const count = prev.filter((s) => s.type === type).length + 1;
       const color = SOLID_COLORS[prev.length % SOLID_COLORS.length];
-      // Yeni cisimleri ızgara düzeninde yerleştir (üst üste binme olmaz)
       const idx = prev.length;
       const autoPos: Point3D = { x: ((idx % 4) - 1.5) * 4.5, y: -Math.floor(idx / 4) * 4.5, z: 0 };
 
@@ -376,7 +430,6 @@ export function WorkspaceView() {
     setSelectedSolidIds([]);
   };
 
-  // Tek cismin sürükleme sırasındaki (mutlak) konumu
   const handleDragSolidPosition = useCallback(
     (id: string, newPos: Point3D) => {
       dragSolids((prev) => prev.map((s) => (s.id === id ? { ...s, position: newPos } : s)));
@@ -384,7 +437,6 @@ export function WorkspaceView() {
     [dragSolids]
   );
 
-  // Çoklu seçimin sürükleme sırasındaki artımlı kayması
   const handleDragSolidsPosition = useCallback(
     (ids: string[], delta: Point3D) => {
       dragSolids((prev) =>
@@ -393,7 +445,6 @@ export function WorkspaceView() {
             ? {
                 ...s,
                 position: {
-                  // Artımlı toplamada kayan nokta birikmesin diye her adımda 2 ondalığa yuvarla
                   x: Number((s.position.x + delta.x).toFixed(2)),
                   y: Number((s.position.y + delta.y).toFixed(2)),
                   z: Number((s.position.z + delta.z).toFixed(2)),
@@ -446,31 +497,36 @@ export function WorkspaceView() {
   const redo3D = () => dispatch({ type: 'redo' });
 
   const activateTool = (tool: ToolMode) => {
-    if (tool === 'function') { setIsFunctionDialogOpen(true); return; }
-    if (tool === 'slider') { setIsSliderDialogOpen(true); return; }
+    if (tool === 'function') {
+      setIsFunctionDialogOpen(true);
+      return;
+    }
+    if (tool === 'slider') {
+      setIsSliderDialogOpen(true);
+      return;
+    }
     setActiveTool(tool);
     if (tool === 'regular_polygon') openRegularPolygonDialog();
   };
+
   const shortcutsRef = useRef({ objects, solids, studioDimension, activateTool });
   shortcutsRef.current = { objects, solids, studioDimension, activateTool };
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing || isAnyModalOpen() || isEditingOrInDialog(event.target)) return;
       const current = shortcutsRef.current;
       if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.code === 'KeyA') {
         event.preventDefault();
-        if (current.studioDimension === '2D') {
-          setActiveTool('select');
-          setSelectedObjectIds(current.objects.map(object => object.id));
-        } else {
-          setActive3DTool('select_move');
-          setSelectedSolidIds(current.solids.map(solid => solid.id));
-        }
+        setActiveTool('select');
+        setSelectedObjectIds(current.objects.map((object) => object.id));
         return;
       }
-      if (current.studioDimension !== '2D') return;
       const tool = toolForShortcut(event);
-      if (tool) { event.preventDefault(); current.activateTool(tool); }
+      if (tool) {
+        event.preventDefault();
+        current.activateTool(tool);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -478,39 +534,261 @@ export function WorkspaceView() {
 
   const selectedSolid = solids.find((s) => s.id === selectedSolidId) || null;
 
+  /* ------------------- Render Panelleri Tanımları ------------------- */
+
+  // 1. CEBİR PANELİ
+  const renderAlgebraPanel = (
+    <div className="flex flex-col h-full w-full bg-card/60 backdrop-blur-sm border-r border-border/60 overflow-hidden">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-muted/40 border-b border-border/60 shrink-0 select-none">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50" />
+          <span className="text-xs font-bold tracking-wider text-foreground uppercase">CEBİR</span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            {objects.length + solids.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setIsAddObjectDialogOpen(true)}
+            className="text-[11px] font-medium text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors"
+            title="Yeni Nesne Ekle"
+          >
+            + Ekle
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <AlgebraView
+          solids={solids}
+          onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
+          onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
+          onAddSolid={handleAddSolid}
+        />
+      </div>
+    </div>
+  );
+
+  // 2. 2D GRAFİK PANELİ
+  const render2DPanel = (
+    <div className="flex flex-col h-full w-full bg-background relative overflow-hidden">
+      <div className="flex items-center justify-between px-3.5 py-1.5 bg-muted/30 border-b border-border/40 shrink-0 z-10 select-none">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
+          <span className="text-xs font-bold tracking-wider text-foreground uppercase">2D GRAFİK</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={resetViewport}
+            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors flex items-center gap-1"
+            title="Görünümü Sıfırla (Merkeze Odaklan)"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span className="hidden sm:inline">Ortala</span>
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 relative overflow-hidden">
+        <Canvas onSwitchTo3D={() => setLayoutMode('3d_only')} />
+        <CommandAssistant onSelectTool={activateTool} />
+      </div>
+    </div>
+  );
+
+  // 3. 3D GRAFİK PANELİ
+  const render3DPanel = (
+    <div className="flex flex-col h-full w-full bg-background relative overflow-hidden border-l border-border/40">
+      <div className="flex items-center justify-between px-3.5 py-1.5 bg-muted/30 border-b border-border/40 shrink-0 z-10 select-none">
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
+          <span className="text-xs font-bold tracking-wider text-foreground uppercase">3D GRAFİK</span>
+          {solids.length > 0 && (
+            <span className="text-[10px] font-medium text-muted-foreground">({solids.length} Cisim)</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => handleSetCameraPreset('isometric')}
+            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors flex items-center gap-1"
+            title="İzometrik Görünüm"
+          >
+            <Box className="w-3 h-3" />
+            <span className="hidden sm:inline">İzometrik</span>
+          </button>
+          <button
+            onClick={() => handleSetCameraPreset('top')}
+            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors"
+            title="Üstten Görünüm (Z-Düzlemi)"
+          >
+            Üst
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 relative overflow-hidden">
+        <Canvas3D
+          solids={solids}
+          selectedSolidId={selectedSolidId}
+          selectedSolidIds={selectedSolidIds}
+          activeTool={active3DTool}
+          camera={camera3D}
+          showGlobalVertices={showGlobalVertices}
+          showGlobalEdges={showGlobalEdges}
+          showGlobalFaces={showGlobalFaces}
+          setCamera={setCamera3D}
+          onSelectSolid={setSelectedSolidId}
+          onSelectSolids={setSelectedSolidIds}
+          onAddSolid={handleAddSolid}
+          onDeleteSolid={(id) => {
+            if (id) {
+              setSolids((prev) => prev.filter((s) => s.id !== id));
+              setSelectedSolidIds((prev) => prev.filter((sid) => sid !== id));
+            } else {
+              handleDeleteSolid();
+            }
+          }}
+          onDeleteSolids={handleDeleteSolid}
+          onClearAll={() => requestClearAll('3D')}
+          setActive3DTool={setActive3DTool}
+          onUpdateSolid={(id, updates) => updateSolidById(id, updates, `prop:${id}:${Object.keys(updates).join(',')}`)}
+          onUpdateSolidPosition={handleDragSolidPosition}
+          onUpdateSolidsPosition={handleDragSolidsPosition}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+          onSwitchTo2D={() => setLayoutMode('2d_only')}
+          onUndo={scene.past.length > 0 ? undo3D : undefined}
+          onRedo={scene.future.length > 0 ? redo3D : undefined}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background text-foreground overflow-hidden">
-      {studioDimension === '2D' && <ActivityPanel />}
+      {/* Üst Düzen Değiştirici ve Hızlı Çubuk */}
+      <div className="flex items-center justify-between px-3 py-1 bg-card/80 border-b border-border/70 backdrop-blur-md shrink-0 z-20 text-xs">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <span className="font-semibold text-muted-foreground hidden md:inline-block">Görünüm Düzeni:</span>
+          
+          <button
+            onClick={() => setLayoutMode('default')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
+              layoutMode === 'default'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="Varsayılan Düzen (Üstte 2D Grafik, Altta Cebir + 3D)"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">2D + (Cebir / 3D)</span>
+            <span className="sm:hidden">Üçlü</span>
+          </button>
 
+          <button
+            onClick={() => setLayoutMode('algebra_2d')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
+              layoutMode === 'algebra_2d'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="Cebir + 2D Yan Yana"
+          >
+            <Columns2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Cebir + 2D</span>
+          </button>
+
+          <button
+            onClick={() => setLayoutMode('2d_3d')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
+              layoutMode === '2d_3d'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="2D + 3D Yan Yana"
+          >
+            <Columns2 className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden sm:inline">2D + 3D</span>
+          </button>
+
+          <button
+            onClick={() => setLayoutMode('three_col')}
+            className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
+              layoutMode === 'three_col'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="3 Sütun Düzeni (Cebir | 2D | 3D)"
+          >
+            <Columns2 className="w-3.5 h-3.5" />
+            <span>3 Sütun</span>
+          </button>
+
+          <button
+            onClick={() => setLayoutMode('algebra_3d')}
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
+              layoutMode === 'algebra_3d'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="Cebir + 3D Yan Yana"
+          >
+            <Columns2 className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">Cebir + 3D</span>
+          </button>
+
+          <button
+            onClick={() => setLayoutMode('2d_only')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all font-medium ${
+              layoutMode === '2d_only'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="Sadece 2D Grafik"
+          >
+            <Maximize2 className="w-3 h-3" />
+            <span>2D</span>
+          </button>
+
+          <button
+            onClick={() => setLayoutMode('3d_only')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all font-medium ${
+              layoutMode === '3d_only'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+            title="Sadece 3D Grafik"
+          >
+            <Box className="w-3.5 h-3.5 text-purple-400" />
+            <span>3D</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowProperties(!showProperties)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+              showProperties
+                ? 'bg-muted text-foreground border-border shadow-xs'
+                : 'text-muted-foreground border-transparent hover:bg-muted/60'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Özellikler</span>
+          </button>
+        </div>
+      </div>
+
+      <ActivityPanel />
+
+      {/* ANA ÇALIŞMA ALANI */}
       <div className="flex flex-1 min-h-0 relative overflow-hidden">
-        {/* SOL ARAÇ ÇUBUĞU (2D veya 3D) + aç/kapa düğmesi (panel genişliğinden bağımsız konumlanır) */}
+        {/* SOL ARAÇ ÇUBUĞU */}
         <div className="relative flex shrink-0 h-full min-h-0">
-          {showToolbar &&
-            (studioDimension === '2D' ? (
-              <Toolbar
-                onSelectTool={activateTool}
-                onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
-                onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
-              />
-            ) : (
-              <Toolbar3D
-                activeTool={active3DTool}
-                setActiveTool={setActive3DTool}
-                showEdges={showGlobalEdges}
-                showVertices={showGlobalVertices}
-                showFaces={showGlobalFaces}
-                toggleShowEdges={() => setShowGlobalEdges(!showGlobalEdges)}
-                toggleShowVertices={() => setShowGlobalVertices(!showGlobalVertices)}
-                toggleShowFaces={() => setShowGlobalFaces(!showGlobalFaces)}
-                onAddSolid={handleAddSolid}
-                onDeleteSelected={handleDeleteSolid}
-                hasSelection={selectedSolidIds.length > 0}
-                onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
-                onAutoArrange={handleAutoArrange}
-                onSetCameraPreset={handleSetCameraPreset}
-                onClearAll={() => requestClearAll('3D')}
-              />
-            ))}
+          {showToolbar && (
+            <Toolbar
+              onSelectTool={activateTool}
+              onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
+              onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
+            />
+          )}
           <button
             onClick={() => setShowToolbar(!showToolbar)}
             className="hidden lg:flex absolute top-16 z-30 p-1.5 rounded-lg bg-card/90 border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
@@ -521,50 +799,126 @@ export function WorkspaceView() {
           </button>
         </div>
 
-        {/* ORTA TUVAL (2D SVG veya 3D three.js) */}
-        {studioDimension === '2D' ? (
-          <div className="relative flex min-w-0 min-h-0 flex-1">
-            <Canvas onSwitchTo3D={() => setStudioDimension('3D')} />
-            {/* Klavye + mikrofon düğmesi: komut kutusu düğmenin yanında açılır */}
-            <CommandAssistant onSelectTool={activateTool} />
-          </div>
-        ) : (
-          <Canvas3D
-            solids={solids}
-            selectedSolidId={selectedSolidId}
-            selectedSolidIds={selectedSolidIds}
-            activeTool={active3DTool}
-            camera={camera3D}
-            showGlobalVertices={showGlobalVertices}
-            showGlobalEdges={showGlobalEdges}
-            showGlobalFaces={showGlobalFaces}
-            setCamera={setCamera3D}
-            onSelectSolid={setSelectedSolidId}
-            onSelectSolids={setSelectedSolidIds}
-            onAddSolid={handleAddSolid}
-            onDeleteSolid={(id) => {
-              if (id) {
-                setSolids((prev) => prev.filter((s) => s.id !== id));
-                setSelectedSolidIds((prev) => prev.filter((sid) => sid !== id));
-              } else {
-                handleDeleteSolid();
-              }
-            }}
-            onDeleteSolids={handleDeleteSolid}
-            onClearAll={() => requestClearAll('3D')}
-            setActive3DTool={setActive3DTool}
-            onUpdateSolid={(id, updates) => updateSolidById(id, updates, `prop:${id}:${Object.keys(updates).join(',')}`)}
-            onUpdateSolidPosition={handleDragSolidPosition}
-            onUpdateSolidsPosition={handleDragSolidsPosition}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-            onSwitchTo2D={() => setStudioDimension('2D')}
-            onUndo={scene.past.length > 0 ? undo3D : undefined}
-            onRedo={scene.future.length > 0 ? redo3D : undefined}
-          />
-        )}
+        {/* ÇOKLU GÖRÜNÜM MERKEZİ ALAN */}
+        <div ref={containerRef} className="flex-1 min-w-0 min-h-0 relative flex flex-col overflow-hidden bg-background">
+          {layoutMode === 'default' && (
+            /* 1. VARSAYILAN DÜZEN: Üstte 2D Grafik, Altta (Cebir + 3D) */
+            <div className="flex flex-col h-full w-full overflow-hidden">
+              {/* Üst Panel: 2D GRAFİK */}
+              <div style={{ height: `${splitY}%` }} className="w-full min-h-[120px] overflow-hidden relative">
+                {render2DPanel}
+              </div>
 
-        {/* SAĞ ÖZELLİKLER PANELİ + aç/kapa düğmesi */}
+              {/* Yatay Bölücü Çizgisi (Mouse ile sürüklenebilir) */}
+              <div
+                onMouseDown={handleMouseDownSplitterY}
+                className="h-2 w-full bg-border/40 hover:bg-primary/40 active:bg-primary transition-colors cursor-row-resize flex items-center justify-center shrink-0 group z-30 select-none"
+                title="Yüksekliği ayarlamak için sürükleyin"
+              >
+                <div className="w-12 h-1 rounded-full bg-border group-hover:bg-primary/80 transition-colors" />
+              </div>
+
+              {/* Alt Panel: Cebir ve 3D Yan Yana */}
+              <div style={{ height: `${100 - splitY}%` }} className="w-full min-h-[120px] flex overflow-hidden relative">
+                {/* Alt-Sol: CEBİR */}
+                <div style={{ width: `${splitX}%` }} className="h-full min-w-[180px] overflow-hidden relative">
+                  {renderAlgebraPanel}
+                </div>
+
+                {/* Dikey Bölücü Çizgisi (Mouse ile sürüklenebilir) */}
+                <div
+                  onMouseDown={handleMouseDownSplitterX}
+                  className="w-2 h-full bg-border/40 hover:bg-primary/40 active:bg-primary transition-colors cursor-col-resize flex items-center justify-center shrink-0 group z-30 select-none"
+                  title="Genişliği ayarlamak için sürükleyin"
+                >
+                  <div className="h-12 w-1 rounded-full bg-border group-hover:bg-primary/80 transition-colors" />
+                </div>
+
+                {/* Alt-Sağ: 3D GRAFİK */}
+                <div style={{ width: `${100 - splitX}%` }} className="h-full min-w-[180px] overflow-hidden relative">
+                  {render3DPanel}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {layoutMode === 'algebra_2d' && (
+            /* 2. CEBİR + 2D */
+            <div className="flex h-full w-full overflow-hidden">
+              <div style={{ width: `${splitX}%` }} className="h-full min-w-[200px] overflow-hidden relative">
+                {renderAlgebraPanel}
+              </div>
+              <div
+                onMouseDown={handleMouseDownSplitterX}
+                className="w-2 h-full bg-border/40 hover:bg-primary/40 active:bg-primary transition-colors cursor-col-resize flex items-center justify-center shrink-0 group z-30 select-none"
+              >
+                <div className="h-12 w-1 rounded-full bg-border group-hover:bg-primary/80 transition-colors" />
+              </div>
+              <div style={{ width: `${100 - splitX}%` }} className="h-full min-w-[200px] overflow-hidden relative">
+                {render2DPanel}
+              </div>
+            </div>
+          )}
+
+          {layoutMode === '2d_3d' && (
+            /* 3. 2D + 3D */
+            <div className="flex h-full w-full overflow-hidden">
+              <div style={{ width: `${splitX}%` }} className="h-full min-w-[200px] overflow-hidden relative">
+                {render2DPanel}
+              </div>
+              <div
+                onMouseDown={handleMouseDownSplitterX}
+                className="w-2 h-full bg-border/40 hover:bg-primary/40 active:bg-primary transition-colors cursor-col-resize flex items-center justify-center shrink-0 group z-30 select-none"
+              >
+                <div className="h-12 w-1 rounded-full bg-border group-hover:bg-primary/80 transition-colors" />
+              </div>
+              <div style={{ width: `${100 - splitX}%` }} className="h-full min-w-[200px] overflow-hidden relative">
+                {render3DPanel}
+              </div>
+            </div>
+          )}
+
+          {layoutMode === 'three_col' && (
+            /* 4. 3 SÜTUN (Cebir | 2D | 3D) */
+            <div className="flex h-full w-full overflow-hidden">
+              <div className="w-1/4 h-full min-w-[200px] overflow-hidden relative">{renderAlgebraPanel}</div>
+              <div className="w-[45%] h-full min-w-[200px] overflow-hidden relative border-x border-border/40">
+                {render2DPanel}
+              </div>
+              <div className="flex-1 h-full min-w-[200px] overflow-hidden relative">{render3DPanel}</div>
+            </div>
+          )}
+
+          {layoutMode === 'algebra_3d' && (
+            /* 5. CEBİR + 3D */
+            <div className="flex h-full w-full overflow-hidden">
+              <div style={{ width: `${splitX}%` }} className="h-full min-w-[200px] overflow-hidden relative">
+                {renderAlgebraPanel}
+              </div>
+              <div
+                onMouseDown={handleMouseDownSplitterX}
+                className="w-2 h-full bg-border/40 hover:bg-primary/40 active:bg-primary transition-colors cursor-col-resize flex items-center justify-center shrink-0 group z-30 select-none"
+              >
+                <div className="h-12 w-1 rounded-full bg-border group-hover:bg-primary/80 transition-colors" />
+              </div>
+              <div style={{ width: `${100 - splitX}%` }} className="h-full min-w-[200px] overflow-hidden relative">
+                {render3DPanel}
+              </div>
+            </div>
+          )}
+
+          {layoutMode === '2d_only' && (
+            /* 6. SADECE 2D */
+            <div className="h-full w-full overflow-hidden">{render2DPanel}</div>
+          )}
+
+          {layoutMode === '3d_only' && (
+            /* 7. SADECE 3D */
+            <div className="h-full w-full overflow-hidden">{render3DPanel}</div>
+          )}
+        </div>
+
+        {/* SAĞ ÖZELLİKLER PANELİ */}
         <div className="relative flex shrink-0 h-full min-h-0">
           <button
             onClick={() => setShowProperties(!showProperties)}
@@ -575,10 +929,14 @@ export function WorkspaceView() {
             {showProperties ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
           </button>
           {showProperties &&
-            (studioDimension === '2D' ? (
-              <PropertiesPanel />
+            (layoutMode === '3d_only' || layoutMode === 'algebra_3d' ? (
+              <Properties3D
+                selectedSolid={selectedSolid}
+                onUpdateSolid={handleUpdateSolid}
+                onDeleteSolid={handleDeleteSolid}
+              />
             ) : (
-              <Properties3D selectedSolid={selectedSolid} onUpdateSolid={handleUpdateSolid} onDeleteSolid={handleDeleteSolid} />
+              <PropertiesPanel />
             ))}
         </div>
       </div>
@@ -587,7 +945,7 @@ export function WorkspaceView() {
       <AddObjectModal
         isOpen={isAddObjectDialogOpen}
         onClose={() => setIsAddObjectDialogOpen(false)}
-        is3D={studioDimension === '3D'}
+        is3D={layoutMode === '3d_only' || layoutMode === 'algebra_3d'}
         onAddSolid3D={handleAddSolid}
       />
       <FunctionDialog isOpen={isFunctionDialogOpen} onClose={() => setIsFunctionDialogOpen(false)} />
@@ -597,9 +955,7 @@ export function WorkspaceView() {
         onClose={() => setIsRegularPolygonDialogOpen(false)}
         targetPos={regularPolygonPos}
       />
-      {/* Araçların sayı/oran sorması için ortak pencere */}
       <ValuePromptDialog request={valuePrompt} onClose={() => setValuePrompt(null)} />
-
       <CircleRadiusDialog
         isOpen={isCircleRadiusDialogOpen}
         onClose={() => setIsCircleRadiusDialogOpen(false)}
@@ -615,3 +971,4 @@ export function WorkspaceView() {
     </div>
   );
 }
+

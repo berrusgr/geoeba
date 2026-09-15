@@ -12,7 +12,20 @@ import {
   CAMERA_ZOOM_MAX,
   CAMERA_PITCH_LIMIT,
 } from '@/types/workspace3d';
-import { Point2D } from '@/types/math';
+import {
+  Point2D,
+  MathObject,
+  PointObject,
+  SegmentObject,
+  LineObject,
+  RayObject,
+  CircleObject,
+  PolygonObject,
+  FunctionObject,
+  SliderObject,
+} from '@/types/math';
+import { compileMathExpression } from '@/math/parser';
+import { useWorkspace } from '@/state/WorkspaceContext';
 import {
   generateSolidMesh,
   computeFaceArea,
@@ -534,6 +547,175 @@ function buildGizmo(center: THREE.Vector3, len: number): THREE.Group {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  2D Matematik Nesnelerini 3D Uzayda Çizme (Ortak Matematiksel Model)       */
+/* -------------------------------------------------------------------------- */
+
+function buildMathObjects3D(
+  objects: MathObject[],
+  selectedObjectIds: string[],
+  isDark: boolean
+): THREE.Group {
+  const group = new THREE.Group();
+  const pointsById = new Map(
+    objects.filter((o) => o.type === 'point').map((p) => [p.id, p as PointObject])
+  );
+
+  const sliderScope: Record<string, number> = {};
+  objects.forEach((o) => {
+    if (o.type === 'slider') {
+      const s = o as SliderObject;
+      sliderScope[s.variableName] = s.value;
+    }
+  });
+
+  for (const obj of objects) {
+    if (obj.visible === false) continue;
+    const isSelected = selectedObjectIds.includes(obj.id);
+    const colorHex = obj.color || (isDark ? '#60a5fa' : '#2563eb');
+
+    switch (obj.type) {
+      case 'point': {
+        const pt = obj as PointObject;
+        const ptGroup = new THREE.Group();
+        const r = isSelected ? 0.35 : 0.25;
+        const geo = new THREE.SphereGeometry(r, 16, 16);
+        const mat = new THREE.MeshStandardMaterial({
+          color: colorHex,
+          roughness: 0.3,
+          metalness: 0.2,
+          emissive: isSelected ? colorHex : '#000000',
+          emissiveIntensity: isSelected ? 0.5 : 0,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(pt.x, pt.y, 0);
+        ptGroup.add(mesh);
+
+        if (pt.label) {
+          const sprite = makeLabelSprite(pt.label, isDark ? '#f8fafc' : '#0f172a', 0.9, true);
+          sprite.position.set(pt.x + 0.35, pt.y + 0.35, 0.15);
+          ptGroup.add(sprite);
+        }
+        group.add(ptGroup);
+        break;
+      }
+      case 'segment': {
+        const seg = obj as SegmentObject;
+        const p1 = pointsById.get(seg.startPointId);
+        const p2 = pointsById.get(seg.endPointId);
+        if (!p1 || !p2) break;
+        const points = [new THREE.Vector3(p1.x, p1.y, 0), new THREE.Vector3(p2.x, p2.y, 0)];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const mat = new THREE.LineBasicMaterial({
+          color: colorHex,
+        });
+        const line = new THREE.Line(geo, mat);
+        group.add(line);
+        break;
+      }
+      case 'line': {
+        const l = obj as LineObject;
+        const p1 = pointsById.get(l.point1Id);
+        const p2 = pointsById.get(l.point2Id);
+        if (!p1 || !p2) break;
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const len = Math.hypot(dx, dy);
+        if (len < 1e-6) break;
+        const extend = 30 / len;
+        const points = [
+          new THREE.Vector3(p1.x - dx * extend, p1.y - dy * extend, 0),
+          new THREE.Vector3(p2.x + dx * extend, p2.y + dy * extend, 0),
+        ];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const mat = new THREE.LineBasicMaterial({
+          color: colorHex,
+        });
+        const line = new THREE.Line(geo, mat);
+        group.add(line);
+        break;
+      }
+      case 'circle': {
+        const circ = obj as CircleObject;
+        const c = pointsById.get(circ.centerPointId);
+        if (!c) break;
+        const rp = circ.radiusPointId ? pointsById.get(circ.radiusPointId) : undefined;
+        const r = c && rp ? Math.hypot(c.x - rp.x, c.y - rp.y) : circ.fixedRadius ?? 0;
+        if (r <= 0) break;
+
+        const curve = new THREE.EllipseCurve(c.x, c.y, r, r, 0, 2 * Math.PI, false, 0);
+        const pts = curve.getPoints(64).map((p) => new THREE.Vector3(p.x, p.y, 0));
+        const geo = new THREE.BufferGeometry().setFromPoints(pts);
+        const mat = new THREE.LineBasicMaterial({
+          color: colorHex,
+        });
+        const circleLine = new THREE.Line(geo, mat);
+        group.add(circleLine);
+        break;
+      }
+      case 'polygon': {
+        const poly = obj as PolygonObject;
+        const pts = poly.pointIds.map((id) => pointsById.get(id)).filter(Boolean) as PointObject[];
+        if (pts.length < 3) break;
+
+        // Kenarlar
+        const edgePts = pts.map((p) => new THREE.Vector3(p.x, p.y, 0));
+        edgePts.push(edgePts[0]);
+        const edgeGeo = new THREE.BufferGeometry().setFromPoints(edgePts);
+        const edgeMat = new THREE.LineBasicMaterial({
+          color: colorHex,
+        });
+        group.add(new THREE.Line(edgeGeo, edgeMat));
+
+        // Yüzey
+        const shape = new THREE.Shape();
+        shape.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i].x, pts[i].y);
+        shape.closePath();
+
+        const faceGeo = new THREE.ShapeGeometry(shape);
+        const faceMat = new THREE.MeshStandardMaterial({
+          color: poly.fillColor || colorHex,
+          transparent: true,
+          opacity: poly.fillOpacity ?? 0.3,
+          side: THREE.DoubleSide,
+          roughness: 0.5,
+        });
+        group.add(new THREE.Mesh(faceGeo, faceMat));
+        break;
+      }
+      case 'function': {
+        const fn = obj as FunctionObject;
+        const compiled = compileMathExpression(fn.expression);
+        if (!compiled) break;
+
+        const curvePts: THREE.Vector3[] = [];
+        const step = 0.15;
+        for (let x = -15; x <= 15; x += step) {
+          try {
+            const y = compiled(x, sliderScope);
+            if (Number.isFinite(y) && Math.abs(y) < 50) {
+              curvePts.push(new THREE.Vector3(x, y, 0));
+            }
+          } catch {
+            // Tanımsız noktaları atla
+          }
+        }
+        if (curvePts.length > 1) {
+          const geo = new THREE.BufferGeometry().setFromPoints(curvePts);
+          const mat = new THREE.LineBasicMaterial({
+            color: colorHex,
+          });
+          group.add(new THREE.Line(geo, mat));
+        }
+        break;
+      }
+    }
+  }
+
+  return group;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Bileşen                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -634,6 +816,10 @@ export function Canvas3D(props: Canvas3DProps) {
     [selectedSolidIds, selectedSolidId]
   );
 
+  const workspace = useWorkspace();
+  const objects = workspace?.objects ?? [];
+  const selectedObjectIds = workspace?.selectedObjectIds ?? [];
+
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 1200, height: 700 });
   const [isDark, setIsDark] = useState(false);
   const [webglError, setWebglError] = useState<string | null>(null);
@@ -644,6 +830,7 @@ export function Canvas3D(props: Canvas3DProps) {
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
     solidsGroup: THREE.Group;
+    mathObjectsGroup: THREE.Group;
     gizmoGroup: THREE.Group;
     gridGroup: THREE.Group | null;
     axesGroup: THREE.Group | null;
@@ -797,13 +984,15 @@ export function Canvas3D(props: Canvas3DProps) {
     scene.add(fill);
 
     const solidsGroup = new THREE.Group();
+    const mathObjectsGroup = new THREE.Group();
     const gizmoGroup = new THREE.Group();
-    scene.add(solidsGroup, gizmoGroup);
+    scene.add(solidsGroup, mathObjectsGroup, gizmoGroup);
 
     threeRef.current = {
       renderer,
       scene,
       solidsGroup,
+      mathObjectsGroup,
       gizmoGroup,
       gridGroup: null,
       axesGroup: null,
@@ -817,6 +1006,7 @@ export function Canvas3D(props: Canvas3DProps) {
       if (!t) return;
       if (t.frame !== null) cancelAnimationFrame(t.frame);
       clearGroup(t.solidsGroup);
+      clearGroup(t.mathObjectsGroup);
       clearGroup(t.gizmoGroup);
       if (t.gridGroup) disposeObject(t.gridGroup);
       if (t.axesGroup) disposeObject(t.axesGroup);
@@ -883,6 +1073,18 @@ export function Canvas3D(props: Canvas3DProps) {
     });
     requestRender();
   }, [solids, effectiveSelectedIds, showGlobalFaces, showGlobalEdges, showGlobalVertices, isDark, camera.zoom, requestRender]);
+
+  /* ------------------- 2D/3D Ortak Matematik Nesneleri ----------------- */
+  useEffect(() => {
+    const t = threeRef.current;
+    if (!t) return;
+    clearGroup(t.mathObjectsGroup);
+    const group = buildMathObjects3D(objects, selectedObjectIds, isDark);
+    while (group.children.length > 0) {
+      t.mathObjectsGroup.add(group.children[0]);
+    }
+    requestRender();
+  }, [objects, selectedObjectIds, isDark, requestRender]);
 
   /* ------------------------------ Gizmo -------------------------------- */
   useEffect(() => {
