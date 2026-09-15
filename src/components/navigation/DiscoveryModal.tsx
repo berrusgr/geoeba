@@ -2,20 +2,15 @@
 
 import React from 'react';
 import { Topic, Activity } from '@/types/curriculum';
-import {
-  X,
-  Play,
-  Shapes,
-  Box,
-} from 'lucide-react';
+import { X, Box } from 'lucide-react';
 
 interface DiscoveryModalProps {
   topic: Topic | null;
   onClose: () => void;
-  onLaunchActivity: (activity: Activity) => void;
+  onLaunchActivity?: (activity: Activity) => void;
 }
 
-export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryModalProps) {
+export function DiscoveryModal({ topic, onClose }: DiscoveryModalProps) {
   React.useEffect(() => {
     return () => {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -70,72 +65,28 @@ export function DiscoveryModal({ topic, onClose, onLaunchActivity }: DiscoveryMo
         <div className="p-6 overflow-y-auto space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1 p-4 rounded-2xl bg-muted/40 border border-border/80 text-xs sm:text-sm font-semibold text-foreground">
-              <span>{topic.description || 'İnteraktif çalışma alanını açarak modelleme yapın.'}</span>
+              <span>{topic.description || 'Bu konu için çalışma alanı.'}</span>
             </div>
 
             <div className="px-6 py-3 rounded-2xl bg-amber-300 dark:bg-amber-400 text-slate-950 font-black text-center shrink-0 shadow-sm">
               <div className="text-[9px] uppercase tracking-wider text-slate-800 font-extrabold">
                 İLGİLİ GÖREVLER
               </div>
-              <div className="text-3xl font-black">{topic.activities.length}</div>
+              <div className="text-3xl font-black">{topic.activities?.length || 0}</div>
             </div>
           </div>
 
-          {/* 3. GÖREV KARTLARI */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-            {topic.activities.map((activity, idx) => {
-              const folderColor = activity.folderColor || (idx === 0 ? '#ef4444' : idx === 1 ? '#eab308' : idx === 2 ? '#3b82f6' : '#10b981');
-
-              return (
-                <div
-                  key={activity.id}
-                  className="group relative rounded-3xl p-5 text-white flex flex-col space-y-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-                  style={{ backgroundColor: folderColor }}
-                >
-                  {/* Klasör Kulakçığı */}
-                  <div
-                    className="absolute -top-3 left-6 px-4 py-1 rounded-t-xl font-bold text-[10px] uppercase tracking-wider shadow-sm"
-                    style={{ backgroundColor: folderColor }}
-                  >
-                    <span className="opacity-90">GÖREV #{idx + 1}</span>
-                  </div>
-
-                  {/* Beyaz Görsel Çizim / Önizleme Kutusu */}
-                  <div className="w-full h-36 rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-3 flex flex-col items-center justify-center overflow-hidden relative shadow-inner border border-black/10">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-2">
-                      <Shapes className="w-7 h-7" />
-                    </div>
-                    <div className="font-bold text-xs text-foreground text-center">
-                      Boş Çalışma Alanı
-                    </div>
-                    <div className="text-[10px] text-muted-foreground text-center">
-                      Çizim, Modelleme &amp; Geometri
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="text-[10px] font-black uppercase tracking-wider opacity-85">
-                      UYGULAMA
-                    </div>
-                    <h3 className="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
-                      <Box className="w-4 h-4 shrink-0" />
-                      <span>{activity.title}</span>
-                    </h3>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      onClose();
-                      onLaunchActivity(activity);
-                    }}
-                    className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-950 text-white font-black text-xs flex items-center justify-center gap-2 shadow-xl hover:scale-105 transition-all mt-auto cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-current text-amber-400" />
-                    <span>Çalışma Alanına Başla</span>
-                  </button>
-                </div>
-              );
-            })}
+          {/* 3. ALT ALAN (BOŞ) */}
+          <div className="min-h-[220px] rounded-2xl border-2 border-dashed border-border/60 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground p-8 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground/80 mb-3">
+              <Box className="w-6 h-6" />
+            </div>
+            <div className="font-bold text-sm text-foreground/80 mb-1">
+              {topic.title}
+            </div>
+            <div className="text-xs text-muted-foreground max-w-sm">
+              Bu konu alanı için içerik tanımlanmamıştır.
+            </div>
           </div>
         </div>
       </div>
