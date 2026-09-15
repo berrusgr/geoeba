@@ -76,8 +76,9 @@ export function PropertiesPanel({
   const [isLayoutOpen, setIsLayoutOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const [isStyleOpen, setIsStyleOpen] = useState(true);
 
-  /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi, çalışma alanı ayarları mı? */
+  /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çalışma alanı ayarları mi? */
   const [localTab, setLocalTab] = useState<PanelTab>('ozellikler');
   const sekme = activeTab ?? localTab;
   const setSekme = (t: PanelTab) => {
@@ -193,22 +194,18 @@ export function PropertiesPanel({
       {/* PANEL BAŞLIĞI & DARALTMA BUTONU */}
       <div className="flex items-center justify-between pb-2.5 border-b border-border/70">
         <div className="flex items-center gap-2">
-          {sekme === 'ayarlar' ? (
+          {sekme === 'ayarlar' || sekme === 'stil' ? (
             <Settings className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-          ) : sekme === 'stil' ? (
-            <Palette className="w-4 h-4 text-pink-600 dark:text-pink-400" />
           ) : (
             <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           )}
           <span className="text-xs font-black uppercase tracking-wider text-foreground">
-            {sekme === 'ayarlar' ? 'Çalışma Alanı Ayarları' : sekme === 'stil' ? 'Çizim Stili' : 'Özellikler'}
+            {sekme === 'ayarlar' || sekme === 'stil' ? 'Ayarlar' : 'Özellikler'}
           </span>
         </div>
       </div>
 
-      {sekme === 'stil' && <StylePanel />}
-
-      {sekme === 'ayarlar' && (
+      {(sekme === 'ayarlar' || sekme === 'stil') && (
         <div className="flex flex-col gap-4 items-stretch text-xs">
           {/* 1. ARAPLAN RENGI */}
           <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
@@ -255,6 +252,30 @@ export function PropertiesPanel({
                 />
               </label>
             </div>
+          </div>
+
+          {/* 2. ÇİZİM VE METİN STİLİ */}
+          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+            <button
+              type="button"
+              onClick={() => setIsStyleOpen(!isStyleOpen)}
+              className="flex items-center justify-between w-full cursor-pointer group"
+            >
+              <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
+                <span>Çizim ve Metin Stili</span>
+              </h3>
+              {isStyleOpen ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
+            {isStyleOpen && (
+              <div className="pt-1">
+                <StylePanel />
+              </div>
+            )}
           </div>
 
           {/* 2. DİK AÇI STİLİ */}

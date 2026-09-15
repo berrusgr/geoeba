@@ -3263,7 +3263,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       <ToolCursor tool={activeTool} surfaceRef={svgRef} />
       <svg
         ref={svgRef}
-        className="w-full h-full block"
+        className="w-full h-full block transition-colors duration-200"
+        style={{ backgroundColor: viewport.backgroundColor || 'transparent' }}
         /* Süzgeç KÖKE uygulanır; böylece dışa aktarımda kök SVG kopyalandığında
            (PNG/SVG/PDF/Word) çıktı da kendiliğinden siyah–beyaz olur. */
         filter={viewport.blackWhite ? 'url(#geoeba-siyah-beyaz)' : undefined}
@@ -3288,7 +3289,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           y={0}
           width="100%"
           height="100%"
-          fill="transparent"
+          fill={viewport.backgroundColor || 'transparent'}
         />
 
         {/* 1. IZGARA KATMANI (NET VE BELİRGİN GRAFİK KAĞIDI IZGARASI) */}
