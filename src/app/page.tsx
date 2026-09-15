@@ -6,7 +6,6 @@ import { WelcomeScreen } from '@/components/navigation/WelcomeScreen';
 import { TeachingPortal } from '@/components/navigation/TeachingPortal';
 import { GradeSelector } from '@/components/navigation/GradeSelector';
 import { TopicSelector } from '@/components/navigation/TopicSelector';
-import { MissionView } from '@/components/workspace/MissionView';
 import { WorkspaceView } from '@/components/workspace/WorkspaceView';
 
 export default function HomePage() {
@@ -22,7 +21,6 @@ export default function HomePage() {
     case 'topics':
       return <TopicSelector />;
     case 'mission':
-      return <MissionView />;
     case 'workspace':
       return <WorkspaceView />;
     default:
