@@ -178,6 +178,7 @@ export function WelcomeScreen() {
               {/* Sınıf Butonları */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {[
+                  { num: 0, label: 'Hazırlık' },
                   { num: 9, label: '9. Sınıf' },
                   { num: 10, label: '10. Sınıf' },
                   { num: 11, label: '11. Sınıf' },
