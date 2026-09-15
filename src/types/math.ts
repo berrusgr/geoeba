@@ -409,4 +409,7 @@ export interface ViewportTransform {
   blackWhite?: boolean;
   snapToGrid: boolean;
   gridStep: number;
+  backgroundColor?: string;
+  rightAngleStyle?: 'arc_dot' | 'square' | 'arc_fill' | 'l_shape';
+  pointSnapMode?: 'automatic' | 'snapToGrid' | 'fixedToGrid' | 'off';
 }

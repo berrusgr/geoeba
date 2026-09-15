@@ -41,15 +41,17 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  Contrast,
 } from 'lucide-react';
 
 export type LayoutMode = 'default' | 'algebra_2d' | '2d_3d' | 'three_col' | 'algebra_3d' | '2d_only' | '3d_only';
+export type PanelTab = 'ozellikler' | 'stil' | 'ayarlar';
 
 interface PropertiesPanelProps {
   layoutMode?: LayoutMode;
   onLayoutModeChange?: (mode: LayoutMode) => void;
-  activeTab?: 'ozellikler' | 'stil';
-  onTabChange?: (tab: 'ozellikler' | 'stil') => void;
+  activeTab?: PanelTab;
+  onTabChange?: (tab: PanelTab) => void;
   onClose?: () => void;
 }
 
@@ -75,10 +77,10 @@ export function PropertiesPanel({
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(true);
 
-  /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi? */
-  const [localTab, setLocalTab] = useState<'ozellikler' | 'stil'>('ozellikler');
+  /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi, çalışma alanı ayarları mı? */
+  const [localTab, setLocalTab] = useState<PanelTab>('ozellikler');
   const sekme = activeTab ?? localTab;
-  const setSekme = (t: 'ozellikler' | 'stil') => {
+  const setSekme = (t: PanelTab) => {
     setLocalTab(t);
     onTabChange?.(t);
   };
@@ -191,18 +193,217 @@ export function PropertiesPanel({
       {/* PANEL BAŞLIĞI & DARALTMA BUTONU */}
       <div className="flex items-center justify-between pb-2.5 border-b border-border/70">
         <div className="flex items-center gap-2">
-          {sekme === 'stil' ? (
+          {sekme === 'ayarlar' ? (
+            <Settings className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+          ) : sekme === 'stil' ? (
             <Palette className="w-4 h-4 text-pink-600 dark:text-pink-400" />
           ) : (
             <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           )}
           <span className="text-xs font-black uppercase tracking-wider text-foreground">
-            {sekme === 'stil' ? 'Çizim Stili' : 'Özellikler'}
+            {sekme === 'ayarlar' ? 'Çalışma Alanı Ayarları' : sekme === 'stil' ? 'Çizim Stili' : 'Özellikler'}
           </span>
         </div>
       </div>
 
       {sekme === 'stil' && <StylePanel />}
+
+      {sekme === 'ayarlar' && (
+        <div className="flex flex-col gap-4 items-stretch text-xs">
+          {/* 1. ARAPLAN RENGI */}
+          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+            <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <span>Arkaplan Rengi</span>
+            </h3>
+            <div className="flex items-center gap-2 flex-wrap pt-1">
+              {[
+                { color: '#ffffff', name: 'Beyaz' },
+                { color: '#f3e8ff', name: 'Lavanta' },
+                { color: '#e0f2fe', name: 'Buz Mavisi' },
+                { color: '#e6f4ea', name: 'Mint Yeşili' },
+                { color: '#fef3c7', name: 'Pastel Sarı' },
+                { color: '#ffedd5', name: 'Şeftali' },
+                { color: '#ffe4e6', name: 'Pembe' },
+              ].map((bg) => {
+                const isSelected = (viewport.backgroundColor || '#ffffff') === bg.color;
+                return (
+                  <button
+                    key={bg.color}
+                    type="button"
+                    onClick={() => setViewport((prev) => ({ ...prev, backgroundColor: bg.color }))}
+                    title={bg.name}
+                    className={`w-7 h-7 rounded-full border border-black/10 shadow-xs flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${
+                      isSelected ? 'ring-2 ring-primary ring-offset-2 scale-105' : ''
+                    }`}
+                    style={{ backgroundColor: bg.color }}
+                  >
+                    {isSelected && <Check className="w-3.5 h-3.5 text-slate-700 dark:text-slate-800" />}
+                  </button>
+                );
+              })}
+              {/* Özel renk seçici */}
+              <label
+                title="Özel Renk Seç"
+                className="w-7 h-7 rounded-full border border-dashed border-border bg-card flex items-center justify-center cursor-pointer hover:border-primary transition-colors text-muted-foreground hover:text-foreground shadow-xs"
+              >
+                <span className="text-xs font-black">+</span>
+                <input
+                  type="color"
+                  value={viewport.backgroundColor || '#ffffff'}
+                  onChange={(e) => setViewport((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* 2. DİK AÇI STİLİ */}
+          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+            <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <span>Dik Açı Stili</span>
+            </h3>
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
+              {[
+                { id: 'arc_dot', label: 'Yay + Nokta', icon: '⦠' },
+                { id: 'square', label: 'Kare Köşe', icon: '⊾' },
+                { id: 'arc_fill', label: 'Dolu Yay', icon: '◬' },
+                { id: 'l_shape', label: 'L-Köşe', icon: '└' },
+              ].map((style) => {
+                const isSelected = (viewport.rightAngleStyle || 'square') === style.id;
+                return (
+                  <button
+                    key={style.id}
+                    type="button"
+                    onClick={() => setViewport((prev) => ({ ...prev, rightAngleStyle: style.id as any }))}
+                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary/15 border-primary text-primary font-bold shadow-xs'
+                        : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                    }`}
+                    title={style.label}
+                  >
+                    <span className="text-base leading-none mb-1 font-serif">{style.icon}</span>
+                    <span className="text-[10px] text-center leading-tight">{style.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. NOKTA YAKALAMA (POINT SNAP) */}
+          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+            <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <span>Nokta Yakalama</span>
+            </h3>
+            <div className="pt-1">
+              <select
+                value={
+                  !viewport.snapToGrid
+                    ? 'off'
+                    : viewport.pointSnapMode || 'snapToGrid'
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'off') {
+                    setViewport((prev) => ({ ...prev, snapToGrid: false, pointSnapMode: 'off' }));
+                  } else {
+                    setViewport((prev) => ({
+                      ...prev,
+                      snapToGrid: true,
+                      pointSnapMode: val as any,
+                    }));
+                  }
+                }}
+                className="w-full px-3 py-2 rounded-xl bg-card border border-border/80 text-foreground text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+              >
+                <option value="automatic">Otomatik</option>
+                <option value="snapToGrid">Izgaraya Sıçra</option>
+                <option value="fixedToGrid">Izgaraya Sabitli</option>
+                <option value="off">Kapalı</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 4. GÖRÜNÜM SEÇENEKLERİ */}
+          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+            <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <span>Görünüm Seçenekleri</span>
+            </h3>
+            <div className="space-y-2 text-xs pt-1">
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-foreground font-bold">Izgara Çizgileri</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={viewport.showGrid}
+                  onChange={(e) => setViewport((prev) => ({ ...prev, showGrid: e.target.checked }))}
+                  className="w-4 h-4 accent-primary rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={viewport.showAxes}
+                  onChange={(e) => setViewport((prev) => ({ ...prev, showAxes: e.target.checked }))}
+                  className="w-4 h-4 accent-cyan-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span className="text-foreground font-bold">Nokta Koordinatları</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={viewport.showCoordinates}
+                  onChange={(e) =>
+                    setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))
+                  }
+                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
+                  <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={viewport.showQuadrants ?? false}
+                  onChange={(e) =>
+                    setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))
+                  }
+                  className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Contrast className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                  <span className="text-foreground font-bold">Siyah–Beyaz Mod</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={viewport.blackWhite ?? false}
+                  onChange={(e) =>
+                    setViewport((prev) => ({ ...prev, blackWhite: e.target.checked }))
+                  }
+                  className="w-4 h-4 accent-slate-600 rounded cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {sekme === 'ozellikler' && (
         <div className="flex flex-col gap-4 items-stretch">

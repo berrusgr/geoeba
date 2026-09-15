@@ -655,91 +655,30 @@ export function WorkspaceView() {
             <span>Stil</span>
           </button>
 
-          {/* Çalışma Alanı Ayarları (Vida Butonu & Açılır Menüsü) */}
-          <div className="relative">
-            <button
-              onClick={() => setShowWorkspaceSettingsMenu(!showWorkspaceSettingsMenu)}
-              className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
-                showWorkspaceSettingsMenu
-                  ? 'bg-slate-200 dark:bg-slate-800 text-foreground ring-1 ring-slate-400/30 font-semibold shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-              title="Çalışma Alanı Ayarları"
-            >
-              <Settings className="w-3 h-3" />
-              <span>Ayarlar</span>
-            </button>
-
-            {showWorkspaceSettingsMenu && (
-              <div className="absolute right-0 top-8 w-56 p-2 bg-card/95 backdrop-blur-md border border-border shadow-xl rounded-2xl z-30 space-y-1 text-xs">
-                <button
-                  onClick={() => {
-                    setViewport((prev) => ({ ...prev, showGrid: !prev.showGrid }));
-                  }}
-                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted font-bold text-foreground cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <Grid className="w-3.5 h-3.5 text-primary" />
-                    <span>Izgara Çizgileri</span>
-                  </span>
-                  {viewport.showGrid && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setViewport((prev) => ({ ...prev, blackWhite: !prev.blackWhite }));
-                  }}
-                  title="Çizimi gri tonlamada gösterir; indirilen dosyalar da siyah–beyaz olur"
-                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted font-bold text-foreground cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <Contrast className="w-3.5 h-3.5 text-primary" />
-                    <span>Siyah–Beyaz Mod</span>
-                  </span>
-                  {viewport.blackWhite && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setViewport((prev) => ({ ...prev, showAxes: !prev.showAxes }));
-                  }}
-                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted font-bold text-foreground cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-xs font-black text-blue-500">XY</span>
-                    <span>Koordinat Eksenleri</span>
-                  </span>
-                  {viewport.showAxes && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setViewport((prev) => ({ ...prev, showCoordinates: !prev.showCoordinates }));
-                  }}
-                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted font-bold text-foreground cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-emerald-500">(x,y)</span>
-                    <span>Nokta Koordinatları</span>
-                  </span>
-                  {viewport.showCoordinates && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setViewport((prev) => ({ ...prev, showQuadrants: !prev.showQuadrants }));
-                  }}
-                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted font-bold text-foreground cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="text-[10px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
-                    <span>Bölge İsimleri (1, 2, 3, 4)</span>
-                  </span>
-                  {viewport.showQuadrants && <Check className="w-3.5 h-3.5 text-primary" />}
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Ayarlar Butonu (Sağda Açar) */}
+          <button
+            onClick={() => {
+              if (showProperties && propertiesTab === 'ayarlar') {
+                setShowProperties(false);
+              } else {
+                setShowProperties(true);
+                setPropertiesTab('ayarlar');
+              }
+            }}
+            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
+              showProperties && propertiesTab === 'ayarlar'
+                ? 'bg-slate-100 dark:bg-slate-800 text-foreground ring-1 ring-slate-400/30 font-semibold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+            title={
+              showProperties && propertiesTab === 'ayarlar'
+                ? 'Ayarlar Panelini Kapat'
+                : 'Çalışma Alanı Ayarlarını Sağda Aç'
+            }
+          >
+            <Settings className="w-3 h-3" />
+            <span>Ayarlar</span>
+          </button>
         </div>
       </div>
       <div className="flex-1 min-h-0 relative flex overflow-hidden">
