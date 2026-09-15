@@ -62,7 +62,7 @@ const TYPE_LABELS: Record<string, string> = {
   angle: 'Açı',
   polygon: 'Çokgen',
   function: 'Fonksiyon',
-  slider: 'Kaydırıcı',
+  slider: 'Sürgü',
   fraction: 'Kesir Modeli',
   pen: 'Serbest Çizim',
   text: 'Metin Notu',

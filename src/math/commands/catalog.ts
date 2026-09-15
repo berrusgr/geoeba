@@ -128,7 +128,7 @@ export const TOOLBAR_OPERATIONS: OperationEntry[] = [
   { tool: 'function', name: 'Fonksiyon', group: 'Cebir & Fonksiyon', family: 'algebra', verbs: ['çiz', 'oluştur', 'göster'], nouns: ['fonksiyon', 'grafik', 'parabol'],
     params: ['ifade', 'sözle ifade (x kare, karekök x…)'],
     examples: ['f(x) = x^2', 'x kare fonksiyonu çiz', 'g(x) = sin(x) grafiğini çiz', 'y = 2x + 1 doğrusunu çiz'] },
-  { tool: 'slider', name: 'Kaydırıcı', group: 'Cebir & Fonksiyon', family: 'algebra', verbs: ['oluştur', 'ekle', 'yap', 'ayarla', 'oynat'], nouns: ['kaydırıcı', 'sürgü', 'parametre'],
+  { tool: 'slider', name: 'Sürgü', group: 'Cebir & Fonksiyon', family: 'algebra', verbs: ['oluştur', 'ekle', 'yap', 'ayarla', 'oynat'], nouns: ['kaydırıcı', 'sürgü', 'parametre'],
     params: ['ad', 'en küçük', 'en büyük', 'adım', 'değer'],
     examples: ['a kaydırıcısı oluştur', '0 ile 10 arasında adımı 0,5 olan b kaydırıcısı ekle', 'k = 3'] },
 

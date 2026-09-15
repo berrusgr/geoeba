@@ -253,7 +253,7 @@ const TYPE_NAMES: Record<MathObject['type'], string> = {
   angle: 'Açı',
   polygon: 'Çokgen',
   function: 'Fonksiyon',
-  slider: 'Kaydırıcı',
+  slider: 'Sürgü',
   fraction: 'Kesir Modeli',
   pen: 'Serbest Çizim',
   text: 'Metin Notu',

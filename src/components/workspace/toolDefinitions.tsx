@@ -122,7 +122,7 @@ export const TOOL_GROUPS: ToolGroup[] = [
     headerTextColor: 'text-sky-800 dark:text-sky-200',
     tools: [
       { id: 'function', name: 'Fonksiyon', description: 'f(x) ifadesi girerek grafik çizin.', icon: <GeometryToolIcon kind="function" />, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400' },
-      { id: 'slider', name: 'Kaydırıcı', description: 'a, b gibi parametreler için kaydırıcı ekleyin.', icon: <Sliders className="w-4 h-4" />, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400' },
+      { id: 'slider', name: 'Sürgü', description: 'a, b gibi parametreler için sürgü ekleyin.', icon: <Sliders className="w-4 h-4" />, iconBg: 'bg-sky-500/10', iconColor: 'text-sky-600 dark:text-sky-400' },
     ],
   },
 
