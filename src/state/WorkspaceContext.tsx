@@ -1,5 +1,6 @@
 'use client';
 import { resolveCommandBindings, constructionDependencies, commandCircleGeometry } from '@/math/commandBindings';
+import type { PointAnimUpdate } from '@/math/pathAnimation';
 
 import React, {
   createContext,
@@ -142,10 +143,10 @@ interface WorkspaceContextType {
   handleCanvasClick: (worldPos: Point2D) => void;
   handlePointDrag: (pointId: string, newWorldPos: Point2D) => void;
   handleSliderChange: (sliderId: string, value: number) => void;
-  /** Oynatma döngüsü için: birden çok kaydırıcının değerini TEK adımda, geçmişe yazmadan günceller. */
-  setSliderValues: (values: Record<string, number>) => void;
+  /** Oynatma döngüsü için: birden çok kaydırıcı veya noktanın değerini TEK adımda, geçmişe yazmadan günceller. */
+  setSliderValues: (values: Record<string, number>, pointUpdates?: Record<string, PointAnimUpdate>) => void;
   addFunction: (expression: string, label?: string) => void;
-  addSlider: (name: string, min: number, max: number, step: number, initialValue: number) => void;
+  addSlider: (name: string, min: number, max: number, step: number, initialValue: number, sliderType?: 'number' | 'angle' | 'integer', animSpeed?: number, animMode?: 'oscillating' | 'increasing' | 'decreasing' | 'increasing_once') => void;
   /** "a = 2" gibi bir atamayı uygular: kaydırıcı varsa değerini yazar, yoksa oluşturur. */
   assignSliderValue: (name: string, value: number) => void;
   undo: () => void;
@@ -587,12 +588,14 @@ export function objectDependencies(o: MathObject): string[] {
       return o.pointIds;
     case 'checkbox':
       return o.targetIds;
-    case 'button':
-      return o.action.kind === 'toggle'
-        ? o.action.targetIds
-        : o.action.kind === 'animate'
-        ? o.action.sliderIds
-        : [o.action.sliderId];
+    case 'button': {
+      const act = o.action;
+      if (act.kind === 'toggle') return act.targetIds;
+      if (act.kind === 'animate') return [...(act.sliderIds ?? []), ...(act.targetIds ?? [])];
+      if (act.kind === 'setSlider') return [act.sliderId];
+      if (act.kind === 'setValue') return [act.targetId];
+      return [];
+    }
     case 'input_box':
       return [o.targetId];
     case 'point':
@@ -1449,13 +1452,20 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   // Oynatma: her karede tek dispatch. 'set' geçmişe yazmaz, böylece animasyon
   // geri alma yığınını yüzlerce adımla doldurmaz.
-  const setSliderValues = useCallback((values: Record<string, number>) => {
+  const setSliderValues = useCallback((values: Record<string, number>, pointUpdates?: Record<string, PointAnimUpdate>) => {
     dispatch({
       type: 'set',
       next: (prev) =>
-        prev.map((o) =>
-          o.type === 'slider' && values[o.id] !== undefined ? { ...o, value: values[o.id] } : o
-        ),
+        prev.map((o) => {
+          if (o.type === 'slider' && values[o.id] !== undefined) {
+            return { ...o, value: values[o.id] };
+          }
+          if (o.type === 'point' && pointUpdates && pointUpdates[o.id] !== undefined) {
+            const u = pointUpdates[o.id];
+            return { ...o, x: u.x, y: u.y, animProgress: u.progress };
+          }
+          return o;
+        }),
     });
   }, []);
 
@@ -1532,7 +1542,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   // Kaydırıcı ekleme
   const addSlider = useCallback(
-    (name: string, min: number, max: number, step: number, initialValue: number) => {
+    (
+      name: string,
+      min: number,
+      max: number,
+      step: number,
+      initialValue: number,
+      sliderType?: 'number' | 'angle' | 'integer',
+      animSpeed?: number,
+      animMode?: 'oscillating' | 'increasing' | 'decreasing' | 'increasing_once'
+    ) => {
       // Tuval üzerinde sol üstten başlayarak, var olan kaydırıcı sayısınca aşağı kayan yerleşim
       const { viewport: vp, objects: mevcut } = latest.current;
       const bounds = getVisibleWorldBounds(vp);
@@ -1551,6 +1570,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         max,
         step,
         value: initialValue,
+        sliderType,
+        animSpeed: animSpeed ?? 1,
+        animMode: animMode ?? 'oscillating',
         x: Number((bounds.minX + genislik * 0.06).toFixed(2)),
         y: Number((bounds.maxY - yukseklik * (0.1 + sayac * 0.07)).toFixed(2)),
         length: Number(uzunluk.toFixed(2)),
@@ -2025,16 +2047,31 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // setSlider
-      commit(
-        (prev) =>
-          prev.map((o) =>
-            o.id === eylem.sliderId && o.type === 'slider'
-              ? ({ ...o, value: eylem.value } as MathObject)
-              : o
-          ),
-        `Kaydırıcıya ${formatTurkishNumber(eylem.value)} atandı`
-      );
+      if (eylem.kind === 'setValue') {
+        commit(
+          (prev) =>
+            prev.map((o) =>
+              o.id === eylem.targetId && o.type === 'slider'
+                ? ({ ...o, value: eylem.value } as MathObject)
+                : o
+            ),
+          `Değer ${formatTurkishNumber(eylem.value)} olarak atandı`
+        );
+        return;
+      }
+
+      if (eylem.kind === 'setSlider') {
+        commit(
+          (prev) =>
+            prev.map((o) =>
+              o.id === eylem.sliderId && o.type === 'slider'
+                ? ({ ...o, value: eylem.value } as MathObject)
+                : o
+            ),
+          `Kaydırıcıya ${formatTurkishNumber(eylem.value)} atandı`
+        );
+        return;
+      }
     },
     [objects, commit]
   );

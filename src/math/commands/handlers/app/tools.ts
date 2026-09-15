@@ -46,7 +46,7 @@ export const TOOLS: ToolInfo[] = [
   { id: 'square', name: 'Kare', description: 'Sürükleyerek kare çizin.', aliases: [/\bkare\b/] },
   { id: 'regular_polygon', name: 'Düzgün Çokgen', description: 'Kenar sayısını girerek düzgün çokgen oluşturun.', aliases: [/\bduzgun cokgen\b/] },
   { id: 'function', name: 'Fonksiyon', description: 'f(x) ifadesi girerek grafik çizin.', aliases: [/\bfonksiyon\b/, /\bgrafik\b/] },
-  { id: 'slider', name: 'Kaydırıcı', description: 'a, b gibi parametreler için kaydırıcı ekleyin.', aliases: [/\bkaydirici\b/, /\bsurgu\b/, /\bparametre\b/] },
+  { id: 'slider', name: 'Sürgü', description: 'a, b gibi parametreler için sürgü ekleyin.', aliases: [/\bkaydirici\b/, /\bsurgu\b/, /\bparametre\b/] },
   { id: 'midpoint', name: 'Orta Nokta', description: 'İki noktaya tıklayın; aralarındaki orta nokta oluşur.', aliases: [/\borta nokta\b/] },
   { id: 'divide_ratio', name: 'Oranda Böl', description: 'İki noktaya tıklayın, sonra m:n oranını girin (örn. 2:1).', aliases: [/\boranda bol(?:me)?\b/, /\boran(?:la)? bol(?:me)?\b/] },
   { id: 'perp_bisector', name: 'Orta Dikme', description: 'İki noktaya tıklayın; orta noktadan geçen dik doğru çizilir.', aliases: [/\borta dikme\b/] },

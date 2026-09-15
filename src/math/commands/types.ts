@@ -19,7 +19,8 @@ export type AppAction =
   | { kind: 'styleMode'; mode: 'Sade' | 'Ayrıntılı' }
   | { kind: 'planeType'; plane: 'dik_koordinat' | 'kareli_duzlem' | 'bos_duzlem' }
   | { kind: 'styleSettings'; patch: Partial<StyleSettings> }
-  | { kind: 'playback'; mode: 'play' | 'stop' | 'toggle' }
+  | { kind: 'playback'; mode: 'play' | 'stop' | 'toggle'; targetId?: string }
+  | { kind: 'clearTraces' }
   | { kind: 'help'; topic?: string };
 
 export type CommandSuccess = {

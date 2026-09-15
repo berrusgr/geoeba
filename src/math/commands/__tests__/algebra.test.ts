@@ -96,6 +96,12 @@ const EXAMPLE_SCENES: Record<string, Setup> = {
   'b kaydırıcısı için girdi kutusu': inRich, 'seçili fonksiyon için girdi kutusu': { scene: rich, select: o => [idOf(o, 'f(x) = x^2')] },
   'tuvale bir resim koy': empty, 'görsel eklemek istiyorum': empty, 'resim yerleştir': empty, 'kalem ile çizim yap': empty, 'serbest elle çiz': empty, 'karalama yap': empty,
   'f(5) kaç': inRich, 'f(2) + g(1) hesapla': inRich, 'f(3) değerini bul': inRich, "f'nin 4'teki değeri nedir": inRich, 'x = 2 iken f kaç': inRich, '2^10 kaç': empty,
+  'CanlandırmayıBaşlat[true]': inRich, 'StartAnimation[false]': inRich, 'CanlandırmayıBaşlat[A, true]': inRich, 'StartAnimation[a, false]': inRich,
+  'A noktasının animasyonunu başlat': inRich, 'A noktasını canlandır': inRich,
+  'DeğerAta[a, 5]': inRich, 'SetValue[a, 2]': inRich, 'DeğerAta[b, -1.5]': inRich, 'SetValue[k, 0]': inRich,
+  'DeğerAta[a, 10]': inRich, 'SetValue[b, 4]': inRich,
+  'İzBırak[A, true]': inRich, 'ShowTrace[A, true]': inRich, 'İzBırak[A, false]': inRich, 'İziGöster[A]': inRich,
+  'İzleriTemizle[]': inRich, 'ClearTrace[]': inRich, 'izleri temizle': inRich, 'A noktasının izini aç': inRich,
 };
 
 describe('algebra examples', () => {

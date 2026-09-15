@@ -822,20 +822,93 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     [objects]
   );
 
+  // Sahnedeki canlandırılan noktalar
+  const animatingPoints = useMemo(
+    () =>
+      objects.filter(
+        (o) =>
+          o.type === 'point' &&
+          (o as PointObject).animating &&
+          o.visible &&
+          (o as PointObject).onObjectId
+      ) as PointObject[],
+    [objects]
+  );
+
   const { isPlaying: sliderPlaying, toggle: toggleSliderPlayback } = useSliderPlayback({
     sliders,
+    animatingPoints,
+    allObjects: objects,
     onValues: setSliderValues,
   });
 
-  // Yazılı komut: "kaydırıcıları oynat / durdur" — oynatma düğmesiyle aynı döngü
+  // İz bırakma (GeoGebra Trace) durumu
+  const [traces, setTraces] = useState<Record<string, { points: Point2D[]; color: string }>>({});
+  const clearTraces = useCallback(() => setTraces({}), []);
+
+  // showTrace: true olan nesnelerin hareket izlerini kaydet
+  useEffect(() => {
+    const traceObjects = objects.filter((o) => o.showTrace && o.visible);
+    if (traceObjects.length === 0) return;
+
+    setTraces((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const obj of traceObjects) {
+        if (obj.type === 'point') {
+          const pt = obj as PointObject;
+          const curList = next[pt.id]?.points ?? [];
+          const last = curList[curList.length - 1];
+          if (!last || Math.hypot(last.x - pt.x, last.y - pt.y) > 0.02) {
+            next[pt.id] = {
+              color: pt.color || '#2563eb',
+              points: [...curList.slice(-600), { x: pt.x, y: pt.y }],
+            };
+            changed = true;
+          }
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [objects]);
+
+  // Yazılı komut / düğme: animasyon başlat/durdur ve iz temizleme dinleyicileri
   useEffect(() => {
     const onPlayback = (event: Event) => {
-      const mode = (event as CustomEvent<unknown>).detail;
-      if (mode === 'toggle' || (mode === 'play' && !sliderPlaying) || (mode === 'stop' && sliderPlaying)) toggleSliderPlayback();
+      const detail = (event as CustomEvent<any>).detail;
+      const mode = typeof detail === 'string' ? detail : detail?.mode ?? 'toggle';
+      const targetId = typeof detail === 'object' ? detail?.targetId : undefined;
+
+      if (targetId) {
+        const obj = latestObjectsRef.current.find((o) => o.id === targetId || o.label === targetId);
+        if (obj?.type === 'point') {
+          const pt = obj as PointObject;
+          const nextAnim = mode === 'play' ? true : mode === 'stop' ? false : !pt.animating;
+          updateObject(pt.id, { animating: nextAnim } as Partial<MathObject>, true);
+        } else if (obj?.type === 'slider') {
+          if (mode === 'toggle' || (mode === 'play' && !sliderPlaying) || (mode === 'stop' && sliderPlaying)) {
+            toggleSliderPlayback();
+          }
+        }
+        return;
+      }
+
+      if (mode === 'toggle' || (mode === 'play' && !sliderPlaying) || (mode === 'stop' && sliderPlaying)) {
+        toggleSliderPlayback();
+      }
     };
+
+    const onClearTraces = () => clearTraces();
+
     window.addEventListener('geoeba:slider-playback', onPlayback);
-    return () => window.removeEventListener('geoeba:slider-playback', onPlayback);
-  }, [sliderPlaying, toggleSliderPlayback]);
+    window.addEventListener('geoeba:animation-playback', onPlayback);
+    window.addEventListener('geoeba:clear-traces', onClearTraces);
+    return () => {
+      window.removeEventListener('geoeba:slider-playback', onPlayback);
+      window.removeEventListener('geoeba:animation-playback', onPlayback);
+      window.removeEventListener('geoeba:clear-traces', onClearTraces);
+    };
+  }, [sliderPlaying, toggleSliderPlayback, updateObject, clearTraces]);
 
   /**
    * Sürükleme biter bitmez tarayıcı bir 'click' olayı da gönderir. mouseup, click'ten ÖNCE
@@ -862,7 +935,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
   viewportRef.current = viewport;
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
+    const onMove = (e: PointerEvent) => {
       const drag = sliderDragRef.current;
       if (!drag || !svgRef.current) return;
       const s = (latestObjectsRef.current.find((o) => o.id === drag.id) as SliderObject | undefined);
@@ -885,11 +958,11 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       const s = latestObjectsRef.current.find((o) => o.id === id) as SliderObject | undefined;
       recordHistory(s ? `${s.variableName} = ${formatTurkishNumber(s.value)}` : 'Kaydırıcı değiştirildi');
     };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
     return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
     };
   }, [handleSliderChange, recordHistory]);
 
@@ -1876,7 +1949,18 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         setActiveTool('select');
       },
     };
-    if (!hedef) return [pasteItem];
+    if (!hedef) {
+      const bostaMaddeler = [pasteItem];
+      if (Object.keys(traces).length > 0) {
+        bostaMaddeler.push({
+          id: 'izleri-temizle',
+          label: 'İzleri Temizle',
+          separatorBefore: true,
+          onSelect: () => clearTraces(),
+        });
+      }
+      return bostaMaddeler;
+    }
     const targetIds = selectedObjectIds.includes(hedef.id) ? selectedObjectIds : [hedef.id];
     const maddeler: ContextMenuItem[] = [
       { id: 'kopyala', label: 'Kopyala', onSelect: () => {
@@ -2104,6 +2188,22 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           onSelect: () => toggleAngleReflex(iliskiliAci.id),
         });
       }
+
+      if ((hedef as PointObject).onObjectId) {
+        const isAnim = (hedef as PointObject).animating;
+        maddeler.push({
+          id: 'canlandirma',
+          label: isAnim ? 'Animasyonu Durdur' : 'Animasyonu Başlat',
+          separatorBefore: true,
+          onSelect: () => updateObject(hedef.id, { animating: !isAnim } as Partial<MathObject>, true),
+        });
+      }
+    } else if (hedef.type === 'slider') {
+      maddeler.push({
+        id: 'canlandirma-slider',
+        label: sliderPlaying ? 'Animasyonu Durdur' : 'Animasyonu Başlat',
+        onSelect: () => toggleSliderPlayback(),
+      });
     } else if (hedef.type === 'circle') {
       const circ = hedef as CircleObject;
       const merkez = pointsById.get(circ.centerPointId);
@@ -2270,6 +2370,26 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     if (hedef.type === 'text') maddeler.push({ id: 'metni-duzenle', label: 'Metni düzenle…', onSelect: () => { setEditingTextObj(hedef); setPendingTextWorldPos({ x: hedef.x, y: hedef.y }); setIsTextDialogOpen(true); } });
     if (hedef.type === 'measurement') maddeler.push({ id: 'olcum-goster', label: hedef.showValue === false ? 'Ölçümü göster' : 'Ölçümü gizle', onSelect: () => updateObject(hedef.id, { showValue: hedef.showValue === false } as Partial<MathObject>, true) });
 
+    // İZ BIRAKMA (GeoGebra Show Trace)
+    const traceDestekleyenler = ['point', 'segment', 'line', 'ray', 'circle', 'polygon', 'arc', 'sector', 'ellipse', 'function'];
+    if (traceDestekleyenler.includes(hedef.type)) {
+      maddeler.push({
+        id: 'iz-birak',
+        label: hedef.showTrace ? 'İzi Gizle (İz Açık)' : 'İzi Göster (İz Bırak)',
+        separatorBefore: true,
+        onSelect: () => updateObject(hedef.id, { showTrace: !hedef.showTrace } as Partial<MathObject>, true),
+      });
+    }
+
+    if (Object.keys(traces).length > 0) {
+      maddeler.push({
+        id: 'izleri-temizle',
+        label: 'Tüm İzleri Temizle',
+        separatorBefore: true,
+        onSelect: () => clearTraces(),
+      });
+    }
+
     // "Sil" her nesne türünde bulunur
     maddeler.push({
       id: 'sil',
@@ -2317,6 +2437,10 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     setLengthMeasurement,
     showDetails,
     deleteObject,
+    traces,
+    clearTraces,
+    sliderPlaying,
+    toggleSliderPlayback,
   ]);
 
   const handleObjectMouseDown = (e: React.MouseEvent, obj: MathObject) => {
@@ -3343,6 +3467,45 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           </g>
         )}
 
+        {/* 2.5 İZLER (TRACES) KATMANI — GeoGebra Show Trace */}
+        {Object.entries(traces).map(([id, trace]) => {
+          if (!trace.points || trace.points.length < 2) return null;
+          const ptsStr = trace.points
+            .map((pt) => {
+              const sp = worldToScreen(pt, viewport);
+              return `${sp.x},${sp.y}`;
+            })
+            .join(' ');
+          return (
+            <g key={`trace-${id}`} className="pointer-events-none select-none">
+              <polyline
+                points={ptsStr}
+                fill="none"
+                stroke={trace.color || '#2563eb'}
+                strokeWidth={2}
+                strokeOpacity={0.65}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="3,3"
+              />
+              {trace.points.map((pt, idx) => {
+                if (idx % 3 !== 0) return null;
+                const sp = worldToScreen(pt, viewport);
+                return (
+                  <circle
+                    key={`tr-pt-${id}-${idx}`}
+                    cx={sp.x}
+                    cy={sp.y}
+                    r={2}
+                    fill={trace.color || '#2563eb'}
+                    fillOpacity={0.7}
+                  />
+                );
+              })}
+            </g>
+          );
+        })}
+
         {/* 3. FONKSİYON GRAFİKLERİ KATMANI */}
         {objects
           .filter((o) => o.type === 'function' && o.visible)
@@ -3850,15 +4013,42 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
             }
 
             if (w.type === 'button') {
+              const act = w.action;
               return (
                 <CanvasButton
                   key={w.id}
                   obj={w}
                   {...ortak}
                   onRun={() => {
-                    // Canlandırma oynatma döngüsü bu bileşende yaşıyor
-                    if (w.action.kind === 'animate') toggleSliderPlayback();
-                    else runButton(w.id);
+                    if (act.kind === 'animate') {
+                      if (act.play !== undefined) {
+                        if (act.play && !sliderPlaying) toggleSliderPlayback();
+                        else if (!act.play && sliderPlaying) toggleSliderPlayback();
+                      } else {
+                        toggleSliderPlayback();
+                      }
+                      if (act.targetIds?.length) {
+                        for (const tid of act.targetIds) {
+                          const o = objects.find((obj) => obj.id === tid);
+                          if (o?.type === 'point') {
+                            updateObject(
+                              o.id,
+                              { animating: act.play ?? !(o as PointObject).animating } as Partial<MathObject>,
+                              true
+                            );
+                          }
+                        }
+                      }
+                    } else if (act.kind === 'clearTraces') {
+                      clearTraces();
+                    } else if (act.kind === 'setValue') {
+                      const tgt = objects.find((o) => o.id === act.targetId);
+                      if (tgt?.type === 'slider') {
+                        handleSliderChange(tgt.id, act.value);
+                      }
+                    } else {
+                      runButton(w.id);
+                    }
                   }}
                 />
               );
@@ -3931,7 +4121,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   textAnchor="middle"
                   fontSize={fs(9, 'measure')} className="fill-muted-foreground font-semibold pointer-events-none"
                 >
-                  {formatTurkishNumber(s.min)}
+                  {formatTurkishNumber(s.min)}{s.sliderType === 'angle' ? '°' : ''}
                 </text>
                 <text
                   x={sag.x}
@@ -3939,7 +4129,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   textAnchor="middle"
                   fontSize={fs(9, 'measure')} className="fill-muted-foreground font-semibold pointer-events-none"
                 >
-                  {formatTurkishNumber(s.max)}
+                  {formatTurkishNumber(s.max)}{s.sliderType === 'angle' ? '°' : ''}
                 </text>
                 {/* Etiket: a = 1,50 */}
                 <text
@@ -3947,7 +4137,7 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   y={sol.y - 12}
                   fontSize={fs(11, 'measure')} className="fill-foreground font-black font-mono pointer-events-none"
                 >
-                  {s.variableName} = {formatTurkishNumber(s.value)}
+                  {s.variableName} = {formatTurkishNumber(s.value)}{s.sliderType === 'angle' ? '°' : ''}
                 </text>
                 {/* Tutamak (sürüklenebilir) */}
                 <circle
@@ -3958,12 +4148,15 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
                   stroke="#ffffff"
                   strokeWidth={2.5}
                   className="cursor-grab active:cursor-grabbing drop-shadow-md"
-                  onMouseDown={(e) => {
+                  onPointerDown={(e) => {
                     if (e.button !== 0) return;
                     e.stopPropagation();
                     setSelectedObjectId(s.id);
                     setSelectedObjectIds([s.id]);
                     sliderDragRef.current = { id: s.id };
+                    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                      e.currentTarget.releasePointerCapture(e.pointerId);
+                    }
                   }}
                 />
                 {isSelected && (

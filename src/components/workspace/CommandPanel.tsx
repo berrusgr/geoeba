@@ -151,7 +151,8 @@ export function CommandPanel({ onSelectTool, variant = 'bar', incoming, onIncomi
         case 'styleMode': window.dispatchEvent(new CustomEvent('geoeba:style-mode', { detail: action.mode })); break;
         case 'planeType': window.dispatchEvent(new CustomEvent('geoeba:plane-type', { detail: action.plane })); break;
         case 'styleSettings': setStyleSettings(prev => ({ ...prev, ...action.patch })); break;
-        case 'playback': window.dispatchEvent(new CustomEvent('geoeba:slider-playback', { detail: action.mode })); break;
+        case 'playback': window.dispatchEvent(new CustomEvent('geoeba:animation-playback', { detail: action })); break;
+        case 'clearTraces': window.dispatchEvent(new CustomEvent('geoeba:clear-traces')); break;
         case 'help': setHelp(true); setHelpFilter(action.topic ?? ''); break;
       }
     }

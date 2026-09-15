@@ -23,7 +23,14 @@ export function depsOf(o: MathObject): string[] {
     case 'angle': return [o.point1Id, o.vertexPointId, o.point3Id];
     case 'polygon': case 'measurement': return o.pointIds;
     case 'checkbox': return o.targetIds;
-    case 'button': return o.action.kind === 'toggle' ? o.action.targetIds : o.action.kind === 'animate' ? o.action.sliderIds : [o.action.sliderId];
+    case 'button': {
+      const act = o.action;
+      if (act.kind === 'toggle') return act.targetIds;
+      if (act.kind === 'animate') return [...(act.sliderIds ?? []), ...(act.targetIds ?? [])];
+      if (act.kind === 'setSlider') return [act.sliderId];
+      if (act.kind === 'setValue') return [act.targetId];
+      return [];
+    }
     case 'input_box': return [o.targetId];
     case 'point': return [...(o.onObjectId ? [o.onObjectId] : []), ...constructionDependencies(o)];
     default: return [];

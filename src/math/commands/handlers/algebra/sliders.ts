@@ -380,11 +380,13 @@ export const playbackHandler: CommandHandler = {
   id: 'algebra.slider.playback',
   examples: ["a'yı oynat", 'animasyonu başlat', 'animasyonu durdur', 'tüm kaydırıcıları oynat', 'kaydırıcıları durdur', 'oynat', 'kaydırıcıları canlandır', 'a ve b kaydırıcılarını oynat'],
   match(c, scene) {
+    if (/^(?:degerata|setvalue)\s*(?:\[|\()/i.test(fold(c.raw))) return 0;
     const verbs = playbackVerbs(c);
     if (!verbs.has('play') && !verbs.has('stop')) return 0;
     if (c.definition || c.assignment || WIDGET_NOUN.test(c.text) || HAS_QUOTE.test(c.raw)) return 0;
     if (hasForeignEditVerb(c)) return 0;
     const { sliders, unknown } = slidersInClause(c, scene);
+    if (/\bnokta/.test(c.text) || (c.labels.some(l => !l.lowercase) && !sliders.length)) return 0;
     const context = SLIDER_NOUN.test(c.text) || ANIMATION_WORD.test(c.text) || sliders.length > 0;
     const bare = c.words.every(w => !/[\p{L}\p{N}#$@"]/u.test(w) || isStopword(w) || /^(?:oynat|baslat|durdur|canlandir|tekrar|yeniden|devam|et|ettir|hepsini|hareket)\w*$/.test(w));
     if (context || bare) return 88;

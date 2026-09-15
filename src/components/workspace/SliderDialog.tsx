@@ -37,11 +37,15 @@ const NUMBER_INPUT_CLASS =
 export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
   const { addSlider, objects } = useWorkspace();
   const [name, setName] = useState('a');
+  const [sliderType, setSliderType] = useState<'number' | 'angle' | 'integer'>('number');
+  
   // Sayı alanları ham metin olarak tutulur; gönderimde/odak kaybında ayrıştırılır.
   const [minRaw, setMinRaw] = useState(DEFAULT_MIN);
   const [maxRaw, setMaxRaw] = useState(DEFAULT_MAX);
   const [stepRaw, setStepRaw] = useState(DEFAULT_STEP);
   const [valueRaw, setValueRaw] = useState(DEFAULT_VALUE);
+  const [animSpeedRaw, setAnimSpeedRaw] = useState('1');
+  const [animMode, setAnimMode] = useState<'oscillating' | 'increasing' | 'decreasing' | 'increasing_once'>('oscillating');
   const [error, setError] = useState<string | null>(null);
 
   const existingNames = objects
@@ -58,12 +62,40 @@ export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
     if (!isOpen) return;
     const used = new Set(existingNamesRef.current);
     setName(CANDIDATE_NAMES.find((n) => !used.has(n)) ?? 'a');
+    setSliderType('number');
     setMinRaw(DEFAULT_MIN);
     setMaxRaw(DEFAULT_MAX);
     setStepRaw(DEFAULT_STEP);
     setValueRaw(DEFAULT_VALUE);
+    setAnimSpeedRaw('1');
+    setAnimMode('oscillating');
     setError(null);
   }, [isOpen]);
+
+  const handleTypeChange = (type: 'number' | 'angle' | 'integer') => {
+    setSliderType(type);
+    setError(null);
+    const used = new Set(existingNamesRef.current);
+    if (type === 'angle') {
+      setName(!used.has('α') ? 'α' : (!used.has('β') ? 'β' : 'θ'));
+      setMinRaw('0');
+      setMaxRaw('360');
+      setStepRaw('1');
+      setValueRaw('45');
+    } else if (type === 'integer') {
+      setName(!used.has('n') ? 'n' : (!used.has('k') ? 'k' : 'm'));
+      setMinRaw('1');
+      setMaxRaw('30');
+      setStepRaw('1');
+      setValueRaw('5');
+    } else {
+      setName(CANDIDATE_NAMES.find((n) => !used.has(n)) ?? 'a');
+      setMinRaw(DEFAULT_MIN);
+      setMaxRaw(DEFAULT_MAX);
+      setStepRaw(DEFAULT_STEP);
+      setValueRaw(DEFAULT_VALUE);
+    }
+  };
 
   const normalizeOnBlur = (raw: string, setter: (v: string) => void, fallback: string) => {
     const n = parseNumberInput(raw);
@@ -77,8 +109,8 @@ export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
       setError('Değişken adı boş olamaz.');
       return;
     }
-    if (!/^[a-zçğıöşü][a-zçğıöşü0-9]?$/.test(trimmedName)) {
-      setError('Değişken adı bir harf (isteğe bağlı bir rakam) olmalıdır. Örn: a, b, m, k1');
+    if (!/^[a-zçğıöşüαβθ][a-zçğıöşü0-9]?$/.test(trimmedName)) {
+      setError('Değişken adı bir harf (isteğe bağlı bir rakam) olmalıdır. Örn: a, b, m, α, β');
       return;
     }
     if (RESERVED_NAMES.includes(trimmedName)) {
@@ -94,6 +126,7 @@ export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
     const max = parseNumberInput(maxRaw);
     const step = parseNumberInput(stepRaw);
     const value = parseNumberInput(valueRaw);
+    const animSpeed = parseNumberInput(animSpeedRaw) || 1;
 
     if (min === null || max === null || step === null || value === null) {
       setError('Tüm sayı alanları geçerli bir sayı olmalıdır.');
@@ -109,7 +142,7 @@ export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
     }
 
     const clampedValue = Math.max(min, Math.min(max, value));
-    addSlider(trimmedName, min, max, step, clampedValue);
+    addSlider(trimmedName, min, max, step, clampedValue, sliderType, animSpeed, animMode);
     setError(null);
     onClose();
   };
@@ -138,6 +171,22 @@ export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
         >
           <X className="w-5 h-5" />
         </button>
+      </div>
+
+      {/* Sürgü Tipi Seçici */}
+      <div className="flex bg-muted rounded-xl p-1 w-full text-xs font-semibold">
+        {(['number', 'angle', 'integer'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => handleTypeChange(t)}
+            className={`flex-1 py-1.5 rounded-lg transition-colors text-center ${
+              sliderType === t ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t === 'number' ? 'Sayı' : t === 'angle' ? 'Açı' : 'Tam Sayı'}
+          </button>
+        ))}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3 text-xs">
@@ -230,6 +279,42 @@ export function SliderDialog({ isOpen, onClose }: SliderDialogProps) {
               onBlur={() => normalizeOnBlur(valueRaw, setValueRaw, DEFAULT_VALUE)}
               className={NUMBER_INPUT_CLASS}
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="font-semibold text-muted-foreground" htmlFor="slider-speed-input">
+              Canlandırma Hızı
+            </label>
+            <input
+              id="slider-speed-input"
+              type="text"
+              inputMode="decimal"
+              value={animSpeedRaw}
+              onChange={(e) => {
+                setAnimSpeedRaw(e.target.value);
+                setError(null);
+              }}
+              onBlur={() => normalizeOnBlur(animSpeedRaw, setAnimSpeedRaw, '1')}
+              className={NUMBER_INPUT_CLASS}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="font-semibold text-muted-foreground" htmlFor="slider-mode-input">
+              Canlandırma Türü
+            </label>
+            <select
+              id="slider-mode-input"
+              value={animMode}
+              onChange={(e) => setAnimMode(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-lg bg-input border border-border text-foreground font-semibold outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+            >
+              <option value="oscillating">⇔ Salınan</option>
+              <option value="increasing">⇒ Artan</option>
+              <option value="decreasing">⇐ Azalan</option>
+              <option value="increasing_once">⇒ Artan (Bir Kere)</option>
+            </select>
           </div>
         </div>
 

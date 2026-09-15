@@ -635,7 +635,15 @@ export class CommandScene {
       targetIds: [...targetIds], checked: true, color: COLORS.checkbox, visible: true, createdAt: Date.now() } as CheckboxObject);
   }
   addButton(action: ButtonObject['action'], position: Point2D, o: { label?: string } = {}): ButtonObject {
-    const label = o.label ?? (action.kind === 'animate' ? 'Oynat / Durdur' : action.kind === 'toggle' ? 'Göster / Gizle' : `${trNum(action.value)} yap`);
+    const label =
+      o.label ??
+      (action.kind === 'animate'
+        ? 'Oynat / Durdur'
+        : action.kind === 'toggle'
+        ? 'Göster / Gizle'
+        : action.kind === 'clearTraces'
+        ? 'İzleri Temizle'
+        : `${trNum(action.value)} yap`);
     return this.add({ id: createId('btn'), type: 'button', label, showLabel: true, x: tidy(position.x), y: tidy(position.y), action, color: COLORS.button, visible: true, createdAt: Date.now() } as ButtonObject);
   }
   addInputBox(target: SliderObject | FunctionObject, position: Point2D): InputBoxObject {

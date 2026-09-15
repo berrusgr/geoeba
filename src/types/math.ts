@@ -65,6 +65,8 @@ export interface BaseMathObject {
    * Kayıklık şekle GÖRE tutulduğu için şekil taşındığında etiket de onunla birlikte gider.
    */
   labelOffsets?: Record<string, Point2D>;
+  /** Nesne hareket ettikçe ekranda kalıcı iz bırakır mı (GeoGebra Show Trace) */
+  showTrace?: boolean;
 }
 
 export interface PointObject extends BaseMathObject {
@@ -103,6 +105,14 @@ export interface PointObject extends BaseMathObject {
    */
   onObjectId?: string;
   dependsOn?: string[]; // Bağımlı olduğu nesne kimlikleri
+  /** Nokta canlandırması açık mı (GeoGebra Animation On) */
+  animating?: boolean;
+  /** Nokta canlandırma hızı */
+  animSpeed?: number;
+  /** Canlandırma modu (salınan, artan, azalan, bir kez artan) */
+  animMode?: 'oscillating' | 'increasing' | 'decreasing' | 'increasing_once';
+  /** Yol üzerindeki parametre ilerlemesi (ör. 0..1 veya açı) */
+  animProgress?: number;
 }
 
 export interface SegmentObject extends BaseMathObject {
@@ -256,6 +266,9 @@ export interface SliderObject extends BaseMathObject {
   y?: number;
   /** Çubuğun dünya birimi cinsinden uzunluğu (varsayılan 4). */
   length?: number;
+  sliderType?: 'number' | 'angle' | 'integer';
+  animSpeed?: number;
+  animMode?: 'oscillating' | 'increasing' | 'decreasing' | 'increasing_once';
 }
 
 export interface FractionObject extends BaseMathObject {
@@ -313,10 +326,14 @@ export interface ButtonObject extends BaseMathObject {
   action:
     /** Bağlı nesnelerin görünürlüğünü ters çevirir */
     | { kind: 'toggle'; targetIds: string[] }
-    /** Kaydırıcı canlandırmasını başlatır/durdurur */
-    | { kind: 'animate'; sliderIds: string[] }
+    /** Canlandırmayı (sürgüler veya nesneler) başlatır/durdurur (GeoGebra StartAnimation) */
+    | { kind: 'animate'; sliderIds?: string[]; targetIds?: string[]; play?: boolean }
     /** Bir kaydırıcıya sabit değer atar */
-    | { kind: 'setSlider'; sliderId: string; value: number };
+    | { kind: 'setSlider'; sliderId: string; value: number }
+    /** Bir nesneye değer atar (GeoGebra SetValue) */
+    | { kind: 'setValue'; targetId: string; value: number }
+    /** Tuvaldeki izleri temizler */
+    | { kind: 'clearTraces' };
 }
 
 /**
