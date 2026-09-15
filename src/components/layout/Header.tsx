@@ -420,16 +420,7 @@ export function Header() {
             </div>
           )}
 
-          {/* Serbest Çalışma Butonu */}
-          {currentScreen !== 'workspace' && (
-            <button
-              onClick={startFreeSandbox}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Serbest Stüdyo</span>
-            </button>
-          )}
+
 
           {/* Tema Değiştirici */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
