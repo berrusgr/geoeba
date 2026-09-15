@@ -1097,17 +1097,23 @@ export function Toolbar({ onSelectTool,
                       <button
                         onClick={() => toggleGroup(group.groupName)}
                         title={ikonModu ? group.groupName : undefined}
-                        className={`w-full flex items-center ${
-                          ikonModu ? 'justify-center' : 'justify-between'
-                        } px-1.5 py-1 text-xs font-black ${group.headerTextColor} hover:opacity-80 transition-opacity cursor-pointer`}
+                        className={`w-full flex items-center justify-between px-1.5 py-1 text-xs font-black ${group.headerTextColor} hover:opacity-80 transition-opacity cursor-pointer`}
                         aria-expanded={isExpanded}
                         aria-label={ikonModu ? group.groupName : undefined}
                       >
                         {ikonModu ? (
-                          <span className="min-w-0 text-[10px] font-black leading-snug text-center break-words">{group.groupName}</span>
+                          <div className="flex items-center justify-between w-full gap-1">
+                            <span className="min-w-0 text-[10px] font-black leading-snug text-left break-words">{group.groupName}</span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                            )}
+                          </div>
                         ) : (
                           <>
-                            <div className="flex items-center gap-2">                              <span className="text-xs font-black">{group.groupName}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black">{group.groupName}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${group.badgeBg}`}>
