@@ -42,9 +42,6 @@ export function DiscoveryModal({ topic, onClose }: DiscoveryModalProps) {
               <Box className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">
-                {topic.code || 'KONU'}
-              </div>
               <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                 {topic.title}
               </h2>
