@@ -630,31 +630,6 @@ export function WorkspaceView() {
             <span>Özellikler</span>
           </button>
 
-          {/* Stil Butonu (Sağda Açar) */}
-          <button
-            onClick={() => {
-              if (showProperties && propertiesTab === 'stil') {
-                setShowProperties(false);
-              } else {
-                setShowProperties(true);
-                setPropertiesTab('stil');
-              }
-            }}
-            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
-              showProperties && propertiesTab === 'stil'
-                ? 'bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 ring-1 ring-pink-500/30 font-semibold shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-            title={
-              showProperties && propertiesTab === 'stil'
-                ? 'Stil Panelini Kapat'
-                : 'Stil Panelini Sağda Aç'
-            }
-          >
-            <Palette className="w-3 h-3" />
-            <span>Stil</span>
-          </button>
-
           {/* Ayarlar Butonu (Sağda Açar) */}
           <button
             onClick={() => {
