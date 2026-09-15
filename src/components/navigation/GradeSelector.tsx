@@ -205,7 +205,7 @@ export function GradeSelector() {
               <button
                 key={grade.gradeNumber}
                 onClick={() => selectGrade(grade.gradeNumber as GradeId)}
-                className={`group relative h-52 flex flex-col justify-between p-6 rounded-3xl ${visual.bgCard} border-2 ${visual.borderCard} shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden text-left`}
+                className={`group relative h-[300px] sm:h-[340px] flex flex-col justify-between p-6 sm:p-8 rounded-[2rem] ${visual.bgCard} border-2 ${visual.borderCard} shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden text-left`}
               >
                 {/* Sağ Alt Silik Filigran Logo */}
                 {visual.imageSrc && (

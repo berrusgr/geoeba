@@ -391,7 +391,7 @@ export function TeachingPortal() {
               return (
                 <div
                   key={theme.id}
-                  className={`rounded-3xl border-2 transition-all duration-200 overflow-hidden flex flex-col justify-between ${
+                  className={`rounded-[2rem] border-2 transition-all duration-200 overflow-hidden flex flex-col justify-between min-h-[300px] sm:min-h-[340px] ${
                     isExpanded
                       ? 'bg-card border-primary shadow-lg ring-2 ring-primary/20'
                       : 'bg-card border-border/80 hover:border-border hover:shadow-md'
@@ -400,7 +400,7 @@ export function TeachingPortal() {
                   {/* TEMA BAŞLIK KARTI */}
                   <button
                     onClick={() => setExpandedThemeId(isExpanded ? null : theme.id)}
-                    className="w-full p-5 flex flex-col items-start justify-between text-left cursor-pointer group flex-1"
+                    className="w-full p-6 sm:p-8 flex flex-col items-start justify-between text-left cursor-pointer group flex-1"
                   >
                     {/* Üst Satır: Tema Numarası & Ders Saati */}
                     <div className="w-full flex items-center justify-between">
