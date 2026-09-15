@@ -725,23 +725,23 @@ export function Toolbar({ onSelectTool,
     <div className="flex h-full min-h-0 bg-card/95 backdrop-blur-md border-r border-border select-none z-30 shadow-sm shrink-0 relative">
 
       {/* 1. SOL DİKEY MENÜ SEÇİCİ (GeoGebra Birebir Stil) */}
-      <div className="w-14 shrink-0 h-full border-r border-border flex flex-col items-center py-4 justify-between bg-slate-50/70 dark:bg-slate-900/60">
-
+      <div className="w-[68px] shrink-0 h-full border-r border-border flex flex-col items-center py-4 justify-between bg-slate-50/70 dark:bg-slate-900/60">
         {/* Üst Kısım: Cebir, Araçlar, Tablo Butonları */}
-        <div className="flex flex-col items-center gap-3 w-full">
+        <div className="flex flex-col items-center gap-3 w-full px-1">
           {/* Cebir Sekmesi */}
           <button
             onClick={() => {
               setSidebarTab('cebir');
             }}
             title="Cebir Görünümü (Cebirsel İfadeler & Fonksiyonlar)"
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
               sidebarTab === 'cebir'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            <Calculator className="w-5 h-5" />
+            <Calculator className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] font-bold leading-none">Cebir</span>
           </button>
 
           {/* Araçlar Sekmesi */}
@@ -750,13 +750,14 @@ export function Toolbar({ onSelectTool,
               setSidebarTab('araclar');
             }}
             title="Araçlar Görünümü (Geometrik Çizim Araçları)"
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
               sidebarTab === 'araclar'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            <Shapes className="w-5 h-5" />
+            <Shapes className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] font-bold leading-none">Araçlar</span>
           </button>
 
           {/* Tablo Sekmesi */}
@@ -765,16 +766,16 @@ export function Toolbar({ onSelectTool,
               setSidebarTab('tablo');
             }}
             title="Hesap Tablosu Görünümü (Spreadsheet)"
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
               sidebarTab === 'tablo'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            <Table className="w-5 h-5" />
+            <Table className="w-5 h-5 shrink-0" />
+            <span className="text-[9.5px] font-bold leading-tight text-center">Hesap Tablosu</span>
           </button>
         </div>
-
       </div>
 
       {/* 2. SAĞ KISIM: İÇERİK PANELİ */}
