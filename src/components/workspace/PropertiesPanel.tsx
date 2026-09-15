@@ -493,7 +493,7 @@ export function PropertiesPanel({
           </div>
 
           {/* 4. SEÇİLİ NESNE BİLGİ VE ÖZELLİK PANELİ */}
-          {selectedObject ? (
+          {selectedObject && (
             <div className="space-y-4 animate-in fade-in duration-150">
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
@@ -1022,10 +1022,6 @@ export function PropertiesPanel({
                   ))}
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-xs text-muted-foreground text-center py-2 border-t border-border/60 pt-3">
-              Özelliklerini görüntülemek ve düzenlemek için tuvaldeki bir nesneye tıklayın.
             </div>
           )}
 
