@@ -2,7 +2,7 @@ import type { CommandHandler } from '../../types';
 import type { Clause } from '../../text';
 import { fold } from '../../text';
 import { fail, type CommandScene, trNum } from '../../scene';
-import type { MathObject, PointObject, SliderObject } from '@/types/math';
+import type { MathObject, PointObject, SliderObject, AngleObject } from '@/types/math';
 import { evaluateValue, findSlider } from './shared';
 
 function findSceneTarget(scene: CommandScene, label: string): MathObject | undefined {
@@ -143,7 +143,17 @@ export const scriptAnimationHandler: CommandHandler = {
         return;
       }
 
-      fail(`${targetLabel} canlandırılabilir bir nesne (nokta veya sürgü) değil.`);
+      if (obj.type === 'angle') {
+        const ang = obj as AngleObject;
+        const p3 = scene.objects.find((o) => o.id === ang.point3Id) as PointObject | undefined;
+        if (p3?.construction?.kind === 'rotate' && p3.construction.sliderId) {
+          scene.act({ kind: 'playback', mode: boolVal ? 'play' : 'stop', targetId: p3.construction.sliderId });
+          scene.say(`${ang.label || 'Açı'} için canlandırma ${boolVal ? 'başlatıldı' : 'durduruldu'}.`);
+          return;
+        }
+      }
+
+      fail(`${targetLabel} canlandırılabilir bir nesne (nokta, açı veya sürgü) değil.`);
       return;
     }
 

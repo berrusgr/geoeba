@@ -34,7 +34,7 @@ export function constructionDependencies(point: PointObject): string[] {
     case 'bisector': return rule.pointIds;
     case 'intersection': return rule.objectIds;
     case 'reflect': return [rule.sourceId, ...(rule.axisPointIds ?? []), ...(rule.centerId ? [rule.centerId] : [])];
-    case 'rotate': return [rule.sourceId, ...(rule.centerId ? [rule.centerId] : [])];
+    case 'rotate': return [rule.sourceId, ...(rule.centerId ? [rule.centerId] : []), ...(rule.sliderId ? [rule.sliderId] : [])];
     case 'translate': return [rule.sourceId, ...(rule.vectorPointIds ?? [])];
     case 'dilate': return [rule.sourceId, ...(rule.centerId ? [rule.centerId] : [])];
     case 'triangleCenter': return rule.pointIds;
@@ -187,7 +187,9 @@ export function resolveCommandBindings(objects: MathObject[]): MathObject[] {
       }
       case 'rotate': {
         const center = r.centerId ? point(r.centerId) : r.center ?? { x: 0, y: 0 };
-        position = rotateAround(point(r.sourceId), center, r.degrees);
+        const slider = r.sliderId ? byId.get(r.sliderId) : undefined;
+        const deg = slider && slider.type === 'slider' ? (slider as { value: number }).value : r.degrees;
+        position = rotateAround(point(r.sourceId), center, deg);
         break;
       }
       case 'translate': {

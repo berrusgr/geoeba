@@ -86,8 +86,8 @@ export interface PointObject extends BaseMathObject {
     | { kind: 'intersection'; objectIds: [string, string]; index: number }
     /** Doğruya (axisPointIds), noktaya (centerId) veya eksene göre yansıma. */
     | { kind: 'reflect'; sourceId: string; axisPointIds?: [string, string]; centerId?: string; axis?: 'x' | 'y' | 'y=x' | 'y=-x' }
-    /** Merkez noktası (centerId) ya da sabit merkez etrafında saat yönünün tersine döndürme. */
-    | { kind: 'rotate'; sourceId: string; centerId?: string; center?: Point2D; degrees: number }
+    /** Merkez noktası (centerId) ya da sabit merkez etrafında saat yönünün tersine döndürme. Sürgüye bağlanabilir (canlandırma). */
+    | { kind: 'rotate'; sourceId: string; centerId?: string; center?: Point2D; degrees: number; sliderId?: string; sliderVariableName?: string }
     /** Vektör (vectorPointIds: başlangıç → bitiş) ya da sabit vektör kadar öteleme. */
     | { kind: 'translate'; sourceId: string; vectorPointIds?: [string, string]; vector?: Point2D }
     /** Merkeze göre k katı (homotete). */

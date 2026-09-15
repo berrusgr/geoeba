@@ -193,6 +193,8 @@ interface WorkspaceContextType {
   toggleAngleReflex: (angleId: string) => void;
   setSegmentLength: (segmentId: string, target: number) => void;
   setAngleDegrees: (angleId: string, targetDeg: number) => void;
+  bindAngleToSlider: (angleId: string, sliderNameOrVar: string) => void;
+  unbindAngleFromSlider: (angleId: string) => void;
   setCircleRadius: (circleId: string, target: number) => void;
 }
 
@@ -2546,6 +2548,90 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [commit]
   );
 
+  /**
+   * Bir açıyı sürgüye bağlar: Açının dönen kolu (point3), köşe etrafında p1'den başlayarak
+   * sürgünün değeri kadar döndürülür. Sürgü henüz yoksa otomatik oluşturulur.
+   */
+  const bindAngleToSlider = useCallback(
+    (angleId: string, sliderNameOrVar: string) => {
+      const cleanName = sliderNameOrVar.trim() || 'α';
+      commit((prev) => {
+        const ang = prev.find((o) => o.id === angleId && o.type === 'angle') as AngleObject | undefined;
+        if (!ang) return prev;
+        const p1 = prev.find((o) => o.id === ang.point1Id && o.type === 'point') as PointObject | undefined;
+        const v = prev.find((o) => o.id === ang.vertexPointId && o.type === 'point') as PointObject | undefined;
+        const p3 = prev.find((o) => o.id === ang.point3Id && o.type === 'point') as PointObject | undefined;
+        if (!p1 || !v || !p3) return prev;
+
+        let slider = prev.find(
+          (o) =>
+            o.type === 'slider' &&
+            ((o as SliderObject).variableName.toLowerCase() === cleanName.toLowerCase() ||
+              o.label.toLowerCase() === cleanName.toLowerCase() ||
+              o.id === cleanName)
+        ) as SliderObject | undefined;
+
+        let next = [...prev];
+        const currentDeg = calculateAngleDegrees(p1, v, p3);
+
+        if (!slider) {
+          const sliderId = createId('slider');
+          slider = {
+            id: sliderId,
+            type: 'slider',
+            variableName: cleanName,
+            label: cleanName,
+            min: 0,
+            max: 360,
+            step: 1,
+            value: Math.round(currentDeg) || 45,
+            sliderType: 'angle',
+            animSpeed: 1,
+            animMode: 'oscillating',
+            x: -8,
+            y: 6 - prev.filter((o) => o.type === 'slider').length * 1.5,
+            color: '#0284c7',
+            visible: true,
+            createdAt: Date.now(),
+          } as SliderObject;
+          next.push(slider);
+        }
+
+        const updatedP3: PointObject = {
+          ...p3,
+          construction: {
+            kind: 'rotate',
+            sourceId: p1.id,
+            centerId: v.id,
+            sliderId: slider.id,
+            sliderVariableName: slider.variableName,
+            degrees: slider.value,
+          },
+        };
+
+        next = next.map((o) => (o.id === p3.id ? updatedP3 : o));
+        return next;
+      }, `Açı ${sliderNameOrVar} sürgüsüne bağlandı`);
+      setHintMessage(`Açı “${cleanName}” sürgüsüne bağlandı. Sürgüyü hareket ettirerek veya oynatarak canlandırabilirsiniz.`);
+    },
+    [commit]
+  );
+
+  /** Açının sürgü bağlantısını çözer. */
+  const unbindAngleFromSlider = useCallback(
+    (angleId: string) => {
+      commit((prev) => {
+        const ang = prev.find((o) => o.id === angleId && o.type === 'angle') as AngleObject | undefined;
+        if (!ang) return prev;
+        const p3 = prev.find((o) => o.id === ang.point3Id && o.type === 'point') as PointObject | undefined;
+        if (!p3 || !p3.construction) return prev;
+        return prev.map((o) => (o.id === p3.id ? ({ ...o, construction: undefined } as MathObject) : o));
+      }, 'Açının sürgü bağlantısı kaldırıldı');
+      setHintMessage('Açının sürgü bağlantısı kaldırıldı.');
+    },
+    [commit]
+  );
+
   /** Çemberin yarıçapını kesin değere ayarlar (yarıçap noktasını merkeze göre taşır). */
   const setCircleRadius = useCallback(
     (circleId: string, target: number) => {
@@ -3889,6 +3975,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       toggleAngleReflex,
       setSegmentLength,
       setAngleDegrees,
+      bindAngleToSlider,
+      unbindAngleFromSlider,
       setCircleRadius,
     }),
     [
@@ -3971,6 +4059,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       toggleAngleReflex,
       setSegmentLength,
       setAngleDegrees,
+      bindAngleToSlider,
+      unbindAngleFromSlider,
       setCircleRadius,
     ]
   );

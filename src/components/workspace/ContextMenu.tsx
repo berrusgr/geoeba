@@ -31,7 +31,10 @@ export interface ContextMenuItem {
     unit?: string;
     /** Kutuya önceden yazılacak değer (Türkçe biçimde) */
     initial?: string;
-    onSubmit: (value: number) => void;
+    /** Yer tutucu metin */
+    placeholder?: string;
+    onSubmit?: (value: number) => void;
+    onSubmitText?: (text: string) => void;
     /** "a", "2*a" gibi girişler için kaydırıcı değerleri */
     scope?: Record<string, number>;
   };
@@ -166,6 +169,16 @@ export function ContextMenu({ open, x, y, title, items, onClose }: ContextMenuPr
   const formGonder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!promptItem?.prompt) return;
+    if (promptItem.prompt.onSubmitText) {
+      const clean = value.trim();
+      if (!clean) {
+        setError('Lütfen bir ad girin.');
+        return;
+      }
+      promptItem.prompt.onSubmitText(clean);
+      onClose();
+      return;
+    }
     // Alan düz sayı da kabul eder, kaydırıcı adı veya ifade de ("a", "2*a", "pi/2")
     const sonuc = evaluateNumericInput(value, promptItem.prompt.scope ?? {});
     if (!sonuc.ok) {
@@ -176,7 +189,7 @@ export function ContextMenu({ open, x, y, title, items, onClose }: ContextMenuPr
       setError('Değer sıfırdan büyük olmalı.');
       return;
     }
-    promptItem.prompt.onSubmit(sonuc.value);
+    promptItem.prompt.onSubmit?.(sonuc.value);
     onClose();
   };
 
@@ -228,7 +241,8 @@ export function ContextMenu({ open, x, y, title, items, onClose }: ContextMenuPr
                 id="baglam-deger-girisi"
                 ref={inputRef}
                 type="text"
-                inputMode="decimal"
+                inputMode={promptItem.prompt.onSubmitText ? 'text' : 'decimal'}
+                placeholder={promptItem.prompt.placeholder}
                 value={value}
                 onChange={(e) => {
                   setValue(e.target.value);

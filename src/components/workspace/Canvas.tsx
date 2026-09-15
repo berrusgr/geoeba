@@ -304,6 +304,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     toggleAngleReflex,
     setSegmentLength,
     setAngleDegrees,
+    bindAngleToSlider,
+    unbindAngleFromSlider,
     setCircleRadius,
     setLengthMeasurement,
   } = useWorkspace();
@@ -2344,6 +2346,11 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
       const v = pointsById.get(ang.vertexPointId);
       const p3 = pointsById.get(ang.point3Id);
       const derece = p1 && v && p3 ? calculateAngleDegrees(p1, v, p3) : 0;
+      const rotateConstruction = p3?.construction?.kind === 'rotate' ? p3.construction : undefined;
+      const boundSlider = rotateConstruction?.sliderId
+        ? (objects.find((o) => o.id === rotateConstruction.sliderId && o.type === 'slider') as SliderObject | undefined)
+        : undefined;
+
       maddeler.push({
         id: 'ayarla-aci',
         label: 'Açıyı ayarla…',
@@ -2355,6 +2362,41 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
           onSubmit: (val) => setAngleDegrees(ang.id, val),
         },
       });
+
+      if (boundSlider) {
+        maddeler.push({
+          id: 'canlandir-aci',
+          label: sliderPlaying ? 'Animasyonu Durdur' : `Animasyonu Başlat (${boundSlider.variableName})`,
+          onSelect: () => toggleSliderPlayback(),
+        });
+        maddeler.push({
+          id: 'surguyu-degistir-aci',
+          label: `Sürgü Değişkenini Değiştir (${boundSlider.variableName})…`,
+          prompt: {
+            label: 'Sürgü Değişkeni / Adı',
+            placeholder: 'ör. a, α, aci',
+            initial: boundSlider.variableName,
+            onSubmitText: (name) => bindAngleToSlider(ang.id, name),
+          },
+        });
+        maddeler.push({
+          id: 'surgu-baglantisini-kaldir',
+          label: 'Sürgü Bağlantısını Kaldır',
+          onSelect: () => unbindAngleFromSlider(ang.id),
+        });
+      } else {
+        maddeler.push({
+          id: 'surguye-bagla-canlandir',
+          label: 'Canlandır (Sürgüye Bağla)…',
+          prompt: {
+            label: 'Sürgü Değişkeni / Adı',
+            placeholder: 'ör. a, α, aci',
+            initial: 'α',
+            onSubmitText: (name) => bindAngleToSlider(ang.id, name),
+          },
+        });
+      }
+
       maddeler.push({ id: 'ic-dis-aci', label: 'İç açı / dış açı', onSelect: () => toggleAngleReflex(ang.id) });
       // Rozete tıklamak dışında garantili bir çıkış yolu: menüden de gizlenebilsin
       maddeler.push({
@@ -2433,6 +2475,8 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
     hideMeasurement,
     setSegmentLength,
     setAngleDegrees,
+    bindAngleToSlider,
+    unbindAngleFromSlider,
     setCircleRadius,
     setLengthMeasurement,
     showDetails,
