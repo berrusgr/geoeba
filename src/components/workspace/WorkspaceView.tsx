@@ -222,9 +222,9 @@ export function WorkspaceView() {
   // Adlı fonksiyonlar (f, g …) tuval çizilmeden önce ayrıştırıcıya bildirilir
   syncUserFunctions(objects);
 
-  // Düzen ve Panel Durumları
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('default');
-  const [splitY, setSplitY] = useState<number>(54); // Üst 2D panel yüksekliği yüzdesi (Varsayılan düzende)
+  // Düzen ve Panel Durumları (Varsayılan olarak sadece 2D görünüm)
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('2d_only');
+  const [splitY, setSplitY] = useState<number>(54); // Üst 2D panel yüksekliği yüzdesi (Varsayılan çoklu düzende)
   const [splitX, setSplitX] = useState<number>(44); // Alt/Sol Cebir paneli genişliği yüzdesi
   const [isDraggingY, setIsDraggingY] = useState(false);
   const [isDraggingX, setIsDraggingX] = useState(false);
@@ -663,119 +663,6 @@ export function WorkspaceView() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background text-foreground overflow-hidden">
-      {/* Üst Düzen Değiştirici ve Hızlı Çubuk */}
-      <div className="flex items-center justify-between px-3 py-1 bg-card/80 border-b border-border/70 backdrop-blur-md shrink-0 z-20 text-xs">
-        <div className="flex items-center gap-1 sm:gap-2">
-          <span className="font-semibold text-muted-foreground hidden md:inline-block">Görünüm Düzeni:</span>
-          
-          <button
-            onClick={() => setLayoutMode('default')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
-              layoutMode === 'default'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="Varsayılan Düzen (Üstte 2D Grafik, Altta Cebir + 3D)"
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">2D + (Cebir / 3D)</span>
-            <span className="sm:hidden">Üçlü</span>
-          </button>
-
-          <button
-            onClick={() => setLayoutMode('algebra_2d')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
-              layoutMode === 'algebra_2d'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="Cebir + 2D Yan Yana"
-          >
-            <Columns2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Cebir + 2D</span>
-          </button>
-
-          <button
-            onClick={() => setLayoutMode('2d_3d')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
-              layoutMode === '2d_3d'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="2D + 3D Yan Yana"
-          >
-            <Columns2 className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden sm:inline">2D + 3D</span>
-          </button>
-
-          <button
-            onClick={() => setLayoutMode('three_col')}
-            className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
-              layoutMode === 'three_col'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="3 Sütun Düzeni (Cebir | 2D | 3D)"
-          >
-            <Columns2 className="w-3.5 h-3.5" />
-            <span>3 Sütun</span>
-          </button>
-
-          <button
-            onClick={() => setLayoutMode('algebra_3d')}
-            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
-              layoutMode === 'algebra_3d'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="Cebir + 3D Yan Yana"
-          >
-            <Columns2 className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">Cebir + 3D</span>
-          </button>
-
-          <button
-            onClick={() => setLayoutMode('2d_only')}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all font-medium ${
-              layoutMode === '2d_only'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="Sadece 2D Grafik"
-          >
-            <Maximize2 className="w-3 h-3" />
-            <span>2D</span>
-          </button>
-
-          <button
-            onClick={() => setLayoutMode('3d_only')}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all font-medium ${
-              layoutMode === '3d_only'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-            }`}
-            title="Sadece 3D Grafik"
-          >
-            <Box className="w-3.5 h-3.5 text-purple-400" />
-            <span>3D</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowProperties(!showProperties)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
-              showProperties
-                ? 'bg-muted text-foreground border-border shadow-xs'
-                : 'text-muted-foreground border-transparent hover:bg-muted/60'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Özellikler</span>
-          </button>
-        </div>
-      </div>
-
       <ActivityPanel />
 
       {/* ANA ÇALIŞMA ALANI */}
@@ -934,9 +821,14 @@ export function WorkspaceView() {
                 selectedSolid={selectedSolid}
                 onUpdateSolid={handleUpdateSolid}
                 onDeleteSolid={handleDeleteSolid}
+                layoutMode={layoutMode}
+                onLayoutModeChange={setLayoutMode}
               />
             ) : (
-              <PropertiesPanel />
+              <PropertiesPanel
+                layoutMode={layoutMode}
+                onLayoutModeChange={setLayoutMode}
+              />
             ))}
         </div>
       </div>

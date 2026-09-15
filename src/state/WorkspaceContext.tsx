@@ -1098,12 +1098,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         ...(selectedActivity.initialViewport || {}),
       }));
     } else {
-      // Serbest Çalışma Masası: kayıtlı çalışmayı geri yükle, yoksa boş başlat
-      const restored = loadSavedSandboxObjects();
+      // Serbest Çalışma Masası: her zaman temiz/boş çalışma alanı ile başla
       dispatch({
         type: 'reset',
-        objects: restored ?? [],
-        description: restored && restored.length > 0 ? 'Kayıtlı çalışma yüklendi' : 'Boş çalışma alanı',
+        objects: [],
+        description: 'Boş çalışma alanı',
         persist: true,
       });
     }

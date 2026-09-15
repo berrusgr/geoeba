@@ -4,12 +4,15 @@ import React, { useEffect, useState } from 'react';
 import { Solid3DObject } from '@/types/workspace3d';
 import { calculate3DVolume, calculate3DSurfaceArea, getSolidPropertyCounts, generateSolidMesh, computeFaceArea } from '@/math/geometry3d';
 import { formatTurkishNumber } from '@/math/coordinates';
-import { Box, Sparkles, Trash2, CheckCircle2, RotateCw, ScanSearch } from 'lucide-react';
+import { Box, Sparkles, Trash2, CheckCircle2, RotateCw, ScanSearch, LayoutGrid, Columns2, Maximize2 } from 'lucide-react';
+import { LayoutMode } from './PropertiesPanel';
 
 interface Properties3DProps {
   selectedSolid: Solid3DObject | null;
   onUpdateSolid: (updates: Partial<Solid3DObject>) => void;
   onDeleteSolid: () => void;
+  layoutMode?: LayoutMode;
+  onLayoutModeChange?: (mode: LayoutMode) => void;
 }
 
 const PRESET_COLORS = [
@@ -138,11 +141,137 @@ function SliderRow({
   );
 }
 
-export function Properties3D({ selectedSolid, onUpdateSolid, onDeleteSolid }: Properties3DProps) {
+export function Properties3D({
+  selectedSolid,
+  onUpdateSolid,
+  onDeleteSolid,
+  layoutMode = '3d_only',
+  onLayoutModeChange,
+}: Properties3DProps) {
+  const renderLayoutSelector = onLayoutModeChange && (
+    <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70 text-left">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+          <span>Görünüm Düzeni</span>
+        </h3>
+        <span className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+          {layoutMode === '3d_only'
+            ? '3D Grafik'
+            : layoutMode === '2d_only'
+            ? '2D Grafik'
+            : layoutMode === 'default'
+            ? 'Çoklu Görünüm'
+            : layoutMode === 'algebra_2d'
+            ? 'Cebir + 2D'
+            : layoutMode === '2d_3d'
+            ? '2D + 3D'
+            : layoutMode === 'three_col'
+            ? '3 Sütun'
+            : 'Cebir + 3D'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-1.5 text-xs">
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('2d_only')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+            layoutMode === '2d_only'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <Maximize2 className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[11px] truncate">Sadece 2D</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('default')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+            layoutMode === 'default'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[11px] truncate">2D + Cebir/3D</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('algebra_2d')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+            layoutMode === 'algebra_2d'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <Columns2 className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[11px] truncate">Cebir + 2D</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('2d_3d')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+            layoutMode === '2d_3d'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <Columns2 className="w-3.5 h-3.5 shrink-0 text-blue-400" />
+          <span className="text-[11px] truncate">2D + 3D</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('three_col')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+            layoutMode === 'three_col'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <Columns2 className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[11px] truncate">3 Sütun</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('algebra_3d')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+            layoutMode === 'algebra_3d'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <Columns2 className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+          <span className="text-[11px] truncate">Cebir + 3D</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onLayoutModeChange('3d_only')}
+          className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer col-span-2 ${
+            layoutMode === '3d_only'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+              : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+          }`}
+        >
+          <Box className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+          <span className="text-[11px] truncate">Sadece 3D Grafik</span>
+        </button>
+      </div>
+    </div>
+  );
+
   if (!selectedSolid) {
     return (
-      <div className="flex flex-col bg-card border-l border-border w-20 lg:w-72 shrink-0 h-full min-h-0 select-none overflow-y-auto p-4 space-y-4 text-center justify-center items-center">
-        <div className="w-14 h-14 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-2">
+      <div className="flex flex-col bg-card border-l border-border w-20 lg:w-72 shrink-0 h-full min-h-0 select-none overflow-y-auto p-4 space-y-4 text-center justify-start items-center">
+        <div className="w-full">{renderLayoutSelector}</div>
+        <div className="w-14 h-14 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-1 mt-4">
           <Box className="w-7 h-7" />
         </div>
         <h3 className="text-xs font-black text-foreground">3D Cisim Seçilmedi</h3>
@@ -185,6 +314,7 @@ export function Properties3D({ selectedSolid, onUpdateSolid, onDeleteSolid }: Pr
 
   return (
     <div className="flex flex-col bg-card border-l border-border w-20 lg:w-80 shrink-0 h-full min-h-0 select-none overflow-y-auto p-4 space-y-4">
+      {renderLayoutSelector}
       {/* 1. BAŞLIK */}
       <div className="flex items-center justify-between pb-2 border-b border-border">
         <div className="space-y-0.5">

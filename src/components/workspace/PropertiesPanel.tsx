@@ -30,10 +30,21 @@ import {
   Sliders,
   Grid,
   Maximize,
+  Maximize2,
   Compass,
   Check,
   Download,
+  LayoutGrid,
+  Columns2,
+  Box,
 } from 'lucide-react';
+
+export type LayoutMode = 'default' | 'algebra_2d' | '2d_3d' | 'three_col' | 'algebra_3d' | '2d_only' | '3d_only';
+
+interface PropertiesPanelProps {
+  layoutMode?: LayoutMode;
+  onLayoutModeChange?: (mode: LayoutMode) => void;
+}
 
 const COLOR_PRESETS = [
   '#2563eb', // Mavi
@@ -46,7 +57,7 @@ const COLOR_PRESETS = [
   '#6b7280', // Gri
 ];
 
-export function PropertiesPanel() {
+export function PropertiesPanel({ layoutMode = '2d_only', onLayoutModeChange }: PropertiesPanelProps) {
   /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi? */
   const [sekme, setSekme] = useState<'ozellikler' | 'stil'>('ozellikler');
   const [disaAktariliyor, setDisaAktariliyor] = useState<'png' | 'svg' | 'pdf' | 'word' | null>(null);
@@ -180,12 +191,132 @@ export function PropertiesPanel() {
 
       {sekme === 'ozellikler' && (
         <div className="space-y-6">
-      {/* 0. ÇİZİMİ DIŞA AKTAR */}
-      <div className="space-y-2">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Download className="w-3.5 h-3.5" />
-          <span>Çizimi İndir</span>
-        </h3>
+          {/* GÖRÜNÜM DÜZENİ SEÇİCİ */}
+          {onLayoutModeChange && (
+            <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+                  <span>Görünüm Düzeni</span>
+                </h3>
+                <span className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+                  {layoutMode === '2d_only'
+                    ? '2D Grafik'
+                    : layoutMode === '3d_only'
+                    ? '3D Grafik'
+                    : layoutMode === 'default'
+                    ? 'Çoklu Görünüm'
+                    : layoutMode === 'algebra_2d'
+                    ? 'Cebir + 2D'
+                    : layoutMode === '2d_3d'
+                    ? '2D + 3D'
+                    : layoutMode === 'three_col'
+                    ? '3 Sütun'
+                    : 'Cebir + 3D'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('2d_only')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    layoutMode === '2d_only'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <Maximize2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[11px] truncate">Sadece 2D</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('default')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    layoutMode === 'default'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[11px] truncate">2D + Cebir/3D</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('algebra_2d')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    layoutMode === 'algebra_2d'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <Columns2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[11px] truncate">Cebir + 2D</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('2d_3d')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    layoutMode === '2d_3d'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <Columns2 className="w-3.5 h-3.5 shrink-0 text-blue-400" />
+                  <span className="text-[11px] truncate">2D + 3D</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('three_col')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    layoutMode === 'three_col'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <Columns2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[11px] truncate">3 Sütun</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('algebra_3d')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                    layoutMode === 'algebra_3d'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <Columns2 className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+                  <span className="text-[11px] truncate">Cebir + 3D</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onLayoutModeChange('3d_only')}
+                  className={`flex items-center gap-1.5 p-2 rounded-xl border text-left transition-all cursor-pointer col-span-2 ${
+                    layoutMode === '3d_only'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                      : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                  }`}
+                >
+                  <Box className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+                  <span className="text-[11px] truncate">Sadece 3D Grafik</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 0. ÇİZİMİ DIŞA AKTAR */}
+          <div className="space-y-2">
+            <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Download className="w-3.5 h-3.5" />
+              <span>Çizimi İndir</span>
+            </h3>
 
         {/* Siyah–beyaz mod: ekranda ne görünüyorsa indirilen dosya da öyle olur */}
         <label className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-muted/40 border border-border/60 cursor-pointer">
