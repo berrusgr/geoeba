@@ -613,7 +613,7 @@ export function WorkspaceView() {
             </span>
           </button>
 
-          {/* Özellikler Butonu (Altta Açar) */}
+          {/* Özellikler Butonu (Sağda Açar) */}
           <button
             onClick={() => {
               if (showProperties && propertiesTab === 'ozellikler') {
@@ -631,17 +631,14 @@ export function WorkspaceView() {
             title={
               showProperties && propertiesTab === 'ozellikler'
                 ? 'Özellikler Panelini Kapat'
-                : 'Özellikler Panelini Altta Aç'
+                : 'Özellikler Panelini Sağda Aç'
             }
           >
             <Sliders className="w-3 h-3" />
             <span>Özellikler</span>
-            <span className="text-[9px] opacity-70 ml-0.5 font-bold">
-              {showProperties && propertiesTab === 'ozellikler' ? '▲' : '▼'}
-            </span>
           </button>
 
-          {/* Stil Butonu (Altta Açar) */}
+          {/* Stil Butonu (Sağda Açar) */}
           <button
             onClick={() => {
               if (showProperties && propertiesTab === 'stil') {
@@ -659,20 +656,40 @@ export function WorkspaceView() {
             title={
               showProperties && propertiesTab === 'stil'
                 ? 'Stil Panelini Kapat'
-                : 'Stil Panelini Altta Aç'
+                : 'Stil Panelini Sağda Aç'
             }
           >
             <Palette className="w-3 h-3" />
             <span>Stil</span>
-            <span className="text-[9px] opacity-70 ml-0.5 font-bold">
-              {showProperties && propertiesTab === 'stil' ? '▲' : '▼'}
-            </span>
           </button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 relative overflow-hidden">
-        <Canvas onSwitchTo3D={() => setLayoutMode('3d_only')} />
-        <CommandAssistant onSelectTool={activateTool} />
+      <div className="flex-1 min-h-0 relative flex overflow-hidden">
+        <div className="flex-1 relative min-w-0">
+          <Canvas onSwitchTo3D={() => setLayoutMode('3d_only')} />
+          <CommandAssistant onSelectTool={activateTool} />
+        </div>
+
+        {/* SAĞ ÖZELLİKLER PANELİ */}
+        {showProperties && (
+          <div className="w-64 sm:w-72 shrink-0 border-l border-border bg-card shadow-lg flex flex-col relative z-20 animate-in slide-in-from-right-2 duration-200">
+            {/* Kapatma Kulakçığı */}
+            <button
+              onClick={() => setShowProperties(false)}
+              className="absolute top-1/2 -translate-y-1/2 -left-5 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
+              title="Paneli Kapat"
+            >
+              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+            <PropertiesPanel
+              layoutMode={layoutMode}
+              onLayoutModeChange={setLayoutMode}
+              activeTab={propertiesTab}
+              onTabChange={setPropertiesTab}
+              onClose={() => setShowProperties(false)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -706,40 +723,63 @@ export function WorkspaceView() {
           </button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 relative overflow-hidden">
-        <Canvas3D
-          solids={solids}
-          selectedSolidId={selectedSolidId}
-          selectedSolidIds={selectedSolidIds}
-          activeTool={active3DTool}
-          camera={camera3D}
-          showGlobalVertices={showGlobalVertices}
-          showGlobalEdges={showGlobalEdges}
-          showGlobalFaces={showGlobalFaces}
-          setCamera={setCamera3D}
-          onSelectSolid={setSelectedSolidId}
-          onSelectSolids={setSelectedSolidIds}
-          onAddSolid={handleAddSolid}
-          onDeleteSolid={(id) => {
-            if (id) {
-              setSolids((prev) => prev.filter((s) => s.id !== id));
-              setSelectedSolidIds((prev) => prev.filter((sid) => sid !== id));
-            } else {
-              handleDeleteSolid();
-            }
-          }}
-          onDeleteSolids={handleDeleteSolid}
-          onClearAll={() => requestClearAll('3D')}
-          setActive3DTool={setActive3DTool}
-          onUpdateSolid={(id, updates) => updateSolidById(id, updates, `prop:${id}:${Object.keys(updates).join(',')}`)}
-          onUpdateSolidPosition={handleDragSolidPosition}
-          onUpdateSolidsPosition={handleDragSolidsPosition}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
-          onSwitchTo2D={() => setLayoutMode('2d_only')}
-          onUndo={scene.past.length > 0 ? undo3D : undefined}
-          onRedo={scene.future.length > 0 ? redo3D : undefined}
-        />
+      <div className="flex-1 min-h-0 relative flex overflow-hidden">
+        <div className="flex-1 relative min-w-0">
+          <Canvas3D
+            solids={solids}
+            selectedSolidId={selectedSolidId}
+            selectedSolidIds={selectedSolidIds}
+            activeTool={active3DTool}
+            camera={camera3D}
+            showGlobalVertices={showGlobalVertices}
+            showGlobalEdges={showGlobalEdges}
+            showGlobalFaces={showGlobalFaces}
+            setCamera={setCamera3D}
+            onSelectSolid={setSelectedSolidId}
+            onSelectSolids={setSelectedSolidIds}
+            onAddSolid={handleAddSolid}
+            onDeleteSolid={(id) => {
+              if (id) {
+                setSolids((prev) => prev.filter((s) => s.id !== id));
+                setSelectedSolidIds((prev) => prev.filter((sid) => sid !== id));
+              } else {
+                handleDeleteSolid();
+              }
+            }}
+            onDeleteSolids={handleDeleteSolid}
+            onClearAll={() => requestClearAll('3D')}
+            setActive3DTool={setActive3DTool}
+            onUpdateSolid={(id, updates) => updateSolidById(id, updates, `prop:${id}:${Object.keys(updates).join(',')}`)}
+            onUpdateSolidPosition={handleDragSolidPosition}
+            onUpdateSolidsPosition={handleDragSolidsPosition}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+            onSwitchTo2D={() => setLayoutMode('2d_only')}
+            onUndo={scene.past.length > 0 ? undo3D : undefined}
+            onRedo={scene.future.length > 0 ? redo3D : undefined}
+          />
+        </div>
+
+        {/* SAĞ ÖZELLİKLER 3D PANELİ */}
+        {showProperties && (layoutMode === '3d_only' || layoutMode === 'algebra_3d') && (
+          <div className="w-64 sm:w-72 shrink-0 border-l border-border bg-card shadow-lg flex flex-col relative z-20 animate-in slide-in-from-right-2 duration-200">
+            <button
+              onClick={() => setShowProperties(false)}
+              className="absolute top-1/2 -translate-y-1/2 -left-5 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
+              title="Paneli Kapat"
+            >
+              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+            <Properties3D
+              selectedSolid={selectedSolid}
+              onUpdateSolid={handleUpdateSolid}
+              onDeleteSolid={handleDeleteSolid}
+              layoutMode={layoutMode}
+              onLayoutModeChange={setLayoutMode}
+              onClose={() => setShowProperties(false)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -893,29 +933,6 @@ export function WorkspaceView() {
           )}
         </div>
 
-        {/* ALTTAN AÇILAN ÖZELLİKLER & STİL PANELİ (Üstteki butonları ve 2D genişliğini asla kaydırmaz) */}
-        {showProperties && (
-          <div className="w-full shrink-0 h-64 sm:h-72 border-t border-border bg-card shadow-xl z-20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
-            {layoutMode === '3d_only' || layoutMode === 'algebra_3d' ? (
-              <Properties3D
-                selectedSolid={selectedSolid}
-                onUpdateSolid={handleUpdateSolid}
-                onDeleteSolid={handleDeleteSolid}
-                layoutMode={layoutMode}
-                onLayoutModeChange={setLayoutMode}
-                onClose={() => setShowProperties(false)}
-              />
-            ) : (
-              <PropertiesPanel
-                layoutMode={layoutMode}
-                onLayoutModeChange={setLayoutMode}
-                activeTab={propertiesTab}
-                onTabChange={setPropertiesTab}
-                onClose={() => setShowProperties(false)}
-              />
-            )}
-          </div>
-        )}
       </div>
 
       {/* 2D & 3D Modalları */}
