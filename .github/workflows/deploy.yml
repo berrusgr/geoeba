@@ -31,16 +31,14 @@ jobs:
       - name: Pages ayarlarini oku
         id: pages
         uses: actions/configure-pages@v5
-        with:
-          # Repo ayarlarinda Pages kapaliysa is akisi kendisi acar.
-          enablement: true
+        continue-on-error: true
 
       - run: npm ci
 
       - name: Statik export
         run: npm run build
         env:
-          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path || format('/{0}', github.event.repository.name) }}
 
       # Jekyll'in '_next' klasorunu yok saymasina karsi guvence.
       - run: touch out/.nojekyll
@@ -58,3 +56,4 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
