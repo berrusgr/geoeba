@@ -156,7 +156,7 @@ export function WelcomeScreen() {
                 <GraduationCap className="w-8 h-8" />
               </div>
               <span className="px-4 py-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 text-purple-800 dark:text-purple-300 text-sm font-black border border-purple-200 dark:border-purple-800 shadow-sm">
-                9-12. Sınıf
+                Hazırlık, 9-12. Sınıf
               </span>
             </div>
 
