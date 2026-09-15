@@ -322,9 +322,6 @@ export function TeachingPortal() {
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <span className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
-                {selectedLevel?.title} &gt; {selectedGrade?.title}
-              </span>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {selectedGrade ? selectedGrade.title : '5. Sınıf'} Matematik
               </h1>
