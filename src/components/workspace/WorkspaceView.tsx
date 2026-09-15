@@ -596,22 +596,7 @@ export function WorkspaceView() {
 
           <div className="w-px h-3.5 bg-border/60 mx-0.5" />
 
-          {/* Araçlar Butonu */}
-          <button
-            onClick={() => setShowToolbar(!showToolbar)}
-            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
-              showToolbar
-                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/30 font-semibold shadow-xs'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-            title={showToolbar ? 'Araçlar Menüsünü Kapat' : 'Araçlar Menüsünü Aç'}
-          >
-            <PenTool className="w-3 h-3" />
-            <span>Araçlar</span>
-            <span className="text-[10px] opacity-70 ml-0.5 font-bold">
-              {showToolbar ? '‹' : '›'}
-            </span>
-          </button>
+
 
           {/* Özellikler Butonu (Sağda Açar) */}
           <button
