@@ -44,6 +44,8 @@ export type LayoutMode = 'default' | 'algebra_2d' | '2d_3d' | 'three_col' | 'alg
 interface PropertiesPanelProps {
   layoutMode?: LayoutMode;
   onLayoutModeChange?: (mode: LayoutMode) => void;
+  activeTab?: 'ozellikler' | 'stil';
+  onTabChange?: (tab: 'ozellikler' | 'stil') => void;
 }
 
 const COLOR_PRESETS = [
@@ -57,9 +59,20 @@ const COLOR_PRESETS = [
   '#6b7280', // Gri
 ];
 
-export function PropertiesPanel({ layoutMode = '2d_only', onLayoutModeChange }: PropertiesPanelProps) {
+export function PropertiesPanel({
+  layoutMode = '2d_only',
+  onLayoutModeChange,
+  activeTab,
+  onTabChange,
+}: PropertiesPanelProps) {
   /** Sağ panel sekmesi: nesne/görünüm özellikleri mi, çizim stili mi? */
-  const [sekme, setSekme] = useState<'ozellikler' | 'stil'>('ozellikler');
+  const [localTab, setLocalTab] = useState<'ozellikler' | 'stil'>('ozellikler');
+  const sekme = activeTab ?? localTab;
+  const setSekme = (t: 'ozellikler' | 'stil') => {
+    setLocalTab(t);
+    onTabChange?.(t);
+  };
+
   const [disaAktariliyor, setDisaAktariliyor] = useState<'png' | 'svg' | 'pdf' | 'word' | null>(null);
   const [disaAktarimHatasi, setDisaAktarimHatasi] = useState<string | null>(null);
   const {

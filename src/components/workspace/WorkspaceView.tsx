@@ -36,6 +36,10 @@ import {
   Sliders,
   RotateCcw,
   Eye,
+  PenTool,
+  Palette,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import { syncUserFunctions } from '@/math/functionNames';
@@ -237,6 +241,7 @@ export function WorkspaceView() {
   const [isAddObjectDialogOpen, setIsAddObjectDialogOpen] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showProperties, setShowProperties] = useState(false);
+  const [propertiesTab, setPropertiesTab] = useState<'ozellikler' | 'stil'>('ozellikler');
 
   // 3D Stüdyo Durumları (geçmiş destekli)
   const [scene, dispatch] = useReducer(sceneReducer, null, () => ({
@@ -571,19 +576,97 @@ export function WorkspaceView() {
   // 2. 2D GRAFİK PANELİ
   const render2DPanel = (
     <div className="flex flex-col h-full w-full bg-background relative overflow-hidden">
-      <div className="flex items-center justify-between px-3.5 py-1.5 bg-muted/30 border-b border-border/40 shrink-0 z-10 select-none">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-muted/40 border-b border-border/50 shrink-0 z-10 select-none">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
           <span className="text-xs font-bold tracking-wider text-foreground uppercase">2D GRAFİK</span>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Adobe Stili Kontrol & Açılır Menü Butonları */}
+        <div className="flex items-center gap-1.5">
+          {/* Görünümü Ortala */}
           <button
             onClick={resetViewport}
-            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors flex items-center gap-1"
+            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-all flex items-center gap-1 font-medium cursor-pointer"
             title="Görünümü Sıfırla (Merkeze Odaklan)"
           >
             <RotateCcw className="w-3 h-3" />
             <span className="hidden sm:inline">Ortala</span>
+          </button>
+
+          <div className="w-px h-3.5 bg-border/60 mx-0.5" />
+
+          {/* Araçlar Butonu */}
+          <button
+            onClick={() => setShowToolbar(!showToolbar)}
+            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
+              showToolbar
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/30 font-semibold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+            title={showToolbar ? 'Araçlar Menüsünü Kapat' : 'Araçlar Menüsünü Aç'}
+          >
+            <PenTool className="w-3 h-3" />
+            <span>Araçlar</span>
+            <span className="text-[10px] opacity-70 ml-0.5 font-bold">
+              {showToolbar ? '‹' : '›'}
+            </span>
+          </button>
+
+          {/* Özellikler Butonu */}
+          <button
+            onClick={() => {
+              if (showProperties && propertiesTab === 'ozellikler') {
+                setShowProperties(false);
+              } else {
+                setShowProperties(true);
+                setPropertiesTab('ozellikler');
+              }
+            }}
+            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
+              showProperties && propertiesTab === 'ozellikler'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500/30 font-semibold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+            title={
+              showProperties && propertiesTab === 'ozellikler'
+                ? 'Özellikler Panelini Kapat'
+                : 'Özellikler Panelini Aç'
+            }
+          >
+            <Sliders className="w-3 h-3" />
+            <span>Özellikler</span>
+            <span className="text-[10px] opacity-70 ml-0.5 font-bold">
+              {showProperties && propertiesTab === 'ozellikler' ? '›' : '‹'}
+            </span>
+          </button>
+
+          {/* Stil Butonu */}
+          <button
+            onClick={() => {
+              if (showProperties && propertiesTab === 'stil') {
+                setShowProperties(false);
+              } else {
+                setShowProperties(true);
+                setPropertiesTab('stil');
+              }
+            }}
+            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
+              showProperties && propertiesTab === 'stil'
+                ? 'bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 ring-1 ring-pink-500/30 font-semibold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+            title={
+              showProperties && propertiesTab === 'stil'
+                ? 'Stil Panelini Kapat'
+                : 'Stil Panelini Aç'
+            }
+          >
+            <Palette className="w-3 h-3" />
+            <span>Stil</span>
+            <span className="text-[10px] opacity-70 ml-0.5 font-bold">
+              {showProperties && propertiesTab === 'stil' ? '›' : '‹'}
+            </span>
           </button>
         </div>
       </div>
@@ -828,6 +911,8 @@ export function WorkspaceView() {
               <PropertiesPanel
                 layoutMode={layoutMode}
                 onLayoutModeChange={setLayoutMode}
+                activeTab={propertiesTab}
+                onTabChange={setPropertiesTab}
               />
             ))}
         </div>

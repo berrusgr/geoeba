@@ -141,6 +141,8 @@ import {
   Settings,
   Check,
   ChevronDown,
+  GripVertical,
+  GripHorizontal,
 } from 'lucide-react';
 
 // Derlenmiş fonksiyon ifadeleri önbelleği (ifade başına tek derleme)
@@ -356,6 +358,91 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
 
   // Sürükleyerek Şekil Boyutlandırma ve Oluşturma Durumu
   const [dragCreateStart, setDragCreateStart] = useState<Point2D | null>(null);
+
+  // Yüzen Hızlı Menü Kenar Konumu (alt, sol, sağ, üst)
+  type DockPosition = 'right' | 'left' | 'bottom' | 'top';
+  const [dockPosition, setDockPosition] = useState<DockPosition>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('geoeba_canvas_dock_pos');
+      if (saved === 'left' || saved === 'right' || saved === 'bottom' || saved === 'top') return saved;
+    }
+    return 'right';
+  });
+  const [isDraggingDock, setIsDraggingDock] = useState(false);
+  const [dockPreview, setDockPreview] = useState<DockPosition | null>(null);
+
+  const cycleDockPosition = useCallback(() => {
+    setDockPosition((prev) => {
+      const next: DockPosition =
+        prev === 'right' ? 'bottom' : prev === 'bottom' ? 'left' : prev === 'left' ? 'top' : 'right';
+      if (typeof window !== 'undefined') localStorage.setItem('geoeba_canvas_dock_pos', next);
+      return next;
+    });
+  }, []);
+
+  const handleDockDragStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingDock(true);
+
+    const onPointerMove = (moveEv: PointerEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, moveEv.clientX - rect.left));
+      const y = Math.max(0, Math.min(rect.height, moveEv.clientY - rect.top));
+      const relX = x / rect.width;
+      const relY = y / rect.height;
+
+      const distLeft = relX;
+      const distRight = 1 - relX;
+      const distTop = relY;
+      const distBottom = 1 - relY;
+      const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+      let target: DockPosition = 'right';
+      if (minDist === distLeft) target = 'left';
+      else if (minDist === distRight) target = 'right';
+      else if (minDist === distTop) target = 'top';
+      else if (minDist === distBottom) target = 'bottom';
+
+      setDockPreview(target);
+    };
+
+    const onPointerUp = (upEv: PointerEvent) => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      setIsDraggingDock(false);
+
+      const container = containerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        const x = Math.max(0, Math.min(rect.width, upEv.clientX - rect.left));
+        const y = Math.max(0, Math.min(rect.height, upEv.clientY - rect.top));
+        const relX = x / rect.width;
+        const relY = y / rect.height;
+
+        const distLeft = relX;
+        const distRight = 1 - relX;
+        const distTop = relY;
+        const distBottom = 1 - relY;
+        const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+        let finalPos: DockPosition = 'right';
+        if (minDist === distLeft) finalPos = 'left';
+        else if (minDist === distRight) finalPos = 'right';
+        else if (minDist === distTop) finalPos = 'top';
+        else if (minDist === distBottom) finalPos = 'bottom';
+
+        setDockPosition(finalPos);
+        if (typeof window !== 'undefined') localStorage.setItem('geoeba_canvas_dock_pos', finalPos);
+      }
+      setDockPreview(null);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  }, []);
   const [dragCreateCurrent, setDragCreateCurrent] = useState<Point2D | null>(null);
   const [rotatingFeedback, setRotatingFeedback] = useState<{ shapeId: string; deg: number } | null>(null);
   const [reflectTargetPolyId, setReflectTargetPolyId] = useState<string | null>(null);
@@ -6125,233 +6212,317 @@ export function Canvas({ onSwitchTo3D }: CanvasProps) {
         </div>
       </div>
 
-      {/* 2. SAĞ DİKEY YÜZEN HIZLI NAVİGASYON VE ARAÇ ÇUBUĞU (Referans Görsel Birebir) */}
-      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-1.5 p-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-xl select-none">
-        {/* 0. Kaydırıcı Oynat / Durdur — yalnızca sahnede kaydırıcı varken görünür */}
-        {sliders.length > 0 && (
-          <>
-            <button
-              onClick={toggleSliderPlayback}
-              title={
-                sliderPlaying
-                  ? 'Kaydırıcı animasyonunu durdur'
-                  : 'Kaydırıcıları oynat (değerler uçtan uca gidip gelir)'
-              }
-              aria-pressed={sliderPlaying}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                sliderPlaying
-                  ? 'bg-emerald-500 text-white shadow-sm'
-                  : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+      {/* SÜRÜKLEME SIRASINDA KENAR KENETLEME KILAVUZLARI */}
+      {isDraggingDock && (
+        <div className="absolute inset-0 z-30 pointer-events-none p-2 grid grid-cols-3 grid-rows-3 gap-2">
+          {/* Üst Kılavuz */}
+          <div
+            className={`col-span-3 h-12 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center text-xs font-bold ${
+              (dockPreview ?? dockPosition) === 'top'
+                ? 'border-blue-500 bg-blue-500/15 text-blue-600 dark:text-blue-400 scale-[1.01]'
+                : 'border-slate-300 dark:border-slate-700 bg-slate-500/5 text-muted-foreground'
+            }`}
+          >
+            ⬆ Üst Kenara Sabitle
+          </div>
+
+          {/* Sol Kılavuz */}
+          <div
+            className={`row-span-1 w-14 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center text-xs font-bold [writing-mode:vertical-rl] rotate-180 self-center h-48 justify-self-start ${
+              (dockPreview ?? dockPosition) === 'left'
+                ? 'border-blue-500 bg-blue-500/15 text-blue-600 dark:text-blue-400 scale-[1.01]'
+                : 'border-slate-300 dark:border-slate-700 bg-slate-500/5 text-muted-foreground'
+            }`}
+          >
+            ⬅ Sol Kenara Sabitle
+          </div>
+
+          <div />
+
+          {/* Sağ Kılavuz */}
+          <div
+            className={`row-span-1 w-14 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center text-xs font-bold [writing-mode:vertical-rl] self-center h-48 justify-self-end ${
+              (dockPreview ?? dockPosition) === 'right'
+                ? 'border-blue-500 bg-blue-500/15 text-blue-600 dark:text-blue-400 scale-[1.01]'
+                : 'border-slate-300 dark:border-slate-700 bg-slate-500/5 text-muted-foreground'
+            }`}
+          >
+            ➡ Sağ Kenara Sabitle
+          </div>
+
+          {/* Alt Kılavuz */}
+          <div
+            className={`col-span-3 h-12 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center text-xs font-bold self-end ${
+              (dockPreview ?? dockPosition) === 'bottom'
+                ? 'border-blue-500 bg-blue-500/15 text-blue-600 dark:text-blue-400 scale-[1.01]'
+                : 'border-slate-300 dark:border-slate-700 bg-slate-500/5 text-muted-foreground'
+            }`}
+          >
+            ⬇ Alt Kenara Sabitle
+          </div>
+        </div>
+      )}
+
+      {/* 2. DÖRT KENARA KENETLENEBİLİR / YÜZEN HIZLI ARAÇ ÇUBUĞU */}
+      {(() => {
+        const activeDock = dockPreview ?? dockPosition;
+        const isVert = activeDock === 'right' || activeDock === 'left';
+        const posClass =
+          activeDock === 'right'
+            ? 'right-3.5 top-1/2 -translate-y-1/2 flex-col'
+            : activeDock === 'left'
+            ? 'left-3.5 top-1/2 -translate-y-1/2 flex-col'
+            : activeDock === 'top'
+            ? 'top-14 left-1/2 -translate-x-1/2 flex-row'
+            : 'bottom-3.5 left-1/2 -translate-x-1/2 flex-row';
+
+        return (
+          <div
+            className={`absolute z-30 flex items-center gap-1.5 p-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-xl select-none transition-all duration-200 ${posClass} ${
+              isDraggingDock ? 'ring-2 ring-blue-500 shadow-2xl opacity-90 scale-105' : ''
+            }`}
+          >
+            {/* Tutma / Sürükleme ve Kenar Değiştirme Kolu */}
+            <div
+              onPointerDown={handleDockDragStart}
+              onDoubleClick={cycleDockPosition}
+              title="Sürükleyerek kenara taşıyın veya çift tıklayarak konumu değiştirin (Sağ / Alt / Sol / Üst)"
+              className={`p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center ${
+                isVert ? 'w-8 h-4 my-0.5' : 'h-8 w-4 mx-0.5'
               }`}
             >
-              {sliderPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {isVert ? <GripHorizontal className="w-3.5 h-3.5" /> : <GripVertical className="w-3.5 h-3.5" />}
+            </div>
+
+            <div className={isVert ? 'w-5 h-px bg-slate-200 dark:bg-slate-700 my-0.5' : 'h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5'} />
+
+            {/* 0. Kaydırıcı Oynat / Durdur — yalnızca sahnede kaydırıcı varken görünür */}
+            {sliders.length > 0 && (
+              <>
+                <button
+                  onClick={toggleSliderPlayback}
+                  title={
+                    sliderPlaying
+                      ? 'Kaydırıcı animasyonunu durdur'
+                      : 'Kaydırıcıları oynat (değerler uçtan uca gidip gelir)'
+                  }
+                  aria-pressed={sliderPlaying}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                    sliderPlaying
+                      ? 'bg-emerald-500 text-white shadow-sm'
+                      : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                  }`}
+                >
+                  {sliderPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+                <div className={isVert ? 'w-5 h-px bg-slate-200 dark:bg-slate-700 my-0.5' : 'h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5'} />
+              </>
+            )}
+
+            {/* 1. Geri Al (Undo) */}
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              title="Geri Al (Ctrl+Z)"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                canUndo
+                  ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-slate-300 dark:text-slate-600 opacity-40 cursor-not-allowed'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
             </button>
-            <div className="w-5 h-px bg-slate-200 dark:bg-slate-700 my-0.5" />
-          </>
-        )}
 
-        {/* 1. Geri Al (Undo) */}
-        <button
-          onClick={undo}
-          disabled={!canUndo}
-          title="Geri Al (Ctrl+Z)"
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            canUndo
-              ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-              : 'text-slate-300 dark:text-slate-600 opacity-40 cursor-not-allowed'
-          }`}
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
+            {/* 2. Yinele (Redo) */}
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              title="Yinele (Ctrl+Y)"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                canRedo
+                  ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-slate-300 dark:text-slate-600 opacity-40 cursor-not-allowed'
+              }`}
+            >
+              <RotateCw className="w-4 h-4" />
+            </button>
 
-        {/* 2. Yinele (Redo) */}
-        <button
-          onClick={redo}
-          disabled={!canRedo}
-          title="Yinele (Ctrl+Y)"
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            canRedo
-              ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-              : 'text-slate-300 dark:text-slate-600 opacity-40 cursor-not-allowed'
-          }`}
-        >
-          <RotateCw className="w-4 h-4" />
-        </button>
+            {/* 3. Görünümü Kaydır / Pan */}
+            <button
+              onClick={() => setActiveTool(activeTool === 'pan' ? 'select' : 'pan')}
+              title="Görünümü Kaydır (El Aracı)"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                activeTool === 'pan'
+                  ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/30'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Hand className="w-4 h-4" />
+            </button>
 
-        {/* 3. Görünümü Kaydır / Pan */}
-        <button
-          onClick={() => setActiveTool(activeTool === 'pan' ? 'select' : 'pan')}
-          title="Görünümü Kaydır (El Aracı)"
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            activeTool === 'pan'
-              ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400/30'
-              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Hand className="w-4 h-4" />
-        </button>
+            {/* 4. Izgaraya Yapış (Magnet - Aktifken Canlı Sarı Rozet) */}
+            <button
+              onClick={() => setViewport((prev) => ({ ...prev, snapToGrid: !prev.snapToGrid }))}
+              title={viewport.snapToGrid ? 'Izgaraya Yapışmayı Kapat' : 'Izgaraya Yapışmayı Aç'}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                viewport.snapToGrid
+                  ? 'bg-[#fde047] text-slate-950 shadow-md ring-2 ring-yellow-400/40 font-bold'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Magnet className="w-4 h-4" />
+            </button>
 
-        {/* 4. Izgaraya Yapış (Magnet - Aktifken Canlı Sarı Rozet) */}
-        <button
-          onClick={() => setViewport((prev) => ({ ...prev, snapToGrid: !prev.snapToGrid }))}
-          title={viewport.snapToGrid ? 'Izgaraya Yapışmayı Kapat' : 'Izgaraya Yapışmayı Aç'}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            viewport.snapToGrid
-              ? 'bg-[#fde047] text-slate-950 shadow-md ring-2 ring-yellow-400/40 font-bold'
-              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Magnet className="w-4 h-4" />
-        </button>
+            {/* 5. Merkeze Dön / Sıfırla (Home) */}
+            <button
+              onClick={centerOrigin}
+              title="Orijini Ortala / Sıfırla (0, 0)"
+              className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <Home className="w-4 h-4" />
+            </button>
 
-        {/* 5. Merkeze Dön / Sıfırla (Home) */}
-        <button
-          onClick={centerOrigin}
-          title="Orijini Ortala / Sıfırla (0, 0)"
-          className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
-        >
-          <Home className="w-4 h-4" />
-        </button>
+            {/* 6. Yakınlaştır (+) */}
+            <button
+              onClick={zoomIn}
+              title="Yakınlaştır (+)"
+              className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
 
-        {/* 6. Yakınlaştır (+) */}
-        <button
-          onClick={zoomIn}
-          title="Yakınlaştır (+)"
-          className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
-        >
-          <ZoomIn className="w-4 h-4" />
-        </button>
+            {/* 7. Uzaklaştır (-) */}
+            <button
+              onClick={zoomOut}
+              title="Uzaklaştır (-)"
+              className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
 
-        {/* 7. Uzaklaştır (-) */}
-        <button
-          onClick={zoomOut}
-          title="Uzaklaştır (-)"
-          className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
-        >
-          <ZoomOut className="w-4 h-4" />
-        </button>
+            {/* 8. Ekrana Sığdır / Tam Görünüm */}
+            <button
+              onClick={fitToObjects}
+              title="Görünümü Ekrana Sığdır"
+              className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
 
-        {/* 8. Ekrana Sığdır / Tam Görünüm */}
-        <button
-          onClick={fitToObjects}
-          title="Görünümü Ekrana Sığdır"
-          className="w-9 h-9 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all cursor-pointer"
-        >
-          <Maximize2 className="w-4 h-4" />
-        </button>
+            {/* 9. Katmanlar / Izgara Geçişi */}
+            <button
+              onClick={() => setViewport((prev) => ({ ...prev, showGrid: !prev.showGrid }))}
+              title={viewport.showGrid ? 'Izgarayı Gizle' : 'Izgarayı Göster'}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                viewport.showGrid
+                  ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+            </button>
 
-        {/* 9. Katmanlar / Izgara Geçişi */}
-        <button
-          onClick={() => setViewport((prev) => ({ ...prev, showGrid: !prev.showGrid }))}
-          title={viewport.showGrid ? 'Izgarayı Gizle' : 'Izgarayı Göster'}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            viewport.showGrid
-              ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-              : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-        </button>
+            {/* 10. Ölçüm ve Ayrıntıları Göster/Gizle (Alan, Uzunluk, Açı vb.) */}
+            <button
+              onClick={() =>
+                setViewport((prev) => ({
+                  ...prev,
+                  showMeasurements: prev.showMeasurements === false ? true : false,
+                }))
+              }
+              title={
+                viewport.showMeasurements !== false
+                  ? 'Ayrıntıları Gizle (Alan, Uzunluk, Açı vb.)'
+                  : 'Ayrıntıları Göster (Alan, Uzunluk, Açı vb.)'
+              }
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                viewport.showMeasurements !== false
+                  ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 ring-1 ring-amber-400/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 font-bold'
+              }`}
+            >
+              {viewport.showMeasurements !== false ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <EyeOff className="w-4 h-4" />
+              )}
+            </button>
 
-        {/* 10. Ölçüm ve Ayrıntıları Göster/Gizle (Alan, Uzunluk, Açı vb.) */}
-        <button
-          onClick={() =>
-            setViewport((prev) => ({
-              ...prev,
-              showMeasurements: prev.showMeasurements === false ? true : false,
-            }))
-          }
-          title={
-            viewport.showMeasurements !== false
-              ? 'Ayrıntıları Gizle (Alan, Uzunluk, Açı vb.)'
-              : 'Ayrıntıları Göster (Alan, Uzunluk, Açı vb.)'
-          }
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            viewport.showMeasurements !== false
-              ? 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-              : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 ring-1 ring-amber-400/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 font-bold'
-          }`}
-        >
-          {viewport.showMeasurements !== false ? (
-            <Eye className="w-4 h-4" />
-          ) : (
-            <EyeOff className="w-4 h-4" />
-          )}
-        </button>
+            {/* 11. Bölge İsimleri Göster/Gizle (I, II, III, IV) */}
+            <button
+              onClick={() =>
+                setViewport((prev) => ({
+                  ...prev,
+                  showQuadrants: !prev.showQuadrants,
+                }))
+              }
+              title={
+                viewport.showQuadrants
+                  ? 'Bölge İsimlerini Gizle (1, 2, 3, 4. Bölge)'
+                  : 'Bölge İsimlerini Göster (1, 2, 3, 4. Bölge)'
+              }
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                viewport.showQuadrants
+                  ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-400/40 font-black text-[10px]'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-black text-[10px]'
+              }`}
+            >
+              <span>I-IV</span>
+            </button>
 
-        {/* 11. Bölge İsimleri Göster/Gizle (I, II, III, IV) */}
-        <button
-          onClick={() =>
-            setViewport((prev) => ({
-              ...prev,
-              showQuadrants: !prev.showQuadrants,
-            }))
-          }
-          title={
-            viewport.showQuadrants
-              ? 'Bölge İsimlerini Gizle (1, 2, 3, 4. Bölge)'
-              : 'Bölge İsimlerini Göster (1, 2, 3, 4. Bölge)'
-          }
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            viewport.showQuadrants
-              ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-400/40 font-black text-[10px]'
-              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-black text-[10px]'
-          }`}
-        >
-          <span>I-IV</span>
-        </button>
+            {/* 10. Düzenle / Seçilen Nesne Ayarları */}
+            <button
+              onClick={() => {
+                if (selectedObjectId) setActiveTool('select');
+              }}
+              title="Seçilen Nesneyi Düzenle"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                selectedObjectId
+                  ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <FileEdit className="w-4 h-4" />
+            </button>
 
-        {/* 10. Düzenle / Seçilen Nesne Ayarları */}
-        <button
-          onClick={() => {
-            if (selectedObjectId) setActiveTool('select');
-          }}
-          title="Seçilen Nesneyi Düzenle"
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            selectedObjectId
-              ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40'
-              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <FileEdit className="w-4 h-4" />
-        </button>
+            {/* 11. Seçiliyi Sil (Kırmızı Çöp Kutusu) */}
+            <button
+              onClick={() => {
+                if (selectedObjectIds.length > 0) {
+                  deleteObjects(
+                    selectedObjectIds,
+                    selectedObjectIds.length === 1 ? undefined : `${selectedObjectIds.length} seçili nesne silindi`
+                  );
+                  setSelectedObjectIds([]);
+                }
+              }}
+              title={
+                selectedObjectIds.length > 0
+                  ? `${selectedObjectIds.length} seçili nesneyi sil`
+                  : 'Silmek için önce nesne seçin'
+              }
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                selectedObjectIds.length > 0
+                  ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30'
+                  : 'text-red-400/60 hover:bg-red-50/50'
+              }`}
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </button>
 
-        {/* 11. Seçiliyi Sil (Kırmızı Çöp Kutusu) */}
-        <button
-          onClick={() => {
-            if (selectedObjectIds.length > 0) {
-              deleteObjects(
-                selectedObjectIds,
-                selectedObjectIds.length === 1 ? undefined : `${selectedObjectIds.length} seçili nesne silindi`
-              );
-              setSelectedObjectIds([]);
-            }
-          }}
-          title={
-            selectedObjectIds.length > 0
-              ? `${selectedObjectIds.length} seçili nesneyi sil`
-              : 'Silmek için önce nesne seçin'
-          }
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-            selectedObjectIds.length > 0
-              ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30'
-              : 'text-red-400/60 hover:bg-red-50/50'
-          }`}
-        >
-          <Trash2 className="w-4 h-4 text-red-500" />
-        </button>
+            <div className={isVert ? 'w-6 h-px bg-slate-200 dark:bg-slate-700 my-0.5' : 'h-6 w-px bg-slate-200 dark:bg-slate-700 mx-0.5'} />
 
-        <div className="w-6 h-px bg-slate-200 dark:bg-slate-700 my-0.5" />
-
-        {/* 12. Tümünü Sil (Tüm Ekranı Temizle) */}
-        <button
-          onClick={() => requestClearAll('2D')}
-          title="Tümünü Sil (Tüm ekranı ve şekilleri temizle)"
-          className="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer text-rose-600 hover:text-white hover:bg-rose-600 dark:hover:bg-rose-600 hover:shadow-md hover:shadow-rose-500/30 group"
-        >
-          <Eraser className="w-4 h-4 transition-transform group-hover:scale-110" />
-        </button>
-      </div>
+            {/* 12. Tümünü Sil (Tüm Ekranı Temizle) */}
+            <button
+              onClick={() => requestClearAll('2D')}
+              title="Tümünü Sil (Tüm ekranı ve şekilleri temizle)"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer text-rose-600 hover:text-white hover:bg-rose-600 dark:hover:bg-rose-600 hover:shadow-md hover:shadow-rose-500/30 group"
+            >
+              <Eraser className="w-4 h-4 transition-transform group-hover:scale-110" />
+            </button>
+          </div>
+        );
+      })()}
 
       {/* İPUCU MESAJI KAPSÜLÜ (Örn: "Önce bir şekil seçin") */}
       {hintMessage && (
