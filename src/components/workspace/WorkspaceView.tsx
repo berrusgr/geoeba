@@ -8,7 +8,6 @@ import { Toolbar } from './Toolbar';
 import { CommandAssistant } from './CommandAssistant';
 import { Canvas } from './Canvas';
 import { PropertiesPanel } from './PropertiesPanel';
-import { WorkspaceMenuBar } from './WorkspaceMenuBar';
 import { ActivityPanel } from './ActivityPanel';
 import { FunctionDialog } from './FunctionDialog';
 import { SliderDialog } from './SliderDialog';
@@ -229,13 +228,20 @@ export function WorkspaceView() {
     resetViewport,
     viewport,
     setViewport,
+    layoutMode,
+    setLayoutMode,
+    isFunctionDialogOpen,
+    setIsFunctionDialogOpen,
+    isSliderDialogOpen,
+    setIsSliderDialogOpen,
+    isAddObjectDialogOpen,
+    setIsAddObjectDialogOpen,
   } = useWorkspace();
 
   // Adlı fonksiyonlar (f, g …) tuval çizilmeden önce ayrıştırıcıya bildirilir
   syncUserFunctions(objects);
 
-  // Düzen ve Panel Durumları (Varsayılan olarak sadece 2D görünüm)
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('2d_only');
+  // Düzen ve Panel Durumları
   const [showWorkspaceSettingsMenu, setShowWorkspaceSettingsMenu] = useState(false);
   const [splitY, setSplitY] = useState<number>(54); // Üst 2D panel yüksekliği yüzdesi (Varsayılan çoklu düzende)
   const [splitX, setSplitX] = useState<number>(44); // Alt/Sol Cebir paneli genişliği yüzdesi
@@ -244,10 +250,7 @@ export function WorkspaceView() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 2D & 3D Dialog ve Panel Durumları
-  const [isFunctionDialogOpen, setIsFunctionDialogOpen] = useState(false);
-  const [isSliderDialogOpen, setIsSliderDialogOpen] = useState(false);
-  const [isAddObjectDialogOpen, setIsAddObjectDialogOpen] = useState(false);
+  // 2D & 3D Panel Durumları
   const [showToolbar, setShowToolbar] = useState(true);
 
   // 3D Stüdyo Durumları (geçmiş destekli)
@@ -740,20 +743,7 @@ export function WorkspaceView() {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background text-foreground overflow-hidden">
-      {/* ÜST MENÜ BARI ŞERİDİ (Dosya, Düzenle, Görünüm, Araçlar, Ekle, Ayarlar, Yardım) */}
-      <WorkspaceMenuBar
-        layoutMode={layoutMode}
-        onLayoutModeChange={setLayoutMode}
-        onSelectTool={activateTool}
-        onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
-        onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
-        onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
-        onOpenRegularPolygonDialog={() => setIsRegularPolygonDialogOpen(true)}
-        onClearAll={() => requestClearAll(studioDimension)}
-        onResetView={() => handleSetCameraPreset('isometric')}
-      />
-
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full bg-background text-foreground overflow-hidden">
       {studioDimension === '2D' && !is3DLayout && <ActivityPanel />}
 
       {/* ANA ÇALIŞMA ALANI */}

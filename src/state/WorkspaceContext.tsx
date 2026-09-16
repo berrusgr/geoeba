@@ -35,7 +35,7 @@ import {
   EllipseObject,
   ViewportTransform,
 } from '@/types/math';
-import { ToolMode, WorkspaceHistoryStep,
+import { ToolMode, LayoutMode, WorkspaceHistoryStep,
   StyleSettings,
   DEFAULT_STYLE_SETTINGS,
   STYLE_STORAGE_KEY,
@@ -119,6 +119,15 @@ interface WorkspaceContextType {
   circleRadiusPos: Point2D;
   setIsCircleRadiusDialogOpen: (open: boolean) => void;
   openCircleRadiusDialog: (pos?: Point2D) => void;
+  layoutMode: LayoutMode;
+  setLayoutMode: React.Dispatch<React.SetStateAction<LayoutMode>>;
+  isFunctionDialogOpen: boolean;
+  setIsFunctionDialogOpen: (open: boolean) => void;
+  isSliderDialogOpen: boolean;
+  setIsSliderDialogOpen: (open: boolean) => void;
+  isAddObjectDialogOpen: boolean;
+  setIsAddObjectDialogOpen: (open: boolean) => void;
+  activateTool: (tool: ToolMode) => void;
 
   // Eylemler
   setObjects: React.Dispatch<React.SetStateAction<MathObject[]>>;
@@ -1029,6 +1038,25 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [valuePrompt, setValuePrompt] = useState<ValuePromptRequest | null>(null);
   const [isCircleRadiusDialogOpen, setIsCircleRadiusDialogOpen] = useState<boolean>(false);
   const [circleRadiusPos, setCircleRadiusPos] = useState<Point2D>({ x: 0, y: 0 });
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('2d_only');
+  const [isFunctionDialogOpen, setIsFunctionDialogOpen] = useState<boolean>(false);
+  const [isSliderDialogOpen, setIsSliderDialogOpen] = useState<boolean>(false);
+  const [isAddObjectDialogOpen, setIsAddObjectDialogOpen] = useState<boolean>(false);
+
+  const activateTool = useCallback((tool: ToolMode) => {
+    if (tool === 'function') {
+      setIsFunctionDialogOpen(true);
+      return;
+    }
+    if (tool === 'slider') {
+      setIsSliderDialogOpen(true);
+      return;
+    }
+    setActiveToolState(tool);
+    if (tool === 'regular_polygon') {
+      setIsRegularPolygonDialogOpen(true);
+    }
+  }, []);
 
   // Olay işleyicilerinin her zaman güncel durumu görmesi için "en son değer" referansı
   const latest = useRef({
@@ -3922,6 +3950,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       circleRadiusPos,
       setIsCircleRadiusDialogOpen,
       openCircleRadiusDialog,
+      layoutMode,
+      setLayoutMode,
+      isFunctionDialogOpen,
+      setIsFunctionDialogOpen,
+      isSliderDialogOpen,
+      setIsSliderDialogOpen,
+      isAddObjectDialogOpen,
+      setIsAddObjectDialogOpen,
+      activateTool,
       setActiveTool,
       setSelectedObjectId,
       setSelectedObjectIds,
@@ -4009,6 +4046,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       circleRadiusPos,
       setIsCircleRadiusDialogOpen,
       openCircleRadiusDialog,
+      layoutMode,
+      setLayoutMode,
+      isFunctionDialogOpen,
+      setIsFunctionDialogOpen,
+      isSliderDialogOpen,
+      setIsSliderDialogOpen,
+      isAddObjectDialogOpen,
+      setIsAddObjectDialogOpen,
+      activateTool,
       setActiveTool,
       setSelectedObjectId,
       setHintMessage,

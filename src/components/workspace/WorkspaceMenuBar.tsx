@@ -60,31 +60,21 @@ import {
   Sun,
 } from 'lucide-react';
 
-interface WorkspaceMenuBarProps {
-  layoutMode: LayoutMode;
-  onLayoutModeChange: (mode: LayoutMode) => void;
-  onSelectTool: (tool: ToolMode) => void;
-  onOpenFunctionDialog: () => void;
-  onOpenSliderDialog: () => void;
-  onOpenAddObjectDialog: () => void;
+export interface WorkspaceMenuBarProps {
+  layoutMode?: LayoutMode;
+  onLayoutModeChange?: (mode: LayoutMode) => void;
+  onSelectTool?: (tool: ToolMode) => void;
+  onOpenFunctionDialog?: () => void;
+  onOpenSliderDialog?: () => void;
+  onOpenAddObjectDialog?: () => void;
   onOpenRegularPolygonDialog?: () => void;
-  onClearAll: () => void;
+  onClearAll?: () => void;
   onResetView?: () => void;
 }
 
 type MenuKey = 'dosya' | 'duzenle' | 'gorunum' | 'araclar' | 'ekle' | 'ayarlar' | 'yardim' | null;
 
-export function WorkspaceMenuBar({
-  layoutMode,
-  onLayoutModeChange,
-  onSelectTool,
-  onOpenFunctionDialog,
-  onOpenSliderDialog,
-  onOpenAddObjectDialog,
-  onOpenRegularPolygonDialog,
-  onClearAll,
-  onResetView,
-}: WorkspaceMenuBarProps) {
+export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
   const [activeMenu, setActiveMenu] = useState<MenuKey>(null);
   const [infoModalType, setInfoModalType] = useState<'shortcuts' | 'about' | 'guide' | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -117,7 +107,29 @@ export function WorkspaceMenuBar({
     setSelectedObjectId,
     addObject,
     resetViewport,
+    layoutMode: ctxLayoutMode,
+    setLayoutMode: ctxSetLayoutMode,
+    isFunctionDialogOpen,
+    setIsFunctionDialogOpen,
+    isSliderDialogOpen,
+    setIsSliderDialogOpen,
+    isAddObjectDialogOpen,
+    setIsAddObjectDialogOpen,
+    openRegularPolygonDialog,
+    activateTool,
+    requestClearAll,
+    studioDimension,
   } = useWorkspace();
+
+  const layoutMode = props.layoutMode ?? ctxLayoutMode;
+  const onLayoutModeChange = props.onLayoutModeChange ?? ctxSetLayoutMode;
+  const onSelectTool = props.onSelectTool ?? activateTool;
+  const onOpenFunctionDialog = props.onOpenFunctionDialog ?? (() => setIsFunctionDialogOpen(true));
+  const onOpenSliderDialog = props.onOpenSliderDialog ?? (() => setIsSliderDialogOpen(true));
+  const onOpenAddObjectDialog = props.onOpenAddObjectDialog ?? (() => setIsAddObjectDialogOpen(true));
+  const onOpenRegularPolygonDialog = props.onOpenRegularPolygonDialog ?? openRegularPolygonDialog;
+  const onClearAll = props.onClearAll ?? (() => requestClearAll(studioDimension));
+  const onResetView = props.onResetView ?? resetViewport;
 
   // Menü dışına tıklanınca kapat
   useEffect(() => {
@@ -298,7 +310,7 @@ export function WorkspaceMenuBar({
       {/* ÜST MENÜ ŞERİDİ */}
       <div
         ref={menuBarRef}
-        className="h-8.5 w-full bg-white/95 dark:bg-[#15171c]/95 backdrop-blur-md border-b border-border/80 px-3 flex items-center justify-between z-30 select-none shadow-2xs shrink-0 relative"
+        className="flex-1 flex items-center justify-between z-30 select-none min-w-0 relative"
       >
         {/* SOL: 7 ANA MENÜ LİSTESİ */}
         <div className="flex items-center gap-0.5 sm:gap-1 text-xs font-medium">
@@ -316,7 +328,7 @@ export function WorkspaceMenuBar({
               Dosya
             </button>
             {activeMenu === 'dosya' && (
-              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -438,7 +450,7 @@ export function WorkspaceMenuBar({
               Düzenle
             </button>
             {activeMenu === 'duzenle' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   disabled={!canUndo}
                   onClick={() => {
@@ -548,7 +560,7 @@ export function WorkspaceMenuBar({
               Görünüm
             </button>
             {activeMenu === 'gorunum' && (
-              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   Çalışma Alanı Düzenleri
                 </div>
@@ -684,7 +696,7 @@ export function WorkspaceMenuBar({
               Araçlar
             </button>
             {activeMenu === 'araclar' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -814,7 +826,7 @@ export function WorkspaceMenuBar({
               Ekle
             </button>
             {activeMenu === 'ekle' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -930,7 +942,7 @@ export function WorkspaceMenuBar({
               Ayarlar
             </button>
             {activeMenu === 'ayarlar' && (
-              <div className="absolute top-full left-0 mt-1 w-64 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-64 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 {/* 1. Çalışma Alanı Ayarları Ana Butonu */}
                 <button
                   onClick={() => {
@@ -1090,7 +1102,7 @@ export function WorkspaceMenuBar({
               Yardım
             </button>
             {activeMenu === 'yardim' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -1197,7 +1209,7 @@ export function WorkspaceMenuBar({
 
       {/* BİLGİLENDİRME MODALLARI (Kısayollar, Hakkında, Kılavuz) */}
       {infoModalType && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4 animate-in fade-in-0 zoom-in-95 duration-150">
             {/* Modal Başlık */}
             <div className="flex items-center justify-between border-b border-border/70 pb-3">
@@ -1297,7 +1309,7 @@ export function WorkspaceMenuBar({
 
       {/* ÇALIŞMA ALANI VE DÜZLEM AYARLARI MODALI */}
       {isSettingsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in-0 zoom-in-95 duration-150">
             {/* Modal Başlık */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/70 shrink-0">
