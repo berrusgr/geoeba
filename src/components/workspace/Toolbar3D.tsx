@@ -46,6 +46,7 @@ interface Toolbar3DProps {
   hasSelection?: boolean;
   onClearAll?: () => void;
   onOpenAddObjectDialog?: () => void;
+  onSwitchTo2D?: () => void;
 }
 
 const SOLID_BUTTONS: { type: Solid3DType; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -100,6 +101,7 @@ export function Toolbar3D({
   hasSelection = false,
   onClearAll,
   onOpenAddObjectDialog,
+  onSwitchTo2D,
 }: Toolbar3DProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [creationMethod, setCreationMethod] = useState<'instant' | 'draw'>('instant');
@@ -130,6 +132,16 @@ export function Toolbar3D({
         >
           <PanelLeftOpen className="w-5 h-5" />
         </button>
+
+        {onSwitchTo2D && (
+          <button
+            onClick={onSwitchTo2D}
+            title="2D Geometri Düzlemine Geç"
+            className="w-9 h-9 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center transition-colors cursor-pointer text-xs font-bold"
+          >
+            <span>📐</span>
+          </button>
+        )}
 
         <div className="w-8 h-px bg-border my-1" />
 
@@ -215,6 +227,16 @@ export function Toolbar3D({
         </div>
 
         <div className="flex items-center gap-1">
+          {onSwitchTo2D && (
+            <button
+              onClick={onSwitchTo2D}
+              title="2D Çizim Düzlemine Geç"
+              className="px-2 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer mr-0.5"
+            >
+              <span>📐</span>
+              <span className="hidden sm:inline">2D Düzlem</span>
+            </button>
+          )}
           <button
             onClick={onClearAll}
             title="Tüm Cisimleri Sil (Sahneyi Temizle)"

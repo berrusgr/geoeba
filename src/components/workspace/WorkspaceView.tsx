@@ -566,7 +566,7 @@ export function WorkspaceView() {
     } else if (layoutMode === 'algebra_2d') {
       setLayoutMode('algebra_3d');
     }
-  }, [layoutMode, setStudioDimension]);
+  }, [layoutMode, setStudioDimension, setLayoutMode]);
 
   const handleSwitchTo2D = useCallback(() => {
     setStudioDimension('2D');
@@ -575,7 +575,7 @@ export function WorkspaceView() {
     } else if (layoutMode === 'algebra_3d') {
       setLayoutMode('algebra_2d');
     }
-  }, [layoutMode, setStudioDimension]);
+  }, [layoutMode, setStudioDimension, setLayoutMode]);
 
   useEffect(() => {
     if ((layoutMode === '3d_only' || layoutMode === 'algebra_3d') && studioDimension !== '3D') {
@@ -584,14 +584,6 @@ export function WorkspaceView() {
       setStudioDimension('2D');
     }
   }, [layoutMode, studioDimension, setStudioDimension]);
-
-  useEffect(() => {
-    if (studioDimension === '3D' && layoutMode === '2d_only') {
-      setLayoutMode('3d_only');
-    } else if (studioDimension === '2D' && layoutMode === '3d_only') {
-      setLayoutMode('2d_only');
-    }
-  }, [studioDimension, layoutMode]);
 
   /* ------------------- Render Panelleri Tanımları ------------------- */
 
@@ -796,6 +788,7 @@ export function WorkspaceView() {
                 onAutoArrange={handleAutoArrange}
                 onSetCameraPreset={handleSetCameraPreset}
                 onClearAll={() => requestClearAll('3D')}
+                onSwitchTo2D={handleSwitchTo2D}
               />
             ) : (
               <Toolbar
