@@ -6,6 +6,7 @@ import { useTheme } from '@/state/ThemeContext';
 import { ToolMode } from '@/types/workspace';
 import { LayoutMode } from './PropertiesPanel';
 import { exportPng, exportSvg, exportPdf, exportWord } from '@/utils/exportCanvas';
+import { StylePanel } from './StylePanel';
 import {
   FileText,
   FolderOpen,
@@ -52,6 +53,8 @@ import {
   Check,
   ChevronRight,
   ExternalLink,
+  Contrast,
+  Sliders,
 } from 'lucide-react';
 
 interface WorkspaceMenuBarProps {
@@ -62,7 +65,6 @@ interface WorkspaceMenuBarProps {
   onOpenSliderDialog: () => void;
   onOpenAddObjectDialog: () => void;
   onOpenRegularPolygonDialog?: () => void;
-  onToggleProperties: (tab?: 'ozellikler' | 'ayarlar') => void;
   onClearAll: () => void;
   onResetView?: () => void;
 }
@@ -77,14 +79,26 @@ export function WorkspaceMenuBar({
   onOpenSliderDialog,
   onOpenAddObjectDialog,
   onOpenRegularPolygonDialog,
-  onToggleProperties,
   onClearAll,
   onResetView,
 }: WorkspaceMenuBarProps) {
   const [activeMenu, setActiveMenu] = useState<MenuKey>(null);
   const [infoModalType, setInfoModalType] = useState<'shortcuts' | 'about' | 'guide' | null>(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'stil' | 'duzlem' | 'genel'>('stil');
   const menuBarRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const BG_COLORS = [
+    { color: '#ffffff', name: 'Beyaz' },
+    { color: '#f3e8ff', name: 'Lavanta' },
+    { color: '#e0f2fe', name: 'Buz Mavisi' },
+    { color: '#e6f4ea', name: 'Mint Yeşili' },
+    { color: '#fef3c7', name: 'Pastel Sarı' },
+    { color: '#ffedd5', name: 'Şeftali' },
+    { color: '#ffe4e6', name: 'Pembe' },
+    { color: '#1e293b', name: 'Koyu Slate' },
+  ];
 
   const { theme, setTheme } = useTheme();
   const {
@@ -913,7 +927,122 @@ export function WorkspaceMenuBar({
               Ayarlar
             </button>
             {activeMenu === 'ayarlar' && (
-              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-64 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
+                {/* 1. Çalışma Alanı Ayarları Ana Butonu */}
+                <button
+                  onClick={() => {
+                    closeMenu();
+                    setIsSettingsModalOpen(true);
+                  }}
+                  className="w-[calc(100%-8px)] mx-1 px-3 py-2 flex items-center justify-between text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-primary" />
+                    <span>Çalışma Alanı Ayarları...</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="my-1 border-t border-border/60" />
+
+                <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Hızlı Düzlem Ayarları
+                </div>
+
+                <button
+                  onClick={() => {
+                    setViewport((prev) => ({ ...prev, showGrid: !prev.showGrid }));
+                  }}
+                  className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Grid className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Izgara Çizgileri</span>
+                  </div>
+                  {viewport.showGrid && <Check className="w-3.5 h-3.5 text-primary" />}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setViewport((prev) => ({ ...prev, showAxes: !prev.showAxes }));
+                  }}
+                  className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Compass className="w-3.5 h-3.5 text-cyan-500" />
+                    <span>Koordinat Eksenleri (x, y)</span>
+                  </div>
+                  {viewport.showAxes && <Check className="w-3.5 h-3.5 text-primary" />}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setViewport((prev) => ({ ...prev, showCoordinates: !prev.showCoordinates }));
+                  }}
+                  className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Maximize className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Nokta Koordinatları</span>
+                  </div>
+                  {viewport.showCoordinates && <Check className="w-3.5 h-3.5 text-primary" />}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setViewport((prev) => ({ ...prev, showQuadrants: !prev.showQuadrants }));
+                  }}
+                  className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold bg-amber-500/20 text-amber-600 px-1 rounded">I-IV</span>
+                    <span>Bölge İsimleri (1-4)</span>
+                  </div>
+                  {viewport.showQuadrants && <Check className="w-3.5 h-3.5 text-primary" />}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setViewport((prev) => ({ ...prev, snapToGrid: !prev.snapToGrid }));
+                  }}
+                  className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🧲</span>
+                    <span>Izgaraya Yapış (Snap)</span>
+                  </div>
+                  {viewport.snapToGrid && <Check className="w-3.5 h-3.5 text-primary" />}
+                </button>
+
+                <div className="my-1 border-t border-border/60" />
+
+                {/* Hızlı Arkaplan Rengi */}
+                <div className="px-3 py-1">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                    Hızlı Arkaplan
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {BG_COLORS.slice(0, 7).map((bg) => (
+                      <button
+                        key={bg.color}
+                        type="button"
+                        onClick={() => setViewport((prev) => ({ ...prev, backgroundColor: bg.color }))}
+                        title={bg.name}
+                        className={`w-5 h-5 rounded-full border border-black/15 shadow-2xs flex items-center justify-center transition-transform hover:scale-115 cursor-pointer ${
+                          (viewport.backgroundColor || '#ffffff') === bg.color ? 'ring-2 ring-primary ring-offset-1 scale-110' : ''
+                        }`}
+                        style={{ backgroundColor: bg.color }}
+                      >
+                        {(viewport.backgroundColor || '#ffffff') === bg.color && (
+                          <Check className="w-2.5 h-2.5 text-slate-800" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="my-1 border-t border-border/60" />
+
                 <button
                   onClick={() => {
                     closeMenu();
@@ -926,44 +1055,6 @@ export function WorkspaceMenuBar({
                     <span>Tema: {theme === 'dark' ? 'Koyu' : 'Açık'}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground">Değiştir</span>
-                </button>
-
-                <div className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Dil: Türkçe</span>
-                  </div>
-                  <Check className="w-3.5 h-3.5 text-primary" />
-                </div>
-
-                <div className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground">
-                  <div className="flex items-center gap-2">
-                    <Ruler className="w-3.5 h-3.5 text-teal-500" />
-                    <span>Birim: Santimetre (cm)</span>
-                  </div>
-                </div>
-
-                <div className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono font-bold text-amber-500">0.00</span>
-                    <span>Ondalık: 2 Basamak</span>
-                  </div>
-                </div>
-
-                <div className="my-1 border-t border-border/60" />
-
-                <button
-                  onClick={() => {
-                    closeMenu();
-                    onToggleProperties('ayarlar');
-                  }}
-                  className="w-full px-3 py-1.5 flex items-center justify-between text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <Settings className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Izgara & Eksen Ayarları...</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
 
                 <button
@@ -1047,14 +1138,6 @@ export function WorkspaceMenuBar({
           <span className="hidden sm:inline bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-border/60">
             {objects.length} Nesne
           </span>
-          <button
-            onClick={() => onToggleProperties('ozellikler')}
-            className="hover:text-primary transition-colors cursor-pointer flex items-center gap-1"
-            title="Özellikler Panelini Aç"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Özellikler</span>
-          </button>
         </div>
       </div>
 
@@ -1139,8 +1222,8 @@ export function WorkspaceMenuBar({
                   <p>Üstteki Görünüm menüsünden veya sol taraftaki Görünümler sekmesinden 2D, 3D veya yan yana çoklu görünümleri seçebilirsiniz.</p>
                 </div>
                 <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 space-y-1">
-                  <h4 className="font-bold text-foreground">3. Sağ Özellikler Paneli</h4>
-                  <p>Sağdaki dikey Özellikler butonuna tıklayarak ızgara, koordinat eksenleri, bölge isimleri ve arkaplan ayarlarını kontrol edebilirsiniz.</p>
+                  <h4 className="font-bold text-foreground">3. Çalışma Alanı ve Düzlem Ayarları</h4>
+                  <p>Üst menüdeki Ayarlar seçeneğinden ızgara, koordinat eksenleri, bölge isimleri, dik açı stili, çizim kalınlıkları ve arkaplan ayarlarını kontrol edebilirsiniz.</p>
                 </div>
               </div>
             )}
@@ -1152,6 +1235,376 @@ export function WorkspaceMenuBar({
                 className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-colors cursor-pointer"
               >
                 Anladım
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ÇALIŞMA ALANI VE DÜZLEM AYARLARI MODALI */}
+      {isSettingsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in-0 zoom-in-95 duration-150">
+            {/* Modal Başlık */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/70 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-foreground">Çalışma Alanı Ayarları</h3>
+                  <p className="text-[11px] text-muted-foreground">Tuval, ızgara, stil ve koordinat düzlemi tercihleri</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSettingsModalOpen(false)}
+                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                title="Kapat"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Sekme Seçici (Stil, Düzlem, Genel) */}
+            <div className="flex items-center px-5 pt-3 border-b border-border/60 bg-muted/20 shrink-0 gap-1.5">
+              <button
+                onClick={() => setSettingsTab('stil')}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  settingsTab === 'stil'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span>Stil & Arkaplan</span>
+              </button>
+
+              <button
+                onClick={() => setSettingsTab('duzlem')}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  settingsTab === 'duzlem'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Grid className="w-3.5 h-3.5" />
+                <span>Görünüm & Düzlem</span>
+              </button>
+
+              <button
+                onClick={() => setSettingsTab('genel')}
+                className={`px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  settingsTab === 'genel'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Genel & Sistem</span>
+              </button>
+            </div>
+
+            {/* Modal Gövdesi (Scrollable) */}
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              {settingsTab === 'stil' && (
+                <div className="space-y-4">
+                  {/* Arkaplan Rengi */}
+                  <div className="space-y-2.5 p-3.5 rounded-2xl bg-muted/40 border border-border/70">
+                    <h4 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Palette className="w-3.5 h-3.5 text-primary" />
+                      <span>Arkaplan Rengi</span>
+                    </h4>
+                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                      {BG_COLORS.map((bg) => {
+                        const isSelected = (viewport.backgroundColor || '#ffffff') === bg.color;
+                        return (
+                          <button
+                            key={bg.color}
+                            type="button"
+                            onClick={() => setViewport((prev) => ({ ...prev, backgroundColor: bg.color }))}
+                            title={bg.name}
+                            className={`w-7 h-7 rounded-full border border-black/10 shadow-xs flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${
+                              isSelected ? 'ring-2 ring-primary ring-offset-2 scale-105' : ''
+                            }`}
+                            style={{ backgroundColor: bg.color }}
+                          >
+                            {isSelected && <Check className="w-3.5 h-3.5 text-slate-700 dark:text-slate-800" />}
+                          </button>
+                        );
+                      })}
+                      <label
+                        title="Özel Renk Seç"
+                        className="w-7 h-7 rounded-full border border-dashed border-border bg-card flex items-center justify-center cursor-pointer hover:border-primary transition-colors text-muted-foreground hover:text-foreground shadow-xs"
+                      >
+                        <span className="text-xs font-black">+</span>
+                        <input
+                          type="color"
+                          value={viewport.backgroundColor || '#ffffff'}
+                          onChange={(e) => setViewport((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                          className="sr-only"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Dik Açı Stili */}
+                  <div className="space-y-2.5 p-3.5 rounded-2xl bg-muted/40 border border-border/70">
+                    <h4 className="text-[11px] font-black text-foreground uppercase tracking-wider">
+                      Dik Açı Sembol Stili
+                    </h4>
+                    <div className="grid grid-cols-4 gap-2 pt-1">
+                      {[
+                        { id: 'arc_dot', label: 'Yay + Nokta', icon: '⦠' },
+                        { id: 'square', label: 'Kare Köşe', icon: '⊾' },
+                        { id: 'arc_fill', label: 'Dolu Yay', icon: '◬' },
+                        { id: 'l_shape', label: 'L-Köşe', icon: '└' },
+                      ].map((style) => {
+                        const isSelected = (viewport.rightAngleStyle || 'square') === style.id;
+                        return (
+                          <button
+                            key={style.id}
+                            type="button"
+                            onClick={() => setViewport((prev) => ({ ...prev, rightAngleStyle: style.id as any }))}
+                            className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-primary/15 border-primary text-primary font-bold shadow-xs'
+                                : 'bg-card border-border/80 text-foreground hover:bg-muted font-medium'
+                            }`}
+                            title={style.label}
+                          >
+                            <span className="text-base leading-none mb-1 font-serif">{style.icon}</span>
+                            <span className="text-[10px] text-center leading-tight">{style.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Çizim ve Metin Stili (StylePanel) */}
+                  <div className="space-y-2.5 p-3.5 rounded-2xl bg-muted/40 border border-border/70">
+                    <h4 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <Sliders className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
+                      <span>Çizim, Metin ve Sadeleştirme</span>
+                    </h4>
+                    <div className="pt-1">
+                      <StylePanel />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'duzlem' && (
+                <div className="space-y-4">
+                  {/* Nokta Yakalama Seçeneği */}
+                  <div className="space-y-2.5 p-3.5 rounded-2xl bg-muted/40 border border-border/70">
+                    <h4 className="text-[11px] font-black text-foreground uppercase tracking-wider">
+                      Nokta Yakalama Modu (Snapping)
+                    </h4>
+                    <select
+                      value={!viewport.snapToGrid ? 'off' : viewport.pointSnapMode || 'snapToGrid'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'off') {
+                          setViewport((prev) => ({ ...prev, snapToGrid: false, pointSnapMode: 'off' }));
+                        } else {
+                          setViewport((prev) => ({
+                            ...prev,
+                            snapToGrid: true,
+                            pointSnapMode: val as any,
+                          }));
+                        }
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl bg-card border border-border/80 text-foreground text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                    >
+                      <option value="automatic">Otomatik</option>
+                      <option value="snapToGrid">Izgaraya Sıçra</option>
+                      <option value="fixedToGrid">Izgaraya Sabitli</option>
+                      <option value="off">Kapalı</option>
+                    </select>
+                  </div>
+
+                  {/* Görünüm ve Koordinat Düzlemi Seçenekleri */}
+                  <div className="space-y-2.5 p-3.5 rounded-2xl bg-muted/40 border border-border/70">
+                    <h4 className="text-[11px] font-black text-foreground uppercase tracking-wider">
+                      Düzlem Elemanları
+                    </h4>
+
+                    <div className="space-y-2 text-xs pt-1">
+                      {/* Izgara */}
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 cursor-pointer transition-all shadow-xs select-none">
+                        <div className="flex items-center gap-2.5">
+                          <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-foreground font-bold">Izgara Çizgileri</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={viewport.showGrid}
+                          onChange={(e) => setViewport((prev) => ({ ...prev, showGrid: e.target.checked }))}
+                          className="sr-only"
+                        />
+                        {viewport.showGrid ? (
+                          <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-card shrink-0" />
+                        )}
+                      </label>
+
+                      {/* Eksenler */}
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 cursor-pointer transition-all shadow-xs select-none">
+                        <div className="flex items-center gap-2.5">
+                          <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                          <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={viewport.showAxes}
+                          onChange={(e) => setViewport((prev) => ({ ...prev, showAxes: e.target.checked }))}
+                          className="sr-only"
+                        />
+                        {viewport.showAxes ? (
+                          <div className="w-5 h-5 rounded-md bg-teal-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-card shrink-0" />
+                        )}
+                      </label>
+
+                      {/* Nokta Koordinatları */}
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 cursor-pointer transition-all shadow-xs select-none">
+                        <div className="flex items-center gap-2.5">
+                          <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <span className="text-foreground font-bold">Nokta Koordinatları</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={viewport.showCoordinates}
+                          onChange={(e) => setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))}
+                          className="sr-only"
+                        />
+                        {viewport.showCoordinates ? (
+                          <div className="w-5 h-5 rounded-md bg-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-card shrink-0" />
+                        )}
+                      </label>
+
+                      {/* Bölge İsimleri */}
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 cursor-pointer transition-all shadow-xs select-none">
+                        <div className="flex items-center gap-2.5">
+                          <div className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/50 border border-amber-300 text-amber-700 dark:text-amber-400 text-[10px] font-black">
+                            I-IV
+                          </div>
+                          <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={viewport.showQuadrants ?? false}
+                          onChange={(e) => setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))}
+                          className="sr-only"
+                        />
+                        {viewport.showQuadrants ? (
+                          <div className="w-5 h-5 rounded-md bg-amber-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-card shrink-0" />
+                        )}
+                      </label>
+
+                      {/* Siyah-Beyaz Mod */}
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 cursor-pointer transition-all shadow-xs select-none">
+                        <div className="flex items-center gap-2.5">
+                          <Contrast className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                          <span className="text-foreground font-bold">Siyah–Beyaz Mod</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={viewport.blackWhite ?? false}
+                          onChange={(e) => setViewport((prev) => ({ ...prev, blackWhite: e.target.checked }))}
+                          className="sr-only"
+                        />
+                        {viewport.blackWhite ? (
+                          <div className="w-5 h-5 rounded-md bg-slate-700 flex items-center justify-center text-white shadow-xs shrink-0">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-card shrink-0" />
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'genel' && (
+                <div className="space-y-4">
+                  {/* Arayüz Teması */}
+                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/70 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-foreground">Arayüz Teması</div>
+                      <div className="text-[11px] text-muted-foreground">Koyu veya açık renk teması</div>
+                    </div>
+                    <button
+                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                      className="px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                    >
+                      <Palette className="w-3.5 h-3.5 text-pink-500" />
+                      <span>{theme === 'dark' ? 'Koyu Tema' : 'Açık Tema'}</span>
+                    </button>
+                  </div>
+
+                  {/* Ölçü ve Sayı Standardı */}
+                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/70 space-y-2">
+                    <div className="text-xs font-bold text-foreground">Sayı ve Ölçü Standartları</div>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div className="flex justify-between">
+                        <span>Ondalık Ayırıcı:</span>
+                        <span className="font-bold text-foreground">Virgül (,) — MEB Standardı</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Varsayılan Uzunluk Birimi:</span>
+                        <span className="font-bold text-foreground">Birim (br)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Açı Birimi:</span>
+                        <span className="font-bold text-foreground">Derece (°)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Kısayollar ve Bilgi */}
+                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/70 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-foreground">Klavye Kısayolları</div>
+                      <div className="text-[11px] text-muted-foreground">Hızlı çizim ve işlem tuş kombinasyonları</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsSettingsModalOpen(false);
+                        setInfoModalType('shortcuts');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                    >
+                      <Keyboard className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Görüntüle</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Alt Buton */}
+            <div className="px-5 py-3 border-t border-border/70 bg-muted/20 flex justify-end shrink-0">
+              <button
+                onClick={() => setIsSettingsModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-colors cursor-pointer shadow-xs"
+              >
+                Tamam
               </button>
             </div>
           </div>
