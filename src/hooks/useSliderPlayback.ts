@@ -19,7 +19,7 @@ const MAX_KARE_MS = 50;
  * `dirs` yerinde güncellenir: uca gelen kaydırıcının yönü ters çevrilir.
  */
 export function advanceSliders(
-  sliders: SliderObject[],
+  sliders: (Pick<SliderObject, 'id' | 'min' | 'max' | 'value'> & Partial<SliderObject>)[],
   dirs: Record<string, 1 | -1>,
   dtSeconds: number,
   tourSeconds: number = TUR_SANIYE

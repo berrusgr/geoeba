@@ -443,6 +443,11 @@ export function WorkspaceView() {
     setSelectedSolidIds([]);
   };
 
+  const handleDeleteSolidById = useCallback((id: string) => {
+    setSolids((prev) => prev.filter((s) => s.id !== id));
+    setSelectedSolidIds((prev) => prev.filter((sid) => sid !== id));
+  }, []);
+
   const handleDragSolidPosition = useCallback(
     (id: string, newPos: Point3D) => {
       dragSolids((prev) => prev.map((s) => (s.id === id ? { ...s, position: newPos } : s)));
@@ -698,7 +703,17 @@ export function WorkspaceView() {
       </div>
       <div className="flex-1 min-h-0 relative flex overflow-hidden">
         <div className="flex-1 relative min-w-0">
-          <Canvas onSwitchTo3D={handleSwitchTo3D} />
+          <Canvas
+            onSwitchTo3D={handleSwitchTo3D}
+            solids={solids}
+            selectedSolidId={selectedSolidId}
+            selectedSolidIds={selectedSolidIds}
+            onSelectSolid={setSelectedSolidId}
+            onSelectSolids={setSelectedSolidIds}
+            onUpdateSolidPosition={handleDragSolidPosition}
+            onDeleteSolid={handleDeleteSolidById}
+            onDragEnd={handleDragEnd}
+          />
           <CommandAssistant onSelectTool={activateTool} />
         </div>
 

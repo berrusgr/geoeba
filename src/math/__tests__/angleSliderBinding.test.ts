@@ -13,6 +13,10 @@ describe('angle slider binding and animation', () => {
       x: 0,
       y: 0,
       createdAt: 1,
+      isIndependent: true,
+      showLabel: true,
+      color: '#000',
+      visible: true,
     };
     const P1: PointObject = {
       id: 'pt-p1',
@@ -21,6 +25,10 @@ describe('angle slider binding and animation', () => {
       x: 4,
       y: 0,
       createdAt: 2,
+      isIndependent: true,
+      showLabel: true,
+      color: '#000',
+      visible: true,
     };
     const slider: SliderObject = {
       id: 'slider-alpha',
@@ -35,6 +43,9 @@ describe('angle slider binding and animation', () => {
       x: -5,
       y: 5,
       createdAt: 3,
+      showLabel: true,
+      color: '#000',
+      visible: true,
     };
     // P3 rotating around V starting from P1 by slider degrees
     const P3: PointObject = {
@@ -52,6 +63,10 @@ describe('angle slider binding and animation', () => {
         degrees: 60,
       },
       createdAt: 4,
+      isIndependent: false,
+      showLabel: true,
+      color: '#000',
+      visible: true,
     };
     const angle: AngleObject = {
       id: 'ang-1',
@@ -61,6 +76,9 @@ describe('angle slider binding and animation', () => {
       vertexPointId: V.id,
       point3Id: P3.id,
       createdAt: 5,
+      showLabel: true,
+      color: '#000',
+      visible: true,
     };
 
     const scene: MathObject[] = [V, P1, slider, P3, angle];
