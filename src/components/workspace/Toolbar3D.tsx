@@ -25,6 +25,7 @@ import {
   Pyramid,
   LayoutGrid,
   ScanSearch,
+  PenTool,
 } from 'lucide-react';
 
 type CameraPreset = 'isometric' | 'front' | 'back' | 'top' | 'bottom' | 'right' | 'left' | 'side';
@@ -101,6 +102,7 @@ export function Toolbar3D({
   onOpenAddObjectDialog,
 }: Toolbar3DProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [creationMethod, setCreationMethod] = useState<'instant' | 'draw'>('instant');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     İncele: true,
     'Cisim oluştur': true,
@@ -161,16 +163,33 @@ export function Toolbar3D({
 
           <div className="w-6 h-px bg-border my-1" />
 
-          {SOLID_BUTTONS.map(({ type, label, Icon }) => (
-            <button
-              key={type}
-              onClick={() => onAddSolid(type)}
-              title={`${label} Ekle`}
-              className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center justify-center transition-all cursor-pointer"
-            >
-              <Icon className="w-4 h-4" />
-            </button>
-          ))}
+          {SOLID_BUTTONS.map(({ type, label, Icon }) => {
+            const isDrawingActive = activeTool === `create_${type}`;
+            return (
+              <button
+                key={type}
+                onClick={() => {
+                  if (creationMethod === 'draw') {
+                    setActiveTool(isDrawingActive ? 'select_move' : (`create_${type}` as Tool3DMode));
+                  } else {
+                    onAddSolid(type);
+                  }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setActiveTool(`create_${type}` as Tool3DMode);
+                }}
+                title={`${label} Ekle (Sağ tık: Zemine çiz)`}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                  isDrawingActive
+                    ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/40'
+                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+              </button>
+            );
+          })}
 
           <div className="w-6 h-px bg-border my-1" />
 
@@ -332,30 +351,79 @@ export function Toolbar3D({
 
           {expandedGroups['Cisim oluştur'] && (
             <div className="space-y-2 pt-0.5">
+              {/* Ekleme / Çizme Modu Seçici */}
+              <div className="grid grid-cols-2 gap-1 p-1 bg-emerald-500/10 dark:bg-emerald-950/30 rounded-xl border border-emerald-500/20">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreationMethod('instant');
+                    if (activeTool.startsWith('create_')) setActiveTool('select_move');
+                  }}
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    creationMethod === 'instant'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15'
+                  }`}
+                  title="Tıklayarak doğrudan sahneye ekle"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Hızlı Ekle</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreationMethod('draw')}
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    creationMethod === 'draw'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15'
+                  }`}
+                  title="Seçilen cismi 3D zemine sürükleyerek boyutlandır ve çiz"
+                >
+                  <PenTool className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Çizerek Ekle</span>
+                </button>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
-                {SOLID_BUTTONS.map(({ type, label, Icon }) => (
-                  <button
-                    key={type}
-                    onClick={() => onAddSolid(type)}
-                    onContextMenu={(e) => {
-                      // Sağ tık: sürükleyerek boyutlandırma modu
-                      e.preventDefault();
-                      setActiveTool(`create_${type}` as Tool3DMode);
-                    }}
-                    className={`flex items-center gap-2 p-2.5 rounded-xl text-left border shadow-sm transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
-                      activeTool === `create_${type}`
-                        ? 'bg-emerald-500 text-white border-transparent'
-                        : 'bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-foreground border-border/80 hover:border-emerald-400'
-                    }`}
-                    title={`${label} ekle (sağ tık: zemine sürükleyerek boyutlandır)`}
-                  >
-                    <Icon className={`w-4 h-4 shrink-0 ${activeTool === `create_${type}` ? 'text-white' : 'text-emerald-600'}`} />
-                    <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">{label}</span>
-                  </button>
-                ))}
+                {SOLID_BUTTONS.map(({ type, label, Icon }) => {
+                  const isDrawingActive = activeTool === `create_${type}`;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        if (creationMethod === 'draw') {
+                          setActiveTool(isDrawingActive ? 'select_move' : (`create_${type}` as Tool3DMode));
+                        } else {
+                          onAddSolid(type);
+                        }
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setActiveTool(`create_${type}` as Tool3DMode);
+                      }}
+                      className={`flex items-center gap-2 p-2.5 rounded-xl text-left border shadow-sm transition-all duration-200 cursor-pointer hover:-translate-y-0.5 ${
+                        isDrawingActive
+                          ? 'bg-emerald-600 text-white border-transparent ring-2 ring-emerald-500/40'
+                          : 'bg-card hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-foreground border-border/80 hover:border-emerald-400'
+                      }`}
+                      title={
+                        creationMethod === 'draw'
+                          ? `${label} çizim modunu aç (zemine tıklayıp sürükleyin)`
+                          : `${label} ekle (çizerek boyutlandırmak için sağ tık)`
+                      }
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isDrawingActive ? 'text-white' : 'text-emerald-600'}`} />
+                      <span className="text-[11px] sm:text-xs font-bold leading-tight break-words">{label}</span>
+                    </button>
+                  );
+                })}
               </div>
               <p className="text-[10px] text-muted-foreground px-1 leading-snug">
-                İpucu: Bir cisme <strong>sağ tıklayıp</strong> zemine sürükleyerek istediğiniz boyutta ve konumda oluşturabilirsiniz.
+                {creationMethod === 'draw' ? (
+                  <>Bir cisim seçtikten sonra <strong>3D zemine tıklayıp sürükleyerek</strong> istediğiniz boyut ve konumda oluşturabilirsiniz.</>
+                ) : (
+                  <>Tıklayarak doğrudan ekleyebilir veya <strong>sağ tıklayarak</strong> zeminde çizim modunu açabilirsiniz.</>
+                )}
               </p>
             </div>
           )}

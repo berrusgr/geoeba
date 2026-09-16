@@ -44,6 +44,7 @@ import {
   Grid,
   Contrast,
   Check,
+  Plus,
 } from 'lucide-react';
 import { useWorkspace } from '@/state/WorkspaceContext';
 import { syncUserFunctions } from '@/math/functionNames';
@@ -546,6 +547,45 @@ export function WorkspaceView() {
 
   const selectedSolid = solids.find((s) => s.id === selectedSolidId) || null;
 
+  const is3DLayout = layoutMode === '3d_only' || layoutMode === 'algebra_3d';
+  const is2DLayout = layoutMode === '2d_only' || layoutMode === 'algebra_2d';
+  const isMultiView = !is3DLayout && !is2DLayout;
+  const show3DToolbar = is3DLayout || (isMultiView && studioDimension === '3D');
+
+  const handleSwitchTo3D = useCallback(() => {
+    setStudioDimension('3D');
+    if (layoutMode === '2d_only') {
+      setLayoutMode('3d_only');
+    } else if (layoutMode === 'algebra_2d') {
+      setLayoutMode('algebra_3d');
+    }
+  }, [layoutMode, setStudioDimension]);
+
+  const handleSwitchTo2D = useCallback(() => {
+    setStudioDimension('2D');
+    if (layoutMode === '3d_only') {
+      setLayoutMode('2d_only');
+    } else if (layoutMode === 'algebra_3d') {
+      setLayoutMode('algebra_2d');
+    }
+  }, [layoutMode, setStudioDimension]);
+
+  useEffect(() => {
+    if ((layoutMode === '3d_only' || layoutMode === 'algebra_3d') && studioDimension !== '3D') {
+      setStudioDimension('3D');
+    } else if ((layoutMode === '2d_only' || layoutMode === 'algebra_2d') && studioDimension !== '2D') {
+      setStudioDimension('2D');
+    }
+  }, [layoutMode, studioDimension, setStudioDimension]);
+
+  useEffect(() => {
+    if (studioDimension === '3D' && layoutMode === '2d_only') {
+      setLayoutMode('3d_only');
+    } else if (studioDimension === '2D' && layoutMode === '3d_only') {
+      setLayoutMode('2d_only');
+    }
+  }, [studioDimension, layoutMode]);
+
   /* ------------------- Render Panelleri Tanımları ------------------- */
 
   // 1. CEBİR PANELİ
@@ -658,7 +698,7 @@ export function WorkspaceView() {
       </div>
       <div className="flex-1 min-h-0 relative flex overflow-hidden">
         <div className="flex-1 relative min-w-0">
-          <Canvas onSwitchTo3D={() => setLayoutMode('3d_only')} />
+          <Canvas onSwitchTo3D={handleSwitchTo3D} />
           <CommandAssistant onSelectTool={activateTool} />
         </div>
 
@@ -688,7 +728,14 @@ export function WorkspaceView() {
 
   // 3. 3D GRAFİK PANELİ
   const render3DPanel = (
-    <div className="flex flex-col h-full w-full bg-background relative overflow-hidden border-l border-border/40">
+    <div
+      onClick={() => {
+        if (isMultiView && studioDimension !== '3D') {
+          setStudioDimension('3D');
+        }
+      }}
+      className="flex flex-col h-full w-full bg-background relative overflow-hidden border-l border-border/40"
+    >
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-muted/30 border-b border-border/40 shrink-0 z-10 select-none">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
@@ -699,8 +746,19 @@ export function WorkspaceView() {
         </div>
         <div className="flex items-center gap-1.5">
           <button
+            onClick={() => {
+              setStudioDimension('3D');
+              setIsAddObjectDialogOpen(true);
+            }}
+            className="text-[11px] font-bold text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 px-2 py-0.5 rounded transition-colors flex items-center gap-1 cursor-pointer"
+            title="3D Cisim Ekle"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Nesne Ekle</span>
+          </button>
+          <button
             onClick={() => handleSetCameraPreset('isometric')}
-            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors flex items-center gap-1"
+            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors flex items-center gap-1 cursor-pointer"
             title="İzometrik Görünüm"
           >
             <Box className="w-3 h-3" />
@@ -708,7 +766,7 @@ export function WorkspaceView() {
           </button>
           <button
             onClick={() => handleSetCameraPreset('top')}
-            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors"
+            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-0.5 rounded hover:bg-muted/60 transition-colors cursor-pointer"
             title="Üstten Görünüm (Z-Düzlemi)"
           >
             Üst
@@ -746,7 +804,7 @@ export function WorkspaceView() {
             onUpdateSolidsPosition={handleDragSolidsPosition}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
-            onSwitchTo2D={() => setLayoutMode('2d_only')}
+            onSwitchTo2D={handleSwitchTo2D}
             onUndo={scene.past.length > 0 ? undo3D : undefined}
             onRedo={scene.future.length > 0 ? redo3D : undefined}
           />
@@ -778,17 +836,68 @@ export function WorkspaceView() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background text-foreground overflow-hidden">
-      <ActivityPanel />
+      {studioDimension === '2D' && !is3DLayout && <ActivityPanel />}
 
       {/* ANA ÇALIŞMA ALANI */}
       <div className="flex flex-1 min-h-0 relative overflow-hidden">
         {/* SOL ARAÇ ÇUBUĞU */}
-        <div className="relative flex shrink-0 h-full min-h-0 z-30">
-          <Toolbar
-            onSelectTool={activateTool}
-            onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
-            onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
-          />
+        <div className="relative flex flex-col shrink-0 h-full min-h-0 z-30">
+          {isMultiView && (
+            <div className="p-1 border-b border-border bg-card/90 flex items-center gap-1 shrink-0 select-none">
+              <button
+                onClick={() => setStudioDimension('2D')}
+                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  studioDimension === '2D'
+                    ? 'bg-slate-900 dark:bg-blue-600 text-white shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+                title="2D Geometri Araçlarını Göster"
+              >
+                <span>📐</span>
+                <span className="hidden sm:inline">2D Araçları</span>
+              </button>
+              <button
+                onClick={() => setStudioDimension('3D')}
+                className={`flex-1 py-1 px-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  studioDimension === '3D'
+                    ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+                title="3D Katı Cisim Araçlarını Göster"
+              >
+                <span>🧊</span>
+                <span className="hidden sm:inline">3D Araçları</span>
+              </button>
+            </div>
+          )}
+          <div className="flex-1 min-h-0 flex relative">
+            {show3DToolbar ? (
+              <Toolbar3D
+                activeTool={active3DTool}
+                setActiveTool={setActive3DTool}
+                showEdges={showGlobalEdges}
+                showVertices={showGlobalVertices}
+                showFaces={showGlobalFaces}
+                toggleShowEdges={() => setShowGlobalEdges((prev) => !prev)}
+                toggleShowVertices={() => setShowGlobalVertices((prev) => !prev)}
+                toggleShowFaces={() => setShowGlobalFaces((prev) => !prev)}
+                onAddSolid={handleAddSolid}
+                onDeleteSelected={handleDeleteSolid}
+                hasSelection={selectedSolidIds.length > 0}
+                onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
+                onAutoArrange={handleAutoArrange}
+                onSetCameraPreset={handleSetCameraPreset}
+                onClearAll={() => requestClearAll('3D')}
+              />
+            ) : (
+              <Toolbar
+                onSelectTool={activateTool}
+                onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
+                onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
+                onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
+              />
+            )}
+          </div>
         </div>
 
         {/* ÇOKLU GÖRÜNÜM MERKEZİ ALAN */}
@@ -916,7 +1025,7 @@ export function WorkspaceView() {
       <AddObjectModal
         isOpen={isAddObjectDialogOpen}
         onClose={() => setIsAddObjectDialogOpen(false)}
-        is3D={layoutMode === '3d_only' || layoutMode === 'algebra_3d'}
+        is3D={show3DToolbar}
         onAddSolid3D={handleAddSolid}
       />
       <FunctionDialog isOpen={isFunctionDialogOpen} onClose={() => setIsFunctionDialogOpen(false)} />
