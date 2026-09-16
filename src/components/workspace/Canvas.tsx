@@ -391,10 +391,10 @@ export function Canvas({
   type DockPosition = 'right' | 'left' | 'bottom' | 'top';
   const [dockPosition, setDockPosition] = useState<DockPosition>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('geoeba_canvas_dock_pos');
+      const saved = localStorage.getItem('geoeba_canvas_dock_pos_v2');
       if (saved === 'left' || saved === 'right' || saved === 'bottom' || saved === 'top') return saved;
     }
-    return 'right';
+    return 'bottom';
   });
   const [isDraggingDock, setIsDraggingDock] = useState(false);
   const [dockPreview, setDockPreview] = useState<DockPosition | null>(null);
@@ -402,8 +402,8 @@ export function Canvas({
   const cycleDockPosition = useCallback(() => {
     setDockPosition((prev) => {
       const next: DockPosition =
-        prev === 'right' ? 'bottom' : prev === 'bottom' ? 'left' : prev === 'left' ? 'top' : 'right';
-      if (typeof window !== 'undefined') localStorage.setItem('geoeba_canvas_dock_pos', next);
+        prev === 'bottom' ? 'left' : prev === 'left' ? 'top' : prev === 'top' ? 'right' : 'bottom';
+      if (typeof window !== 'undefined') localStorage.setItem('geoeba_canvas_dock_pos_v2', next);
       return next;
     });
   }, []);
@@ -428,7 +428,7 @@ export function Canvas({
       const distBottom = 1 - relY;
       const minDist = Math.min(distLeft, distRight, distTop, distBottom);
 
-      let target: DockPosition = 'right';
+      let target: DockPosition = 'bottom';
       if (minDist === distLeft) target = 'left';
       else if (minDist === distRight) target = 'right';
       else if (minDist === distTop) target = 'top';
@@ -456,14 +456,14 @@ export function Canvas({
         const distBottom = 1 - relY;
         const minDist = Math.min(distLeft, distRight, distTop, distBottom);
 
-        let finalPos: DockPosition = 'right';
+        let finalPos: DockPosition = 'bottom';
         if (minDist === distLeft) finalPos = 'left';
         else if (minDist === distRight) finalPos = 'right';
         else if (minDist === distTop) finalPos = 'top';
         else if (minDist === distBottom) finalPos = 'bottom';
 
         setDockPosition(finalPos);
-        if (typeof window !== 'undefined') localStorage.setItem('geoeba_canvas_dock_pos', finalPos);
+        if (typeof window !== 'undefined') localStorage.setItem('geoeba_canvas_dock_pos_v2', finalPos);
       }
       setDockPreview(null);
     };
