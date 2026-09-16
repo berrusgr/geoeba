@@ -1132,13 +1132,6 @@ export function WorkspaceMenuBar({
             )}
           </div>
         </div>
-
-        {/* SAĞ: HIZLI DURUM BİLGİSİ */}
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
-          <span className="hidden sm:inline bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-border/60">
-            {objects.length} Nesne
-          </span>
-        </div>
       </div>
 
       {/* BİLGİLENDİRME MODALLARI (Kısayollar, Hakkında, Kılavuz) */}

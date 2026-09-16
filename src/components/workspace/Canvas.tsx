@@ -3339,34 +3339,8 @@ export function Canvas({
           </div>
         </div>
 
-        {/* Sağ Alan: 2D/3D Geçiş ve Ayarlar Butonu */}
+        {/* Sağ Alan: 3D Cisim Üstten Görünüm Modu (Varsa) */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* 2D ve 3D DÜZLEM GEÇİŞ BUTONU */}
-          <div className="flex items-center p-1 rounded-2xl bg-card/95 backdrop-blur-md border border-border shadow-md">
-            <button
-              onClick={() => setStudioDimension('2D')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                studioDimension === '2D'
-                  ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm dark:from-blue-600 dark:to-indigo-600'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <span>📐</span>
-              <span>2D</span>
-            </button>
-
-            <button
-              onClick={() => (onSwitchTo3D ? onSwitchTo3D() : setStudioDimension('3D'))}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                studioDimension === '3D'
-                  ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm dark:from-blue-600 dark:to-indigo-600'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              <span>🧊</span>
-              <span>3D</span>
-            </button>
-          </div>
 
           {solids && solids.length > 0 && (
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs">

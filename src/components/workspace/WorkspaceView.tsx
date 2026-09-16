@@ -632,19 +632,6 @@ export function WorkspaceView() {
           <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
           <span className="text-xs font-bold tracking-wider text-foreground uppercase">2D GRAFİK</span>
         </div>
-
-        {/* Adobe Stili Kontrol & Açılır Menü Butonları */}
-        <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-          {/* Görünümü Ortala */}
-          <button
-            onClick={resetViewport}
-            className="text-[11px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-all flex items-center gap-1 font-medium cursor-pointer"
-            title="Görünümü Sıfırla (Merkeze Odaklan)"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">Ortala</span>
-          </button>
-        </div>
       </div>
       <div className="flex-1 min-h-0 relative flex overflow-hidden">
         <div className="flex-1 relative min-w-0">
