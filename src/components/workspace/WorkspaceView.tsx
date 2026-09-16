@@ -8,6 +8,7 @@ import { Toolbar } from './Toolbar';
 import { CommandAssistant } from './CommandAssistant';
 import { Canvas } from './Canvas';
 import { PropertiesPanel } from './PropertiesPanel';
+import { WorkspaceMenuBar } from './WorkspaceMenuBar';
 import { ActivityPanel } from './ActivityPanel';
 import { FunctionDialog } from './FunctionDialog';
 import { SliderDialog } from './SliderDialog';
@@ -828,6 +829,23 @@ export function WorkspaceView() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background text-foreground overflow-hidden">
+      {/* ÜST MENÜ BARI ŞERİDİ (Dosya, Düzenle, Görünüm, Araçlar, Ekle, Ayarlar, Yardım) */}
+      <WorkspaceMenuBar
+        layoutMode={layoutMode}
+        onLayoutModeChange={setLayoutMode}
+        onSelectTool={activateTool}
+        onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
+        onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
+        onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
+        onOpenRegularPolygonDialog={() => setIsRegularPolygonDialogOpen(true)}
+        onToggleProperties={(tab) => {
+          if (tab) setPropertiesTab(tab);
+          setShowProperties((prev) => (tab && !prev ? true : !prev));
+        }}
+        onClearAll={() => requestClearAll(studioDimension)}
+        onResetView={() => handleSetCameraPreset('isometric')}
+      />
+
       {studioDimension === '2D' && !is3DLayout && <ActivityPanel />}
 
       {/* ANA ÇALIŞMA ALANI */}
