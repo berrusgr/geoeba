@@ -1041,6 +1041,23 @@ export function Toolbar({
             <span className="text-[9.5px] font-bold leading-none">Görünümler</span>
           </button>
         </div>
+
+        {/* Alt Kısım: Ara / Komut Arama Butonu */}
+        <div className="flex flex-col items-center gap-2 w-full px-1">
+          <div className="w-8 h-px bg-border/80" />
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('geoeba:toggle-command-palette'));
+            }}
+            title="Ara / Komut Bulucu (Ctrl+K)"
+            aria-label="Ara"
+            className="w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer text-muted-foreground hover:text-primary hover:bg-primary/10"
+          >
+            <Search className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] font-bold leading-none">Ara</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. SAĞ KISIM: İÇERİK PANELİ */}
@@ -1646,33 +1663,6 @@ export function Toolbar({
                     </button>
                   )}
                 </div>
-              </div>
-
-              {/* Arama Çubuğu */}
-              <div className="p-3 border-b border-border/60 shrink-0">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={toolSearch}
-                    onChange={(e) => setToolSearch(e.target.value)}
-                    placeholder="Araç veya komut ara..."
-                    aria-label="Araç ara"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border/80 text-foreground text-xs placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  />
-                </div>
-
-                {onOpenAddObjectDialog && (
-                  <button
-                    type="button"
-                    onClick={onOpenAddObjectDialog}
-                    className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold shadow-xs hover:opacity-90 transition-all cursor-pointer active:scale-98"
-                    title="Kesin ölçü girerek nesne ekleyin (nokta, doğru parçası, çember, üçgen, açı, fonksiyon)"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Nesne ekle</span>
-                  </button>
-                )}
               </div>
 
               {/* Ağaç Menü Araç Listesi (Alt Alta Tek Tek) */}

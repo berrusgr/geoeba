@@ -34,7 +34,7 @@ import {
 } from '@/math/geometry3d';
 import { formatTurkishNumber } from '@/math/coordinates';
 import { isAnyModalOpen } from '@/components/ui/modalState';
-import { RotateCw, Focus, Plus, Minus, Grid, Trash2, Box, Sparkles, ScanSearch } from 'lucide-react';
+import { RotateCw, Focus, Plus, Minus, Grid, Trash2, Box, Sparkles, ScanSearch, Search } from 'lucide-react';
 import { ViewCube3D } from './ViewCube3D';
 
 /* -------------------------------------------------------------------------- */
@@ -1910,6 +1910,17 @@ export function Canvas3D(props: Canvas3DProps) {
           title="Tüm 3D Cisimleri Sil (Sahneyi Temizle)"
         >
           <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
+        </button>
+        <div className="w-6 h-px bg-border my-0.5" />
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('geoeba:toggle-command-palette'));
+          }}
+          className="p-2.5 rounded-xl hover:bg-primary/10 text-primary transition-all cursor-pointer group"
+          title="Araç veya Komut Ara (Ctrl+K)"
+          aria-label="Araç veya Komut Ara"
+        >
+          <Search className="w-4 h-4 transition-transform group-hover:scale-110" />
         </button>
       </div>
 

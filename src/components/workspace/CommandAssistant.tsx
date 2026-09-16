@@ -93,8 +93,13 @@ export function CommandAssistant({ onSelectTool }: { onSelectTool: (tool: ToolMo
         setOpen(value => !value);
       }
     };
+    const onToggle = () => setOpen(value => !value);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('geoeba:toggle-command-palette', onToggle);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('geoeba:toggle-command-palette', onToggle);
+    };
   }, []);
 
   const toggleMic = () => {
