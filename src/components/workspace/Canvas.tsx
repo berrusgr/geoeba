@@ -44,7 +44,7 @@ import { TextNoteDialog } from './TextNoteDialog';
 import { ContextMenu, ContextMenuItem } from './ContextMenu';
 import { useSliderPlayback } from '@/hooks/useSliderPlayback';
 import { Solid3DObject, Point3D } from '@/types/workspace3d';
-import { projectSolidFor2D } from '@/math/solidProjection2D';
+import { projectSolidFor2D, SolidProjectionMode } from '@/math/solidProjection2D';
 
 /** Etiketi olmayan nesneler için menü başlığında gösterilecek tür adları. */
 /** 'distance' ölçüm etiketinin yazısı: "|AP| = 2 br". */
@@ -374,6 +374,7 @@ export function Canvas({
     initialPos: Point3D;
     hasMoved: boolean;
   } | null>(null);
+  const [solidProjectionMode, setSolidProjectionMode] = useState<SolidProjectionMode>('top');
   const [selectionMarquee, setSelectionMarquee] = useState<{
     startWorld: Point2D;
     currentWorld: Point2D;
@@ -3367,6 +3368,37 @@ export function Canvas({
             </button>
           </div>
 
+          {solids && solids.length > 0 && (
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setSolidProjectionMode('top')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  solidProjectionMode === 'top'
+                    ? 'bg-white dark:bg-slate-900 text-foreground shadow-xs font-bold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title="3D cisimler 2D düzlemde üstten görünüm (kare, dikdörtgen, daire) olarak gösterilir"
+              >
+                <span>⏹</span>
+                <span>Üstten Görünüm</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSolidProjectionMode('axonometric')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  solidProjectionMode === 'axonometric'
+                    ? 'bg-white dark:bg-slate-900 text-foreground shadow-xs font-bold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title="3D cisimler 2D düzlemde 3D hacimli aksonometrik izdüşümle gösterilir"
+              >
+                <span>🧊</span>
+                <span>3D İzdüşüm</span>
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -3997,7 +4029,7 @@ export function Canvas({
           <g id="layer-solids-3d">
             {solids.map((solid) => {
               const isSelected = selectedSolidIds.includes(solid.id) || selectedSolidId === solid.id;
-              const proj = projectSolidFor2D(solid, viewport, isSelected);
+              const proj = projectSolidFor2D(solid, viewport, isSelected, solidProjectionMode);
 
               return (
                 <g
@@ -4006,196 +4038,351 @@ export function Canvas({
                   className="cursor-move group"
                   onMouseDown={(e) => handleSolidMouseDown(solid, e)}
                 >
-                  {/* 1. Zemin İzdüşümü (Z=0 Düzlemindeki Taban İzi) */}
-                  {proj.footprint.pointsAttr && (
-                    <polygon
-                      points={proj.footprint.pointsAttr}
-                      fill={solid.color || '#3b82f6'}
-                      fillOpacity={isSelected ? 0.22 : 0.08}
-                      stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                      strokeWidth={isSelected ? 1.8 : 1.2}
-                      strokeDasharray="4 3"
-                    />
-                  )}
+                  {/* ======================================================== */}
+                  {/* A) ÜSTTEN GÖRÜNÜM MODU (Küp -> Kare, Prizma -> Dikdörtgen, vb.) */}
+                  {/* ======================================================== */}
+                  {solidProjectionMode === 'top' && proj.topView && (
+                    <g id={`solid-topview-${solid.id}`}>
+                      {/* 1. Çokgen Tabanlı Cisimler (Küp -> Kare, Prizma -> Dikdörtgen, Üçgen Prizma -> Üçgen) */}
+                      {proj.topView.kind === 'polygon' && proj.topView.pointsAttr && (
+                        <g>
+                          <polygon
+                            points={proj.topView.pointsAttr}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.35 : 0.20}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2.6 : 1.8}
+                            strokeLinejoin="round"
+                          />
+                          {/* Köşe Noktaları */}
+                          {proj.topView.points?.map((pt, pti) => (
+                            <circle
+                              key={pti}
+                              cx={pt.x}
+                              cy={pt.y}
+                              r={isSelected ? 4 : 3}
+                              fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            />
+                          ))}
+                        </g>
+                      )}
 
-                  {/* 2. Eğri Yüzeyli Cisimler (Silindir, Koni, Küre) */}
-                  {proj.curves && proj.curves.kind === 'cylinder' && (
-                    <g>
-                      {/* Taban elips (alt) */}
-                      <ellipse
-                        cx={proj.curves.bottomCenter.x}
-                        cy={proj.curves.bottomCenter.y}
-                        rx={proj.curves.rx}
-                        ry={proj.curves.ry}
-                        fill={solid.color || '#3b82f6'}
-                        fillOpacity={isSelected ? 0.35 : 0.22}
-                        stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                        strokeWidth={isSelected ? 2 : 1.5}
-                        strokeDasharray="4 3"
-                      />
-                      {/* Yan yüzey gövdesi */}
-                      {proj.curves.topCenter && (
-                        <path
-                          d={`M ${proj.curves.bottomCenter.x - proj.curves.rx} ${proj.curves.bottomCenter.y}
-                              L ${proj.curves.topCenter.x - proj.curves.rx} ${proj.curves.topCenter.y}
-                              A ${proj.curves.rx} ${proj.curves.ry} 0 0 0 ${proj.curves.topCenter.x + proj.curves.rx} ${proj.curves.topCenter.y}
-                              L ${proj.curves.bottomCenter.x + proj.curves.rx} ${proj.curves.bottomCenter.y}
-                              A ${proj.curves.rx} ${proj.curves.ry} 0 0 1 ${proj.curves.bottomCenter.x - proj.curves.rx} ${proj.curves.bottomCenter.y} Z`}
-                          fill={solid.color || '#3b82f6'}
-                          fillOpacity={isSelected ? 0.3 : 0.18}
-                          stroke="none"
-                        />
+                      {/* 2. Dairesel Cisimler (Silindir -> Daire, Küre -> Daire) */}
+                      {proj.topView.kind === 'circle' && proj.topView.radius && (
+                        <g>
+                          <circle
+                            cx={proj.topView.centerScreen.x}
+                            cy={proj.topView.centerScreen.y}
+                            r={proj.topView.radius}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.35 : 0.20}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2.6 : 1.8}
+                          />
+                          <circle
+                            cx={proj.topView.centerScreen.x}
+                            cy={proj.topView.centerScreen.y}
+                            r={3}
+                            fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                          />
+                        </g>
                       )}
-                      {/* Yan kenarlar */}
-                      {proj.curves.sideLines?.map((sl, sli) => (
-                        <line
-                          key={sli}
-                          x1={sl.from.x}
-                          y1={sl.from.y}
-                          x2={sl.to.x}
-                          y2={sl.to.y}
-                          stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                          strokeWidth={isSelected ? 2 : 1.5}
-                        />
-                      ))}
-                      {/* Tavan elips (üst) */}
-                      {proj.curves.topCenter && (
-                        <ellipse
-                          cx={proj.curves.topCenter.x}
-                          cy={proj.curves.topCenter.y}
-                          rx={proj.curves.rx}
-                          ry={proj.curves.ry}
-                          fill={solid.color || '#3b82f6'}
-                          fillOpacity={isSelected ? 0.45 : 0.32}
-                          stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                          strokeWidth={isSelected ? 2 : 1.5}
-                        />
+
+                      {/* 3. Koni (Daire + Tepe Noktası / Artı İşareti) */}
+                      {proj.topView.kind === 'cone' && proj.topView.radius && (
+                        <g>
+                          <circle
+                            cx={proj.topView.centerScreen.x}
+                            cy={proj.topView.centerScreen.y}
+                            r={proj.topView.radius}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.35 : 0.20}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2.6 : 1.8}
+                          />
+                          <line
+                            x1={proj.topView.centerScreen.x - 6}
+                            y1={proj.topView.centerScreen.y}
+                            x2={proj.topView.centerScreen.x + 6}
+                            y2={proj.topView.centerScreen.y}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={1.5}
+                          />
+                          <line
+                            x1={proj.topView.centerScreen.x}
+                            y1={proj.topView.centerScreen.y - 6}
+                            x2={proj.topView.centerScreen.x}
+                            y2={proj.topView.centerScreen.y + 6}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={1.5}
+                          />
+                          <circle
+                            cx={proj.topView.centerScreen.x}
+                            cy={proj.topView.centerScreen.y}
+                            r={3}
+                            fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                          />
+                        </g>
                       )}
+
+                      {/* 4. Piramit (Taban Dikdörtgeni + Tepeye Birleşen 4 Ayrıt) */}
+                      {proj.topView.kind === 'pyramid' && proj.topView.pointsAttr && (
+                        <g>
+                          <polygon
+                            points={proj.topView.pointsAttr}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.35 : 0.20}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2.6 : 1.8}
+                            strokeLinejoin="round"
+                          />
+                          {proj.topView.diagEdges?.map((diag, di) => (
+                            <line
+                              key={di}
+                              x1={diag.from.x}
+                              y1={diag.from.y}
+                              x2={diag.to.x}
+                              y2={diag.to.y}
+                              stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                              strokeWidth={1.6}
+                              strokeDasharray="4 3"
+                            />
+                          ))}
+                          <circle
+                            cx={proj.topView.centerScreen.x}
+                            cy={proj.topView.centerScreen.y}
+                            r={3.5}
+                            fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                          />
+                          {proj.topView.points?.map((pt, pti) => (
+                            <circle
+                              key={pti}
+                              cx={pt.x}
+                              cy={pt.y}
+                              r={isSelected ? 4 : 3}
+                              fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            />
+                          ))}
+                        </g>
+                      )}
+
+                      {/* Kenar / Yarıçap Ölçü Etiketleri */}
+                      {showDetails &&
+                        proj.topView.dimensionLabels.map((lbl, li) => (
+                          <g key={li} className="select-none pointer-events-none">
+                            <rect
+                              x={lbl.x - 30}
+                              y={lbl.y - 11}
+                              width="60"
+                              height="20"
+                              rx="5"
+                              fill="#ffffff"
+                              fillOpacity="0.92"
+                              stroke="#cbd5e1"
+                              strokeWidth="0.9"
+                              className="dark:fill-slate-900 dark:stroke-slate-700 shadow-2xs"
+                            />
+                            <text
+                              x={lbl.x}
+                              y={lbl.y + 3}
+                              textAnchor="middle"
+                              fontSize="10"
+                              className="font-mono font-bold fill-slate-800 dark:fill-slate-200"
+                            >
+                              {lbl.text}
+                            </text>
+                          </g>
+                        ))}
                     </g>
                   )}
 
-                  {proj.curves && proj.curves.kind === 'cone' && (
-                    <g>
-                      {/* Taban elips */}
-                      <ellipse
-                        cx={proj.curves.bottomCenter.x}
-                        cy={proj.curves.bottomCenter.y}
-                        rx={proj.curves.rx}
-                        ry={proj.curves.ry}
-                        fill={solid.color || '#3b82f6'}
-                        fillOpacity={isSelected ? 0.3 : 0.18}
-                        stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                        strokeWidth={isSelected ? 2 : 1.5}
-                        strokeDasharray="4 3"
-                      />
-                      {/* Yan konik gövde */}
-                      {proj.curves.topCenter && (
+                  {/* ======================================================== */}
+                  {/* B) AKSONOMETRİK / HACİMLİ 3D GÖRÜNÜM MODU */}
+                  {/* ======================================================== */}
+                  {solidProjectionMode === 'axonometric' && (
+                    <g id={`solid-axon-${solid.id}`}>
+                      {/* 1. Zemin İzdüşümü (Z=0 Düzlemindeki Taban İzi) */}
+                      {proj.footprint.pointsAttr && (
                         <polygon
-                          points={`${proj.curves.bottomCenter.x - proj.curves.rx},${proj.curves.bottomCenter.y} ${proj.curves.topCenter.x},${proj.curves.topCenter.y} ${proj.curves.bottomCenter.x + proj.curves.rx},${proj.curves.bottomCenter.y}`}
+                          points={proj.footprint.pointsAttr}
                           fill={solid.color || '#3b82f6'}
-                          fillOpacity={isSelected ? 0.32 : 0.2}
-                          stroke="none"
-                        />
-                      )}
-                      {/* Tepeye uzanan yan çizgiler */}
-                      {proj.curves.sideLines?.map((sl, sli) => (
-                        <line
-                          key={sli}
-                          x1={sl.from.x}
-                          y1={sl.from.y}
-                          x2={sl.to.x}
-                          y2={sl.to.y}
+                          fillOpacity={isSelected ? 0.22 : 0.08}
                           stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                          strokeWidth={isSelected ? 2 : 1.5}
-                        />
-                      ))}
-                      {/* Tepe tepe noktası */}
-                      {proj.curves.topCenter && (
-                        <circle
-                          cx={proj.curves.topCenter.x}
-                          cy={proj.curves.topCenter.y}
-                          r={3.5}
-                          fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                          strokeWidth={isSelected ? 1.8 : 1.2}
+                          strokeDasharray="4 3"
                         />
                       )}
+
+                      {/* 2. Eğri Yüzeyli Cisimler (Silindir, Koni, Küre) */}
+                      {proj.curves && proj.curves.kind === 'cylinder' && (
+                        <g>
+                          <ellipse
+                            cx={proj.curves.bottomCenter.x}
+                            cy={proj.curves.bottomCenter.y}
+                            rx={proj.curves.rx}
+                            ry={proj.curves.ry}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.35 : 0.22}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2 : 1.5}
+                            strokeDasharray="4 3"
+                          />
+                          {proj.curves.topCenter && (
+                            <path
+                              d={`M ${proj.curves.bottomCenter.x - proj.curves.rx} ${proj.curves.bottomCenter.y}
+                                  L ${proj.curves.topCenter.x - proj.curves.rx} ${proj.curves.topCenter.y}
+                                  A ${proj.curves.rx} ${proj.curves.ry} 0 0 0 ${proj.curves.topCenter.x + proj.curves.rx} ${proj.curves.topCenter.y}
+                                  L ${proj.curves.bottomCenter.x + proj.curves.rx} ${proj.curves.bottomCenter.y}
+                                  A ${proj.curves.rx} ${proj.curves.ry} 0 0 1 ${proj.curves.bottomCenter.x - proj.curves.rx} ${proj.curves.bottomCenter.y} Z`}
+                              fill={solid.color || '#3b82f6'}
+                              fillOpacity={isSelected ? 0.3 : 0.18}
+                              stroke="none"
+                            />
+                          )}
+                          {proj.curves.sideLines?.map((sl, sli) => (
+                            <line
+                              key={sli}
+                              x1={sl.from.x}
+                              y1={sl.from.y}
+                              x2={sl.to.x}
+                              y2={sl.to.y}
+                              stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                              strokeWidth={isSelected ? 2 : 1.5}
+                            />
+                          ))}
+                          {proj.curves.topCenter && (
+                            <ellipse
+                              cx={proj.curves.topCenter.x}
+                              cy={proj.curves.topCenter.y}
+                              rx={proj.curves.rx}
+                              ry={proj.curves.ry}
+                              fill={solid.color || '#3b82f6'}
+                              fillOpacity={isSelected ? 0.45 : 0.32}
+                              stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                              strokeWidth={isSelected ? 2 : 1.5}
+                            />
+                          )}
+                        </g>
+                      )}
+
+                      {proj.curves && proj.curves.kind === 'cone' && (
+                        <g>
+                          <ellipse
+                            cx={proj.curves.bottomCenter.x}
+                            cy={proj.curves.bottomCenter.y}
+                            rx={proj.curves.rx}
+                            ry={proj.curves.ry}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.3 : 0.18}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2 : 1.5}
+                            strokeDasharray="4 3"
+                          />
+                          {proj.curves.topCenter && (
+                            <polygon
+                              points={`${proj.curves.bottomCenter.x - proj.curves.rx},${proj.curves.bottomCenter.y} ${proj.curves.topCenter.x},${proj.curves.topCenter.y} ${proj.curves.bottomCenter.x + proj.curves.rx},${proj.curves.bottomCenter.y}`}
+                              fill={solid.color || '#3b82f6'}
+                              fillOpacity={isSelected ? 0.32 : 0.2}
+                              stroke="none"
+                            />
+                          )}
+                          {proj.curves.sideLines?.map((sl, sli) => (
+                            <line
+                              key={sli}
+                              x1={sl.from.x}
+                              y1={sl.from.y}
+                              x2={sl.to.x}
+                              y2={sl.to.y}
+                              stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                              strokeWidth={isSelected ? 2 : 1.5}
+                            />
+                          ))}
+                          {proj.curves.topCenter && (
+                            <circle
+                              cx={proj.curves.topCenter.x}
+                              cy={proj.curves.topCenter.y}
+                              r={3.5}
+                              fill={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            />
+                          )}
+                        </g>
+                      )}
+
+                      {proj.curves && proj.curves.kind === 'sphere' && (
+                        <g>
+                          <circle
+                            cx={proj.curves.bottomCenter.x}
+                            cy={proj.curves.bottomCenter.y}
+                            r={proj.curves.sphereR}
+                            fill={solid.color || '#3b82f6'}
+                            fillOpacity={isSelected ? 0.35 : 0.22}
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={isSelected ? 2.2 : 1.6}
+                          />
+                          <ellipse
+                            cx={proj.curves.bottomCenter.x}
+                            cy={proj.curves.bottomCenter.y}
+                            rx={proj.curves.rx}
+                            ry={proj.curves.ry}
+                            fill="none"
+                            stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
+                            strokeWidth={1.2}
+                            strokeDasharray="4 3"
+                            strokeOpacity={0.7}
+                          />
+                        </g>
+                      )}
+
+                      {/* 3. Çokyüzlü Cisimlerin Yüzeyleri (Küp, Prizma, Piramit) */}
+                      {!proj.curves &&
+                        proj.faces.map((face, fi) => (
+                          <polygon
+                            key={fi}
+                            points={face.pointsAttr}
+                            fill={face.fill}
+                            fillOpacity={isSelected ? Math.min(1, face.fillOpacity + 0.15) : face.fillOpacity}
+                            stroke={face.stroke}
+                            strokeWidth={face.strokeWidth}
+                            strokeLinejoin="round"
+                          />
+                        ))}
+
+                      {/* 4. Çokyüzlü Cisimlerin Ayrıtları (Görünen düz, arkadaki kesikli) */}
+                      {!proj.curves &&
+                        proj.edges.map((edge, ei) => (
+                          <line
+                            key={ei}
+                            x1={edge.from.x}
+                            y1={edge.from.y}
+                            x2={edge.to.x}
+                            y2={edge.to.y}
+                            stroke={edge.stroke}
+                            strokeWidth={edge.strokeWidth}
+                            strokeDasharray={edge.isHidden ? '4 3' : undefined}
+                            strokeOpacity={edge.isHidden ? 0.6 : 1}
+                            strokeLinecap="round"
+                          />
+                        ))}
                     </g>
                   )}
 
-                  {proj.curves && proj.curves.kind === 'sphere' && (
-                    <g>
-                      {/* Küre ana daire */}
-                      <circle
-                        cx={proj.curves.bottomCenter.x}
-                        cy={proj.curves.bottomCenter.y}
-                        r={proj.curves.sphereR}
-                        fill={solid.color || '#3b82f6'}
-                        fillOpacity={isSelected ? 0.35 : 0.22}
-                        stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                        strokeWidth={isSelected ? 2.2 : 1.6}
-                      />
-                      {/* Ekvator dairesi elipsi (derinlik hissi) */}
-                      <ellipse
-                        cx={proj.curves.bottomCenter.x}
-                        cy={proj.curves.bottomCenter.y}
-                        rx={proj.curves.rx}
-                        ry={proj.curves.ry}
-                        fill="none"
-                        stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
-                        strokeWidth={1.2}
-                        strokeDasharray="4 3"
-                        strokeOpacity={0.7}
-                      />
-                    </g>
-                  )}
-
-                  {/* 3. Çokyüzlü Cisimlerin Yüzeyleri (Küp, Prizma, Piramit) */}
-                  {!proj.curves &&
-                    proj.faces.map((face, fi) => (
-                      <polygon
-                        key={fi}
-                        points={face.pointsAttr}
-                        fill={face.fill}
-                        fillOpacity={isSelected ? Math.min(1, face.fillOpacity + 0.15) : face.fillOpacity}
-                        stroke={face.stroke}
-                        strokeWidth={face.strokeWidth}
-                        strokeLinejoin="round"
-                      />
-                    ))}
-
-                  {/* 4. Çokyüzlü Cisimlerin Ayrıtları (Görünen düz, arkadaki kesikli) */}
-                  {!proj.curves &&
-                    proj.edges.map((edge, ei) => (
-                      <line
-                        key={ei}
-                        x1={edge.from.x}
-                        y1={edge.from.y}
-                        x2={edge.to.x}
-                        y2={edge.to.y}
-                        stroke={edge.stroke}
-                        strokeWidth={edge.strokeWidth}
-                        strokeDasharray={edge.isHidden ? '4 3' : undefined}
-                        strokeOpacity={edge.isHidden ? 0.6 : 1}
-                        strokeLinecap="round"
-                      />
-                    ))}
-
-                  {/* 5. Cisim Bilgi Rozeti (Başlık, Boyut, Hacim) */}
+                  {/* 5. Cisim Bilgi Rozeti (Başlık, Boyut, Taban Alanı, Hacim) */}
                   {showDetails && (
                     <g
                       transform={`translate(${proj.badge.x}, ${proj.badge.y})`}
                       className="select-none pointer-events-none"
                     >
                       <rect
-                        x="-55"
-                        y="-18"
-                        width="110"
-                        height="36"
-                        rx="7"
+                        x="-60"
+                        y="-19"
+                        width="120"
+                        height="38"
+                        rx="8"
                         fill="#0f172a"
-                        fillOpacity="0.88"
+                        fillOpacity="0.90"
                         stroke={isSelected ? '#ec4899' : solid.color || '#3b82f6'}
                         strokeWidth={isSelected ? '1.8' : '1.2'}
-                        className="shadow-md"
+                        className="shadow-md backdrop-blur-xs"
                       />
                       <text
                         x="0"
@@ -4206,7 +4393,7 @@ export function Canvas({
                         fill="#ffffff"
                         className="font-sans"
                       >
-                        {proj.badge.title} <tspan fill="#38bdf8" fontSize="8">(3D)</tspan>
+                        {proj.badge.title}
                       </text>
                       <text
                         x="0"
@@ -4216,7 +4403,9 @@ export function Canvas({
                         fill="#cbd5e1"
                         className="font-mono"
                       >
-                        {proj.badge.dimText} · V={formatTurkishNumber(proj.badge.volume)} br³
+                        {proj.topView
+                          ? `A=${formatTurkishNumber(proj.topView.baseArea)} br² · V=${formatTurkishNumber(proj.badge.volume)} br³`
+                          : `${proj.badge.dimText} · V=${formatTurkishNumber(proj.badge.volume)} br³`}
                       </text>
                     </g>
                   )}
