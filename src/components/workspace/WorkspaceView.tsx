@@ -248,7 +248,7 @@ export function WorkspaceView() {
   const [isSliderDialogOpen, setIsSliderDialogOpen] = useState(false);
   const [isAddObjectDialogOpen, setIsAddObjectDialogOpen] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
-  const [showProperties, setShowProperties] = useState(false);
+  const [showProperties, setShowProperties] = useState(true);
   const [propertiesTab, setPropertiesTab] = useState<'ozellikler' | 'stil' | 'ayarlar'>('ozellikler');
 
   // 3D Stüdyo Durumları (geçmiş destekli)
@@ -716,27 +716,6 @@ export function WorkspaceView() {
           />
           <CommandAssistant onSelectTool={activateTool} />
         </div>
-
-        {/* SAĞ ÖZELLİKLER PANELİ */}
-        {showProperties && (
-          <div className="w-64 sm:w-72 shrink-0 border-l border-border bg-card shadow-lg flex flex-col relative z-20 animate-in slide-in-from-right-2 duration-200">
-            {/* Kapatma Kulakçığı */}
-            <button
-              onClick={() => setShowProperties(false)}
-              className="absolute top-1/2 -translate-y-1/2 -left-5 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
-              title="Paneli Kapat"
-            >
-              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </button>
-            <PropertiesPanel
-              layoutMode={layoutMode}
-              onLayoutModeChange={setLayoutMode}
-              activeTab={propertiesTab}
-              onTabChange={setPropertiesTab}
-              onClose={() => setShowProperties(false)}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -786,6 +765,25 @@ export function WorkspaceView() {
           >
             Üst
           </button>
+          <button
+            onClick={() => {
+              if (showProperties && propertiesTab === 'ozellikler') {
+                setShowProperties(false);
+              } else {
+                setShowProperties(true);
+                setPropertiesTab('ozellikler');
+              }
+            }}
+            className={`text-[11px] px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium cursor-pointer ${
+              showProperties && propertiesTab === 'ozellikler'
+                ? 'bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 ring-1 ring-violet-500/30 font-semibold shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+            title={showProperties ? 'Özellikler Panelini Kapat' : 'Özellikler Panelini Sağda Aç'}
+          >
+            <Sliders className="w-3 h-3" />
+            <span>Özellikler</span>
+          </button>
         </div>
       </div>
       <div className="flex-1 min-h-0 relative flex overflow-hidden">
@@ -824,27 +822,6 @@ export function WorkspaceView() {
             onRedo={scene.future.length > 0 ? redo3D : undefined}
           />
         </div>
-
-        {/* SAĞ ÖZELLİKLER 3D PANELİ */}
-        {showProperties && (layoutMode === '3d_only' || layoutMode === 'algebra_3d') && (
-          <div className="w-64 sm:w-72 shrink-0 border-l border-border bg-card shadow-lg flex flex-col relative z-20 animate-in slide-in-from-right-2 duration-200">
-            <button
-              onClick={() => setShowProperties(false)}
-              className="absolute top-1/2 -translate-y-1/2 -left-5 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
-              title="Paneli Kapat"
-            >
-              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </button>
-            <Properties3D
-              selectedSolid={selectedSolid}
-              onUpdateSolid={handleUpdateSolid}
-              onDeleteSolid={handleDeleteSolid}
-              layoutMode={layoutMode}
-              onLayoutModeChange={setLayoutMode}
-              onClose={() => setShowProperties(false)}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1036,6 +1013,56 @@ export function WorkspaceView() {
           )}
         </div>
 
+        {/* SAĞ ÖZELLİKLER & AYARLAR PANELİ (TAM SAĞ TARAFTA) */}
+        {showProperties && (
+          <div className="w-72 sm:w-80 shrink-0 h-full border-l border-border bg-card shadow-lg flex flex-col relative z-20 animate-in slide-in-from-right-2 duration-200">
+            {/* Kapatma Kulakçığı */}
+            <button
+              onClick={() => setShowProperties(false)}
+              className="absolute top-1/2 -translate-y-1/2 -left-5 z-30 flex items-center justify-center w-5 h-12 rounded-l-md bg-card border border-r-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group"
+              title="Özellikler Panelini Kapat"
+            >
+              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+            {studioDimension === '3D' && (layoutMode === '3d_only' || layoutMode === 'algebra_3d') ? (
+              <Properties3D
+                selectedSolid={selectedSolid}
+                onUpdateSolid={handleUpdateSolid}
+                onDeleteSolid={handleDeleteSolid}
+                layoutMode={layoutMode}
+                onLayoutModeChange={setLayoutMode}
+                onClose={() => setShowProperties(false)}
+              />
+            ) : (
+              <PropertiesPanel
+                layoutMode={layoutMode}
+                onLayoutModeChange={setLayoutMode}
+                activeTab={propertiesTab}
+                onTabChange={setPropertiesTab}
+                onClose={() => setShowProperties(false)}
+              />
+            )}
+          </div>
+        )}
+
+        {/* SAĞ KENAR DİKEY AÇMA ŞERİDİ */}
+        {!showProperties && (
+          <div className="h-full border-l border-border bg-slate-50/70 dark:bg-slate-900/60 flex flex-col items-center py-4 px-1 shrink-0 z-20">
+            <button
+              onClick={() => {
+                setShowProperties(true);
+                setPropertiesTab('ozellikler');
+              }}
+              title="Özellikler Panelini Aç"
+              className="w-10 py-3 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-slate-600 dark:text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 group"
+            >
+              <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400 transition-transform group-hover:scale-110" />
+              <span className="text-[10px] font-bold [writing-mode:vertical-rl] tracking-wider uppercase">
+                Özellikler
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 2D & 3D Modalları */}

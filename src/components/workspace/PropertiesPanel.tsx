@@ -192,17 +192,23 @@ export function PropertiesPanel({
   return (
     <div className="w-full h-full bg-card p-4 space-y-4 overflow-y-auto select-none">
       {/* PANEL BAŞLIĞI & DARALTMA BUTONU */}
-      <div className="flex items-center justify-between pb-2.5 border-b border-border/70">
+      <div className="flex items-center justify-between pb-2 border-b border-border/70">
         <div className="flex items-center gap-2">
-          {sekme === 'ayarlar' || sekme === 'stil' ? (
-            <Settings className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-          ) : (
-            <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-          )}
-          <span className="text-xs font-black uppercase tracking-wider text-foreground">
+          <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <span className="text-sm font-black uppercase tracking-wider text-foreground">
             {sekme === 'ayarlar' || sekme === 'stil' ? 'Ayarlar' : 'Özellikler'}
           </span>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            title="Kapat"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {(sekme === 'ayarlar' || sekme === 'stil') && (
@@ -346,13 +352,14 @@ export function PropertiesPanel({
           </div>
 
           {/* 4. GÖRÜNÜM SEÇENEKLERİ */}
-          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
-            <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <div className="space-y-2.5 p-3 rounded-[22px] bg-slate-50/70 dark:bg-slate-900/50 border border-border/80 shadow-xs">
+            <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5 px-1">
+              <Settings className="w-3.5 h-3.5 text-primary" />
               <span>Görünüm Seçenekleri</span>
             </h3>
             <div className="space-y-2 text-xs pt-1">
-              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                <div className="flex items-center gap-2">
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                <div className="flex items-center gap-2.5">
                   <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-foreground font-bold">Izgara Çizgileri</span>
                 </div>
@@ -360,12 +367,25 @@ export function PropertiesPanel({
                   type="checkbox"
                   checked={viewport.showGrid}
                   onChange={(e) => setViewport((prev) => ({ ...prev, showGrid: e.target.checked }))}
-                  className="w-4 h-4 accent-primary rounded cursor-pointer"
+                  className="sr-only"
                 />
+                {viewport.showGrid ? (
+                  <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                )}
               </label>
 
-              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                <div className="flex items-center gap-2">
+              <label
+                className={`flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border cursor-pointer transition-all shadow-xs select-none ${
+                  viewport.showAxes
+                    ? 'border-indigo-300 dark:border-indigo-500/60 ring-2 ring-indigo-200/60 dark:ring-indigo-900/40'
+                    : 'border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
                   <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
                 </div>
@@ -373,12 +393,19 @@ export function PropertiesPanel({
                   type="checkbox"
                   checked={viewport.showAxes}
                   onChange={(e) => setViewport((prev) => ({ ...prev, showAxes: e.target.checked }))}
-                  className="w-4 h-4 accent-cyan-600 rounded cursor-pointer"
+                  className="sr-only"
                 />
+                {viewport.showAxes ? (
+                  <div className="w-5 h-5 rounded-md bg-teal-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                )}
               </label>
 
-              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                <div className="flex items-center gap-2">
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                <div className="flex items-center gap-2.5">
                   <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span className="text-foreground font-bold">Nokta Koordinatları</span>
                 </div>
@@ -388,13 +415,22 @@ export function PropertiesPanel({
                   onChange={(e) =>
                     setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))
                   }
-                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                  className="sr-only"
                 />
+                {viewport.showCoordinates ? (
+                  <div className="w-5 h-5 rounded-md bg-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                )}
               </label>
 
-              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                <div className="flex items-center gap-2.5">
+                  <div className="px-2 py-0.5 rounded-xl bg-amber-100/90 dark:bg-amber-950/50 border border-amber-300/60 text-amber-700 dark:text-amber-400 text-[10px] font-black leading-tight text-center shrink-0">
+                    I-<br />IV
+                  </div>
                   <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
                 </div>
                 <input
@@ -403,12 +439,19 @@ export function PropertiesPanel({
                   onChange={(e) =>
                     setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))
                   }
-                  className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
+                  className="sr-only"
                 />
+                {viewport.showQuadrants ? (
+                  <div className="w-5 h-5 rounded-md bg-amber-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                )}
               </label>
 
-              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                <div className="flex items-center gap-2">
+              <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                <div className="flex items-center gap-2.5">
                   <Contrast className="w-4 h-4 text-slate-700 dark:text-slate-300" />
                   <span className="text-foreground font-bold">Siyah–Beyaz Mod</span>
                 </div>
@@ -418,8 +461,15 @@ export function PropertiesPanel({
                   onChange={(e) =>
                     setViewport((prev) => ({ ...prev, blackWhite: e.target.checked }))
                   }
-                  className="w-4 h-4 accent-slate-600 rounded cursor-pointer"
+                  className="sr-only"
                 />
+                {viewport.blackWhite ? (
+                  <div className="w-5 h-5 rounded-md bg-slate-700 flex items-center justify-center text-white shadow-xs shrink-0">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                )}
               </label>
             </div>
           </div>
@@ -429,27 +479,29 @@ export function PropertiesPanel({
       {sekme === 'ozellikler' && (
         <div className="flex flex-col gap-4 items-stretch">
           {/* 1. GÖRÜNÜM VE KOORDİNAT DÜZLEMİ AYARLARI */}
-          <div className="space-y-2.5 p-3 rounded-2xl bg-muted/40 border border-border/70">
+          <div className="space-y-2.5 p-3.5 rounded-[22px] bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/90 dark:border-slate-800 shadow-xs">
             <button
               type="button"
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="flex items-center justify-between w-full cursor-pointer group"
+              className="flex items-center justify-between w-full cursor-pointer group px-1"
             >
-              <h3 className="text-[11px] font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Settings className="w-3.5 h-3.5 text-primary" />
-                <span>Görünüm ve koordinat düzlemi ayarları</span>
-              </h3>
+              <Settings className="w-4 h-4 text-indigo-400 dark:text-indigo-400 shrink-0" />
+              <div className="text-center font-black text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 tracking-wider uppercase leading-snug">
+                <div>GÖRÜNÜM VE KOORDİNAT</div>
+                <div>DÜZLEMİ AYARLARI</div>
+              </div>
               {isSettingsOpen ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <ChevronUp className="w-4 h-4 text-slate-400 group-hover:text-foreground transition-colors shrink-0" />
               ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-foreground transition-colors shrink-0" />
               )}
             </button>
 
             {isSettingsOpen && (
               <div className="space-y-2 text-xs pt-1">
-                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                  <div className="flex items-center gap-2">
+                {/* 1. Izgara Çizgileri */}
+                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                  <div className="flex items-center gap-2.5">
                     <Grid className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span className="text-foreground font-bold">Izgara Çizgileri</span>
                   </div>
@@ -457,12 +509,26 @@ export function PropertiesPanel({
                     type="checkbox"
                     checked={viewport.showGrid}
                     onChange={(e) => setViewport((prev) => ({ ...prev, showGrid: e.target.checked }))}
-                    className="w-4 h-4 accent-primary rounded cursor-pointer"
+                    className="sr-only"
                   />
+                  {viewport.showGrid ? (
+                    <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                  )}
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                  <div className="flex items-center gap-2">
+                {/* 2. Koordinat Eksenleri (x, y) */}
+                <label
+                  className={`flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border cursor-pointer transition-all shadow-xs select-none ${
+                    viewport.showAxes
+                      ? 'border-indigo-300 dark:border-indigo-500/60 ring-2 ring-indigo-200/60 dark:ring-indigo-900/40'
+                      : 'border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
                     <Compass className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                     <span className="text-foreground font-bold">Koordinat Eksenleri (x, y)</span>
                   </div>
@@ -470,12 +536,20 @@ export function PropertiesPanel({
                     type="checkbox"
                     checked={viewport.showAxes}
                     onChange={(e) => setViewport((prev) => ({ ...prev, showAxes: e.target.checked }))}
-                    className="w-4 h-4 accent-cyan-600 rounded cursor-pointer"
+                    className="sr-only"
                   />
+                  {viewport.showAxes ? (
+                    <div className="w-5 h-5 rounded-md bg-teal-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                  )}
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                  <div className="flex items-center gap-2">
+                {/* 3. Nokta Koordinatları */}
+                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                  <div className="flex items-center gap-2.5">
                     <Maximize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                     <span className="text-foreground font-bold">Nokta Koordinatları</span>
                   </div>
@@ -485,13 +559,23 @@ export function PropertiesPanel({
                     onChange={(e) =>
                       setViewport((prev) => ({ ...prev, showCoordinates: e.target.checked }))
                     }
-                    className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                    className="sr-only"
                   />
+                  {viewport.showCoordinates ? (
+                    <div className="w-5 h-5 rounded-md bg-indigo-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                  )}
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md border border-amber-500/20">I-IV</span>
+                {/* 4. Bölge İsimleri (1, 2, 3, 4. Bölge) */}
+                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                  <div className="flex items-center gap-2.5">
+                    <div className="px-2 py-0.5 rounded-xl bg-amber-100/90 dark:bg-amber-950/50 border border-amber-300/60 text-amber-700 dark:text-amber-400 text-[10px] font-black leading-tight text-center shrink-0">
+                      I-<br />IV
+                    </div>
                     <span className="text-foreground font-bold">Bölge İsimleri (1, 2, 3, 4. Bölge)</span>
                   </div>
                   <input
@@ -500,12 +584,20 @@ export function PropertiesPanel({
                     onChange={(e) =>
                       setViewport((prev) => ({ ...prev, showQuadrants: e.target.checked }))
                     }
-                    className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
+                    className="sr-only"
                   />
+                  {viewport.showQuadrants ? (
+                    <div className="w-5 h-5 rounded-md bg-amber-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                  )}
                 </label>
 
-                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 cursor-pointer transition-colors shadow-sm">
-                  <div className="flex items-center gap-2">
+                {/* 5. Izgaraya Yapış (Snap) */}
+                <label className="flex items-center justify-between p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 hover:border-indigo-300 cursor-pointer transition-all shadow-xs select-none">
+                  <div className="flex items-center gap-2.5">
                     <span className="text-sm">🧲</span>
                     <span className="text-foreground font-bold">Izgaraya Yapış (Snap)</span>
                   </div>
@@ -513,8 +605,15 @@ export function PropertiesPanel({
                     type="checkbox"
                     checked={viewport.snapToGrid}
                     onChange={(e) => setViewport((prev) => ({ ...prev, snapToGrid: e.target.checked }))}
-                    className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                    className="sr-only"
                   />
+                  {viewport.snapToGrid ? (
+                    <div className="w-5 h-5 rounded-md bg-emerald-600 flex items-center justify-center text-white shadow-xs shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0" />
+                  )}
                 </label>
               </div>
             )}
