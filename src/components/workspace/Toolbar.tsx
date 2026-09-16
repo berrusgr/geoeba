@@ -149,6 +149,7 @@ export function Toolbar({
   const [toolSearch, setToolSearch] = useState('');
   const [objectSearch, setObjectSearch] = useState('');
   const [sidebarTab, setSidebarTab] = useState<'araclar' | 'nesneler' | 'baglamlar' | 'gorunumler'>('araclar');
+  const [layoutTooltip, setLayoutTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
 
   const selectedObject = objects.find((o) => o.id === selectedObjectId);
 
@@ -1586,13 +1587,21 @@ export function Toolbar({
                       key={opt.mode}
                       type="button"
                       onClick={() => onLayoutModeChange?.(opt.mode)}
-                      className={`w-full p-3 rounded-2xl border text-left transition-all cursor-pointer select-none relative group ${
+                      title={opt.description}
+                      onMouseEnter={(e) => {
+                        setLayoutTooltip({ text: opt.description, x: e.clientX + 14, y: e.clientY + 10 });
+                      }}
+                      onMouseMove={(e) => {
+                        setLayoutTooltip({ text: opt.description, x: e.clientX + 14, y: e.clientY + 10 });
+                      }}
+                      onMouseLeave={() => setLayoutTooltip(null)}
+                      className={`w-full p-2.5 rounded-2xl border text-left transition-all cursor-pointer select-none relative group ${
                         isCurrent
                           ? 'bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/30'
                           : 'bg-muted/30 border-border/70 hover:bg-muted/60 hover:border-primary/40'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-xl shrink-0 transition-transform ${
                             isCurrent
@@ -1618,9 +1627,6 @@ export function Toolbar({
                               {opt.badge}
                             </span>
                           </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                            {opt.description}
-                          </p>
                         </div>
                       </div>
 
@@ -1633,6 +1639,16 @@ export function Toolbar({
                   );
                 })}
               </div>
+
+              {/* Fare ile Üzerine Gelince Çıkan Yüzen Açıklama Etiketi (Tooltip Label) */}
+              {layoutTooltip && (
+                <div
+                  style={{ left: layoutTooltip.x, top: layoutTooltip.y }}
+                  className="fixed z-[1000] pointer-events-none px-3 py-1.5 rounded-xl bg-slate-900/95 dark:bg-slate-100/95 text-white dark:text-slate-900 text-xs font-medium shadow-2xl border border-border/50 backdrop-blur-md max-w-xs animate-in fade-in-0 zoom-in-95 duration-100 select-none leading-tight"
+                >
+                  {layoutTooltip.text}
+                </div>
+              )}
             </div>
           )}
 
