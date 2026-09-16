@@ -25,9 +25,10 @@ import {
 import { formatTurkishNumber } from '@/math/coordinates';
 import { validateMathExpression, extractVariableNames, compileMathExpression, evaluateNumericInput } from '@/math/parser';
 import { functionDefinitionCycle, functionNameOwner, relabelFunction, undefinedFunctionCalls } from '@/math/functionNames';
-import { Trash2, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Calculator, Shapes, Table, Eye, EyeOff, Plus, Check, X, AlertCircle, Keyboard } from 'lucide-react';
+import { Trash2, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Calculator, Shapes, Table, Eye, EyeOff, Plus, Check, X, AlertCircle, Keyboard, ChevronsUpDown } from 'lucide-react';
 import { TOOL_SHORTCUTS } from './toolShortcuts';
 import { TOOL_GROUPS } from './toolDefinitions';
+import { TREE_TOOL_GROUPS, TreeToolItem } from './treeToolDefinitions';
 import { MathKeypad } from '@/components/workspace/MathKeypad';
 
 interface ToolbarProps {
@@ -41,8 +42,8 @@ interface ToolbarProps {
   onOpenAddObjectDialog?: () => void;
 }
 
-/** Araç panelinin ikon modu tercihi bu anahtarla saklanır. */
-const IKON_MODU_ANAHTARI = 'geoeba_arac_ikon_modu_v1';
+/** Araç panelinin daraltma/kapatma tercihi bu anahtarla saklanır. */
+const PANEL_KAPALI_ANAHTARI = 'geoeba_arac_paneli_kapali_v1';
 
 const TABLE_ROWS = 10;
 const TABLE_COLS = 3;
@@ -315,66 +316,47 @@ export function Toolbar({ onSelectTool,
     Array.from({ length: TABLE_ROWS }, () => Array.from({ length: TABLE_COLS }, () => ''))
   );
 
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(TOOL_GROUPS.map((g) => [g.groupName, g.groupName === 'Temel Çizim Araçları']))
-  );
+  // Sol araç paneli daraltma/kapatma durumu (kulakçık butonu ile açılıp kapanabilir)
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
 
-  /**
-   * Araç panelinin İKON MODU: yazılar gizlenir, araçlar iki sütunlu ikon ızgarası olur.
-   * Dar ekranlarda tuvale yer açar. Tercih tarayıcıda saklanır.
-   */
-  const [ikonModu, setIkonModu] = useState(false);
-
-  // Sunucuda localStorage yok; tercih bağlanma anında okunur.
   useEffect(() => {
     try {
-      setIkonModu(localStorage.getItem(IKON_MODU_ANAHTARI) === '1');
+      setIsPanelCollapsed(localStorage.getItem(PANEL_KAPALI_ANAHTARI) === '1');
     } catch {
-      /* depolama kapalıysa varsayılan (kapalı) kalır */
+      /* depolama kapalıysa varsayılan (açık) kalır */
     }
   }, []);
 
-  /**
-   * Kayıt, EFEKTLE değil doğrudan burada yapılır. Efektle yazıldığında, ilk
-   * render'da okuma henüz state'e yansımadığı için varsayılan değer kaydın
-   * üzerine yazılıyor ve tercih her yenilemede kayboluyordu.
-   */
-  const ikonModuDegistir = () => {
-    const yeni = !ikonModu;
-    setIkonModu(yeni);
-    try {
-      localStorage.setItem(IKON_MODU_ANAHTARI, yeni ? '1' : '0');
-    } catch {
-      /* yoksay */
-    }
+  const togglePanelCollapse = () => {
+    setIsPanelCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(PANEL_KAPALI_ANAHTARI, next ? '1' : '0');
+      } catch {
+        /* yoksay */
+      }
+      return next;
+    });
   };
 
-  /**
-   * İkon modunda üzerine gelinen araç ve baloncuğun EKRAN konumu.
-   *
-   * Baloncuk panelin içine çizilirse panelin `overflow` kırpması ve yığın bağlamı
-   * yüzünden tuvalin altında kalıyordu; bu yüzden portal ile doğrudan `body`'ye
-   * çizilir ve konumu düğmenin ekran dikdörtgeninden hesaplanır.
-   */
-  const [vurgulanan, setVurgulanan] = useState<{
-    id: string;
-    ad: string;
-    aciklama: string;
-    x: number;
-    y: number;
-  } | null>(null);
+  // Ağaç menü gruplarının açma/kapama durumu
+  const [expandedTreeGroups, setExpandedTreeGroups] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(TREE_TOOL_GROUPS.map((g) => [g.id, g.defaultExpanded ?? true]))
+  );
 
-  const baloncukAc = (el: HTMLElement, id: string, ad: string, aciklama: string) => {
-    const r = el.getBoundingClientRect();
-    setVurgulanan({ id, ad, aciklama, x: Math.round(r.right + 8), y: Math.round(r.top + r.height / 2) });
-  };
-  const baloncukKapat = (id: string) => setVurgulanan((v) => (v && v.id === id ? null : v));
-
-  const toggleGroup = (groupName: string) => {
-    setExpandedGroups((prev) => ({
+  const toggleTreeGroup = (groupId: string) => {
+    setExpandedTreeGroups((prev) => ({
       ...prev,
-      [groupName]: !(prev[groupName] ?? (groupName === 'Temel Çizim Araçları')),
+      [groupId]: !prev[groupId],
     }));
+  };
+
+  const toggleAllTreeGroups = () => {
+    const allExpanded = TREE_TOOL_GROUPS.every((g) => expandedTreeGroups[g.id] !== false);
+    const nextState = !allExpanded;
+    setExpandedTreeGroups(
+      Object.fromEntries(TREE_TOOL_GROUPS.map((g) => [g.id, nextState]))
+    );
   };
 
   const handleToolClick = (toolId: ToolMode) => {
@@ -719,7 +701,7 @@ export function Toolbar({ onSelectTool,
     }
   };
 
-  const normalizedSearch = (ikonModu ? '' : toolSearch).trim().toLocaleLowerCase('tr');
+  const normalizedSearch = toolSearch.trim().toLocaleLowerCase('tr');
 
   return (
     <div className="flex h-full min-h-0 bg-card/95 backdrop-blur-md border-r border-border select-none z-30 shadow-sm shrink-0 relative">
@@ -732,6 +714,7 @@ export function Toolbar({ onSelectTool,
           <button
             onClick={() => {
               setSidebarTab('cebir');
+              setIsPanelCollapsed(false);
             }}
             title="Cebir Görünümü (Cebirsel İfadeler & Fonksiyonlar)"
             className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
@@ -748,6 +731,7 @@ export function Toolbar({ onSelectTool,
           <button
             onClick={() => {
               setSidebarTab('araclar');
+              setIsPanelCollapsed(false);
             }}
             title="Araçlar Görünümü (Geometrik Çizim Araçları)"
             className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
@@ -764,6 +748,7 @@ export function Toolbar({ onSelectTool,
           <button
             onClick={() => {
               setSidebarTab('tablo');
+              setIsPanelCollapsed(false);
             }}
             title="Hesap Tablosu Görünümü (Spreadsheet)"
             className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
@@ -779,13 +764,11 @@ export function Toolbar({ onSelectTool,
       </div>
 
       {/* 2. SAĞ KISIM: İÇERİK PANELİ */}
-      {true && (
-        // İkon modunda panel daralır: amaç tuvale yer açmaktır.
-        <div
-          className={`h-full flex flex-col min-h-0 overflow-hidden transition-[width] duration-200 ${
-            ikonModu && sidebarTab === 'araclar' ? 'w-[144px]' : 'w-72 sm:w-80'
-          }`}
-        >
+      <div
+        className={`h-full flex flex-col min-h-0 overflow-hidden transition-[width] duration-200 ${
+          isPanelCollapsed ? 'w-0' : 'w-64 sm:w-72'
+        }`}
+      >
 
           {/* A. CEBİR GÖRÜNÜMÜ */}
           {sidebarTab === 'cebir' && (
@@ -1029,12 +1012,22 @@ export function Toolbar({ onSelectTool,
             </div>
           )}
 
-          {/* B. ARAÇLAR GÖRÜNÜMÜ */}
+          {/* B. ARAÇLAR GÖRÜNÜMÜ (Ağaç Menü — Tek Tek Alt Alta) */}
           {sidebarTab === 'araclar' && (
-            <div className="flex-1 flex flex-col min-h-0">
-              <div className={`p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0 ${ikonModu ? 'hidden' : ''}`}>
-                <h3 className="text-xs font-black text-foreground tracking-tight">Geometri Araçları</h3>
+            <div className="flex-1 flex flex-col min-h-0 bg-card">
+              {/* Başlık — Görseldeki "Çalışma Alanım" */}
+              <div className="p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
+                <h3 className="text-sm font-bold text-foreground tracking-tight">Çalışma Alanım</h3>
                 <div className="flex items-center gap-1 ml-auto">
+                  <button
+                    type="button"
+                    onClick={toggleAllTreeGroups}
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    title="Tüm Grupları Aç / Kapat"
+                    aria-label="Tüm Grupları Aç / Kapat"
+                  >
+                    <ChevronsUpDown className="w-3.5 h-3.5" />
+                  </button>
                   {objects.length > 0 && (
                     <button
                       onClick={() => requestClearAll('2D')}
@@ -1048,8 +1041,8 @@ export function Toolbar({ onSelectTool,
                 </div>
               </div>
 
-              {/* Arama Çubuğu — ikon modunda yer kaplamasın diye gizlenir */}
-              <div className={`p-3 border-b border-border/60 shrink-0 ${ikonModu ? 'hidden' : ''}`}>
+              {/* Arama Çubuğu */}
+              <div className="p-3 border-b border-border/60 shrink-0">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -1058,30 +1051,14 @@ export function Toolbar({ onSelectTool,
                     onChange={(e) => setToolSearch(e.target.value)}
                     placeholder="Araç veya komut ara..."
                     aria-label="Araç ara"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/60 border border-border/80 text-foreground text-xs placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border/80 text-foreground text-xs placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                 </div>
-
-                {/* Ölçü girerek nesne ekleme (yalnızca üst bileşen diyaloğu bağladıysa) */}
-                {onOpenAddObjectDialog && (
-                  <button
-                    type="button"
-                    onClick={onOpenAddObjectDialog}
-                    className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-black shadow-sm hover:opacity-90 transition-all cursor-pointer active:scale-95"
-                    title="Kesin ölçü girerek nesne ekleyin (nokta, doğru parçası, çember, üçgen, açı, fonksiyon)"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Nesne ekle</span>
-                  </button>
-                )}
               </div>
 
-              {/* Araç Grupları Listesi */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-3.5 scrollbar-thin">
-                {TOOL_GROUPS.filter((group) => group.groupName !== 'Düzenleme Araçları').map((group) => {
-                  const isExpanded =
-                    normalizedSearch !== '' ||
-                    (expandedGroups[group.groupName] ?? (group.groupName === 'Temel Çizim Araçları'));
+              {/* Ağaç Menü Araç Listesi (Alt Alta Tek Tek) */}
+              <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-3.5 scrollbar-thin">
+                {TREE_TOOL_GROUPS.map((group) => {
                   const matchingTools = group.tools.filter(
                     (t) =>
                       normalizedSearch === '' ||
@@ -1091,131 +1068,79 @@ export function Toolbar({ onSelectTool,
 
                   if (matchingTools.length === 0) return null;
 
+                  const isExpanded = normalizedSearch !== '' || (expandedTreeGroups[group.id] ?? true);
+
                   return (
-                    <div
-                      key={group.groupName}
-                      className={`rounded-2xl ${ikonModu ? 'p-1.5' : 'p-2.5'} ${group.containerBg} border ${group.containerBorder} space-y-2 shadow-sm transition-all`}
-                    >
-                      {/* Grup adı geniş ve dar görünümde okunabilir kalır */}
+                    <div key={group.id} className="space-y-1">
+                      {/* Grup Başlığı (Kapama/Açma Butonlu) */}
                       <button
-                        onClick={() => toggleGroup(group.groupName)}
-                        title={ikonModu ? group.groupName : undefined}
-                        className={`w-full flex items-center justify-between px-1.5 py-1 text-xs font-black ${group.headerTextColor} hover:opacity-80 transition-opacity cursor-pointer`}
+                        type="button"
+                        onClick={() => toggleTreeGroup(group.id)}
+                        className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-left transition-colors cursor-pointer hover:bg-muted/60 group select-none"
                         aria-expanded={isExpanded}
-                        aria-label={ikonModu ? group.groupName : undefined}
                       >
-                        {ikonModu ? (
-                          <div className="flex items-center justify-between w-full gap-1">
-                            <span className="min-w-0 text-[10px] font-black leading-snug text-left break-words">{group.groupName}</span>
-                            {isExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                            )}
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-black">{group.groupName}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${group.badgeBg}`}>
-                                {matchingTools.length}
-                              </span>
-                              {isExpanded ? (
-                                <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
-                              ) : (
-                                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                              )}
-                            </div>
-                          </>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-transform" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-transform" />
+                          )}
+                          <span className="text-xs font-bold text-foreground/90 group-hover:text-foreground">
+                            {group.name}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-muted-foreground/70 px-1.5 py-0.5 rounded-md bg-muted/80">
+                          {matchingTools.length}
+                        </span>
                       </button>
 
-                      {/* 2 Sütunlu Buton Kartları */}
+                      {/* Araçlar: Tek tek alt alta (Görseldeki gibi) */}
                       {isExpanded && (
-                        <div className={`grid grid-cols-2 ${ikonModu ? 'gap-1.5' : 'gap-2'} pt-0.5`}>
+                        <div className="flex flex-col space-y-0.5 pl-3">
                           {matchingTools.map((tool) => {
                             const isActive = activeTool === tool.id;
-
-                            // İKON MODU: kare ikon; üzerine gelince ad YANA doğru açılır
-                            if (ikonModu) {
-                              return (
-                                <div
-                                  key={tool.id}
-                                  onMouseEnter={(e) =>
-                                    baloncukAc(e.currentTarget, tool.id, tool.name, `${tool.description} Kısayol: ${TOOL_SHORTCUTS[tool.id]}`)
-                                  }
-                                  onMouseLeave={() => baloncukKapat(tool.id)}
-                                >
-                                  <button
-                                    onClick={() => handleToolClick(tool.id)}
-                                    onFocus={(e) =>
-                                      baloncukAc(
-                                        e.currentTarget.parentElement as HTMLElement,
-                                        tool.id,
-                                        tool.name,
-                                        tool.description
-                                      )
-                                    }
-                                    onBlur={() => baloncukKapat(tool.id)}
-                                    title={`${tool.name} (${TOOL_SHORTCUTS[tool.id]}) — ${tool.description}`}
-                                    aria-keyshortcuts={TOOL_SHORTCUTS[tool.id]}
-                                    aria-label={tool.name}
-                                    aria-pressed={isActive}
-                                    className={`relative w-full aspect-square min-w-9 min-h-9 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
-                                      isActive
-                                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-transparent shadow-sm ring-2 ring-primary/20'
-                                        : 'bg-card hover:bg-background text-foreground border-border/80 hover:border-primary/40 shadow-sm'
-                                    }`}
-                                  >
-                                    <div
-                                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 ${
-                                        isActive ? 'bg-white/20 text-white' : `${tool.iconBg} ${tool.iconColor}`
-                                      }`}
-                                    >
-                                      {tool.icon}
-                                    </div>
-                                    <kbd className="absolute bottom-0.5 inset-x-0 text-center text-[7px] leading-none opacity-70">{TOOL_SHORTCUTS[tool.id]}</kbd>
-                                  </button>
-
-                                </div>
-                              );
-                            }
+                            const shortcut = TOOL_SHORTCUTS[tool.id as ToolMode];
 
                             return (
                               <button
                                 key={tool.id}
-                                onClick={() => handleToolClick(tool.id)}
-                                title={`${tool.name} (${TOOL_SHORTCUTS[tool.id]}) — ${tool.description}`}
+                                type="button"
+                                onClick={() => {
+                                  if (tool.id === 'add_object') {
+                                    onOpenAddObjectDialog?.();
+                                    return;
+                                  }
+                                  handleToolClick(tool.id as ToolMode);
+                                }}
+                                title={`${tool.name}${shortcut ? ` (${shortcut})` : ''} — ${tool.description}`}
                                 aria-label={tool.name}
-                                aria-keyshortcuts={TOOL_SHORTCUTS[tool.id]}
                                 aria-pressed={isActive}
-                                className={`flex items-center gap-2.5 p-2.5 rounded-xl text-left transition-all duration-200 cursor-pointer border ${
+                                className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer select-none text-xs ${
                                   isActive
-                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent shadow-sm scale-105 ring-2 ring-primary/20'
-                                    : 'bg-card hover:bg-background text-foreground border-border/80 hover:border-primary/40 shadow-sm hover:-translate-y-0.5'
+                                    ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold shadow-xs ring-1 ring-blue-500/25'
+                                    : 'text-foreground/80 hover:bg-muted/70 hover:text-foreground font-medium'
                                 }`}
                               >
+                                {/* Orijinal Logolar/İkonlar (Değiştirilmeden Korundu) */}
                                 <div
-                                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 shrink-0 transition-transform ${
+                                  className={`w-5 h-5 flex items-center justify-center shrink-0 [&>svg]:w-4 [&>svg]:h-4 ${
                                     isActive
-                                      ? 'bg-white/20 text-white'
-                                      : `${tool.iconBg} ${tool.iconColor}`
+                                      ? 'text-blue-600 dark:text-blue-400'
+                                      : 'text-blue-600 dark:text-blue-400'
                                   }`}
                                 >
                                   {tool.icon}
                                 </div>
 
-                                {/* En fazla 2 satır: uzun adlar taşmak yerine kısaltılır, tamamı ipucunda */}
-                                <span
-                                  className={`text-[11px] sm:text-xs font-bold leading-tight break-words hyphens-auto ${
-                                    isActive ? 'text-white' : 'text-foreground'
-                                  }`}
-                                >
+                                <span className="flex-1 truncate leading-tight">
                                   {tool.name}
-                                  <kbd className="block text-[9px] leading-tight font-medium opacity-70 mt-1">{TOOL_SHORTCUTS[tool.id]}</kbd>
                                 </span>
+
+                                {shortcut && (
+                                  <kbd className="text-[9px] font-mono text-muted-foreground/60 opacity-60 ml-auto shrink-0">
+                                    {shortcut}
+                                  </kbd>
+                                )}
                               </button>
                             );
                           })}
@@ -1289,34 +1214,17 @@ export function Toolbar({ onSelectTool,
             </div>
           )}
         </div>
-      )}
 
-      {/* İkon modu baloncuğu — panelin taşma sınırından etkilenmesin diye body'ye çizilir */}
-      {ikonModu &&
-        vurgulanan &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            role="tooltip"
-            style={{ position: 'fixed', left: vurgulanan.x, top: vurgulanan.y, transform: 'translateY(-50%)', zIndex: 9999 }}
-            className="pointer-events-none animate-in fade-in slide-in-from-left-1 duration-150"
-          >
-            <div className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-white shadow-2xl border border-white/10 w-max max-w-[220px]">
-              <div className="text-[11px] font-black leading-tight">{vurgulanan.ad}</div>
-              <div className="text-[10px] text-slate-300 leading-snug mt-0.5">{vurgulanan.aciklama}</div>
-            </div>
-          </div>,
-          document.body
-        )}
-
-      {/* Kapatma Kulakçığı */}
+      {/* Kapatma / Açma Kulakçığı */}
       <button
-        onClick={ikonModuDegistir}
+        type="button"
+        onClick={togglePanelCollapse}
         className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-12 rounded-r-md bg-card border border-l-0 border-border/80 shadow-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer group z-40"
         style={{ left: '100%' }}
-        title={ikonModu ? 'Araç Çubuğunu Genişlet (›)' : 'Araç Çubuğunu Daralt (‹)'}
+        title={isPanelCollapsed ? 'Araç Panelini Aç (›)' : 'Araç Panelini Kapat (‹)'}
+        aria-label={isPanelCollapsed ? 'Araç Panelini Aç' : 'Araç Panelini Kapat'}
       >
-        {ikonModu ? (
+        {isPanelCollapsed ? (
           <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         ) : (
           <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
