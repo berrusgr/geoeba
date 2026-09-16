@@ -1054,6 +1054,18 @@ export function Toolbar({ onSelectTool,
                     className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border/80 text-foreground text-xs placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                 </div>
+
+                {onOpenAddObjectDialog && (
+                  <button
+                    type="button"
+                    onClick={onOpenAddObjectDialog}
+                    className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold shadow-xs hover:opacity-90 transition-all cursor-pointer active:scale-98"
+                    title="Kesin ölçü girerek nesne ekleyin (nokta, doğru parçası, çember, üçgen, açı, fonksiyon)"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Nesne ekle</span>
+                  </button>
+                )}
               </div>
 
               {/* Ağaç Menü Araç Listesi (Alt Alta Tek Tek) */}
