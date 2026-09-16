@@ -1911,17 +1911,6 @@ export function Canvas3D(props: Canvas3DProps) {
         >
           <Trash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
         </button>
-        <div className="w-6 h-px bg-border my-0.5" />
-        <button
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('geoeba:toggle-command-palette'));
-          }}
-          className="p-2.5 rounded-xl hover:bg-primary/10 text-primary transition-all cursor-pointer group"
-          title="Araç veya Komut Ara (Ctrl+K)"
-          aria-label="Araç veya Komut Ara"
-        >
-          <Search className="w-4 h-4 transition-transform group-hover:scale-110" />
-        </button>
       </div>
 
       {/* Oluşturma modu ipucu */}

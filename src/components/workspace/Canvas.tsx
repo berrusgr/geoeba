@@ -6958,20 +6958,6 @@ export function Canvas({
             >
               <Eraser className="w-4 h-4 transition-transform group-hover:scale-110" />
             </button>
-
-            <div className={isVert ? 'w-6 h-px bg-slate-200 dark:bg-slate-700 my-0.5' : 'h-6 w-px bg-slate-200 dark:bg-slate-700 mx-0.5'} />
-
-            {/* 13. Ara / Komut Asistanı */}
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('geoeba:toggle-command-palette'));
-              }}
-              title="Araç veya Komut Ara (Ctrl+K)"
-              aria-label="Araç veya Komut Ara"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer text-blue-600 hover:text-white hover:bg-blue-600 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white hover:shadow-md hover:shadow-blue-500/30 group"
-            >
-              <Search className="w-4 h-4 transition-transform group-hover:scale-110" />
-            </button>
           </div>
         );
       })()}
