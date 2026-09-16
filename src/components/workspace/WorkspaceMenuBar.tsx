@@ -328,7 +328,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Dosya
             </button>
             {activeMenu === 'dosya' && (
-              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -450,7 +450,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Düzenle
             </button>
             {activeMenu === 'duzenle' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   disabled={!canUndo}
                   onClick={() => {
@@ -560,7 +560,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Görünüm
             </button>
             {activeMenu === 'gorunum' && (
-              <div className="absolute top-full left-0 mt-1 w-56 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <div className="px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   Çalışma Alanı Düzenleri
                 </div>
@@ -696,7 +696,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Araçlar
             </button>
             {activeMenu === 'araclar' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -826,7 +826,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Ekle
             </button>
             {activeMenu === 'ekle' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
@@ -942,7 +942,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Ayarlar
             </button>
             {activeMenu === 'ayarlar' && (
-              <div className="absolute top-full left-0 mt-1 w-64 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 {/* 1. Çalışma Alanı Ayarları Ana Butonu */}
                 <button
                   onClick={() => {
@@ -1102,7 +1102,7 @@ export function WorkspaceMenuBar(props: WorkspaceMenuBarProps = {}) {
               Yardım
             </button>
             {activeMenu === 'yardim' && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-popover/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-border/80 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-border/90 py-1.5 z-[999] animate-in fade-in-0 zoom-in-95 duration-100">
                 <button
                   onClick={() => {
                     closeMenu();
