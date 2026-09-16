@@ -910,6 +910,8 @@ export function WorkspaceView() {
                 onOpenFunctionDialog={() => setIsFunctionDialogOpen(true)}
                 onOpenSliderDialog={() => setIsSliderDialogOpen(true)}
                 onOpenAddObjectDialog={() => setIsAddObjectDialogOpen(true)}
+                layoutMode={layoutMode}
+                onLayoutModeChange={setLayoutMode}
               />
             )}
           </div>

@@ -14,6 +14,7 @@ import {
   AngleObject,
   SliderObject,
   MeasurementObject,
+  PolygonObject,
 } from '@/types/math';
 import {
   generateNextPointLabel,
@@ -25,11 +26,47 @@ import {
 import { formatTurkishNumber } from '@/math/coordinates';
 import { validateMathExpression, extractVariableNames, compileMathExpression, evaluateNumericInput } from '@/math/parser';
 import { functionDefinitionCycle, functionNameOwner, relabelFunction, undefinedFunctionCalls } from '@/math/functionNames';
-import { Trash2, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Calculator, Shapes, Table, Eye, EyeOff, Plus, Check, X, AlertCircle, Keyboard, ChevronsUpDown } from 'lucide-react';
+import {
+  Trash2,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Calculator,
+  Shapes,
+  Eye,
+  EyeOff,
+  Plus,
+  Check,
+  X,
+  AlertCircle,
+  Keyboard,
+  ChevronsUpDown,
+  Layers,
+  Sparkles,
+  LayoutGrid,
+  Box,
+  Columns2,
+  Columns3,
+  PanelLeft,
+  PanelRight,
+  Lock,
+  Unlock,
+  Copy,
+  SlidersHorizontal,
+  Square,
+  Circle,
+  MousePointer,
+  Pencil,
+} from 'lucide-react';
 import { TOOL_SHORTCUTS } from './toolShortcuts';
 import { TOOL_GROUPS } from './toolDefinitions';
 import { TREE_TOOL_GROUPS, TreeToolItem } from './treeToolDefinitions';
 import { MathKeypad } from '@/components/workspace/MathKeypad';
+import { LayoutMode } from './PropertiesPanel';
 
 interface ToolbarProps {
   onSelectTool?: (tool: ToolMode) => void;
@@ -40,6 +77,8 @@ interface ToolbarProps {
    * (WorkspaceView bu prop'u geçtiğinde AddObjectModal'ın 2D sekmeleri erişilebilir olur.)
    */
   onOpenAddObjectDialog?: () => void;
+  layoutMode?: LayoutMode;
+  onLayoutModeChange?: (mode: LayoutMode) => void;
 }
 
 /** Araç panelinin daraltma/kapatma tercihi bu anahtarla saklanır. */
@@ -78,8 +117,14 @@ function matchNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function Toolbar({ onSelectTool,
-  onOpenFunctionDialog, onOpenSliderDialog, onOpenAddObjectDialog }: ToolbarProps) {
+export function Toolbar({
+  onSelectTool,
+  onOpenFunctionDialog,
+  onOpenSliderDialog,
+  onOpenAddObjectDialog,
+  layoutMode = '2d_only',
+  onLayoutModeChange,
+}: ToolbarProps) {
   const {
     activeTool,
     setActiveTool,
@@ -97,10 +142,15 @@ export function Toolbar({ onSelectTool,
     requestClearAll,
     openRegularPolygonDialog,
     recordHistory,
+    selectedObjectId,
+    setSelectedObjectId,
   } = useWorkspace();
 
   const [toolSearch, setToolSearch] = useState('');
-  const [sidebarTab, setSidebarTab] = useState<'cebir' | 'araclar' | 'tablo'>('araclar');
+  const [objectSearch, setObjectSearch] = useState('');
+  const [sidebarTab, setSidebarTab] = useState<'araclar' | 'nesneler' | 'baglamlar' | 'gorunumler'>('araclar');
+
+  const selectedObject = objects.find((o) => o.id === selectedObjectId);
 
   // Cebir Input State
   const [algebraInput, setAlgebraInput] = useState('');
@@ -701,40 +751,222 @@ export function Toolbar({ onSelectTool,
     }
   };
 
+  const PRESET_COLORS = [
+    { name: 'Mavi', hex: '#3b82f6' },
+    { name: 'İndigo', hex: '#6366f1' },
+    { name: 'Zümrüt', hex: '#10b981' },
+    { name: 'Kırmızı', hex: '#ef4444' },
+    { name: 'Kehribar', hex: '#f59e0b' },
+    { name: 'Mor', hex: '#8b5cf6' },
+    { name: 'Camgöbeği', hex: '#06b6d4' },
+    { name: 'Koyu', hex: '#334155' },
+  ];
+
+  const LAYOUT_OPTIONS: Array<{
+    mode: LayoutMode;
+    name: string;
+    badge: string;
+    description: string;
+    icon: React.ReactNode;
+  }> = [
+    {
+      mode: '2d_only',
+      name: '2D Düzlem',
+      badge: '2D',
+      description: 'Yalnızca 2 boyutlu geometri çizim alanı',
+      icon: <Square className="w-5 h-5 text-blue-500" />,
+    },
+    {
+      mode: '3d_only',
+      name: '3D Uzay',
+      badge: '3D',
+      description: 'Yalnızca 3 boyutlu katı cisim ve uzay stüdyosu',
+      icon: <Box className="w-5 h-5 text-purple-500" />,
+    },
+    {
+      mode: '2d_3d',
+      name: '2D + 3D',
+      badge: '2D + 3D',
+      description: 'Sol tarafta 2D çizim, sağ tarafta 3D uzay yan yana',
+      icon: <Columns2 className="w-5 h-5 text-indigo-500" />,
+    },
+    {
+      mode: 'default',
+      name: 'Cebir',
+      badge: 'Cebir',
+      description: 'Cebirsel ifadeler ve fonksiyonlar çalışma alanı',
+      icon: <Calculator className="w-5 h-5 text-emerald-500" />,
+    },
+    {
+      mode: 'algebra_2d',
+      name: '2D + Cebir',
+      badge: '2D + Cebir',
+      description: '2D geometri düzlemi ile cebir giriş paneli',
+      icon: <PanelLeft className="w-5 h-5 text-cyan-500" />,
+    },
+    {
+      mode: 'algebra_3d',
+      name: '3D + Cebir',
+      badge: '3D + Cebir',
+      description: '3D uzay stüdyosu ile cebir giriş paneli',
+      icon: <PanelRight className="w-5 h-5 text-violet-500" />,
+    },
+    {
+      mode: 'three_col',
+      name: '2D + 3D + Cebir',
+      badge: 'Üçü Bir Arada',
+      description: 'Cebir listesi, 2D geometri ve 3D uzay üç sütun halinde',
+      icon: <Columns3 className="w-5 h-5 text-rose-500" />,
+    },
+  ];
+
+  const filteredObjects = objects.filter((obj) => {
+    if (!objectSearch.trim()) return true;
+    const q = objectSearch.trim().toLocaleLowerCase('tr');
+    const label = (obj.label || '').toLocaleLowerCase('tr');
+    const details = getObjectDetails(obj).toLocaleLowerCase('tr');
+    const type = obj.type.toLocaleLowerCase('tr');
+    return label.includes(q) || details.includes(q) || type.includes(q);
+  });
+
+  const getExistingPointLabels = () => objects.map((o) => o.label || '').filter(Boolean);
+
+  const addPointReflectOrigin = (pt: PointObject) => {
+    const label = generateNextPointLabel(getExistingPointLabels());
+    addObject({
+      id: `point-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type: 'point',
+      x: -pt.x,
+      y: -pt.y,
+      label,
+      color: pt.color || '#3b82f6',
+      size: pt.size || 5,
+      isIndependent: true,
+      visible: true,
+      showLabel: true,
+      createdAt: Date.now(),
+    });
+    setHintMessage(`${label} noktası (${formatTurkishNumber(-pt.x, 2)}; ${formatTurkishNumber(-pt.y, 2)}) orijine göre simetrik olarak eklendi.`);
+  };
+
+  const addPointReflectX = (pt: PointObject) => {
+    const label = generateNextPointLabel(getExistingPointLabels());
+    addObject({
+      id: `point-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type: 'point',
+      x: pt.x,
+      y: -pt.y,
+      label,
+      color: pt.color || '#3b82f6',
+      size: pt.size || 5,
+      isIndependent: true,
+      visible: true,
+      showLabel: true,
+      createdAt: Date.now(),
+    });
+    setHintMessage(`${label} noktası (${formatTurkishNumber(pt.x, 2)}; ${formatTurkishNumber(-pt.y, 2)}) x eksenine göre simetrik olarak eklendi.`);
+  };
+
+  const addPointReflectY = (pt: PointObject) => {
+    const label = generateNextPointLabel(getExistingPointLabels());
+    addObject({
+      id: `point-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type: 'point',
+      x: -pt.x,
+      y: pt.y,
+      label,
+      color: pt.color || '#3b82f6',
+      size: pt.size || 5,
+      isIndependent: true,
+      visible: true,
+      showLabel: true,
+      createdAt: Date.now(),
+    });
+    setHintMessage(`${label} noktası (${formatTurkishNumber(-pt.x, 2)}; ${formatTurkishNumber(pt.y, 2)}) y eksenine göre simetrik olarak eklendi.`);
+  };
+
+  const addSegmentMidpoint = (seg: SegmentObject) => {
+    const p1 = objects.find((o) => o.id === seg.startPointId && o.type === 'point') as PointObject | undefined;
+    const p2 = objects.find((o) => o.id === seg.endPointId && o.type === 'point') as PointObject | undefined;
+    if (!p1 || !p2) return;
+    const mx = (p1.x + p2.x) / 2;
+    const my = (p1.y + p2.y) / 2;
+    const label = generateNextPointLabel(getExistingPointLabels());
+    addObject({
+      id: `point-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type: 'point',
+      x: mx,
+      y: my,
+      label,
+      color: '#10b981',
+      size: 5,
+      isIndependent: true,
+      visible: true,
+      showLabel: true,
+      createdAt: Date.now(),
+    });
+    setHintMessage(`[${p1.label}${p2.label}] doğru parçasının orta noktası ${label} eklendi.`);
+  };
+
+  const addPolygonCentroid = (poly: PolygonObject) => {
+    const pts = (poly.pointIds || [])
+      .map((id) => objects.find((o) => o.id === id && o.type === 'point') as PointObject | undefined)
+      .filter(Boolean) as PointObject[];
+    if (pts.length < 3) return;
+    const avgX = pts.reduce((sum, p) => sum + p.x, 0) / pts.length;
+    const avgY = pts.reduce((sum, p) => sum + p.y, 0) / pts.length;
+    const label = 'G';
+    addObject({
+      id: `point-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      type: 'point',
+      x: avgX,
+      y: avgY,
+      label,
+      color: '#8b5cf6',
+      size: 6,
+      isIndependent: true,
+      visible: true,
+      showLabel: true,
+      createdAt: Date.now(),
+    });
+    setHintMessage(`${poly.label || 'Çokgenin'} ağırlık merkezi ${label} (${formatTurkishNumber(avgX, 2)}; ${formatTurkishNumber(avgY, 2)}) eklendi.`);
+  };
+
+  const duplicateObject = (obj: MathObject) => {
+    if (obj.type === 'point') {
+      const pt = obj as PointObject;
+      const label = generateNextPointLabel(getExistingPointLabels());
+      addObject({
+        ...pt,
+        id: `point-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        x: pt.x + 1,
+        y: pt.y + 1,
+        label,
+        createdAt: Date.now(),
+      });
+      setHintMessage(`${label} noktası çoğaltıldı.`);
+    } else {
+      setHintMessage(`Nesne kopyalandı.`);
+    }
+  };
+
   const normalizedSearch = toolSearch.trim().toLocaleLowerCase('tr');
 
   return (
     <div className="flex h-full min-h-0 bg-card/95 backdrop-blur-md border-r border-border select-none z-30 shadow-sm shrink-0 relative">
 
-      {/* 1. SOL DİKEY MENÜ SEÇİCİ (GeoGebra Birebir Stil) */}
+      {/* 1. SOL DİKEY MENÜ SEÇİCİ */}
       <div className="w-[68px] shrink-0 h-full border-r border-border flex flex-col items-center py-4 justify-between bg-slate-50/70 dark:bg-slate-900/60">
-        {/* Üst Kısım: Cebir, Araçlar, Tablo Butonları */}
+        {/* Üst Kısım: Araçlar, Nesneler, Bağlamlar, Görünümler Butonları */}
         <div className="flex flex-col items-center gap-3 w-full px-1">
-          {/* Cebir Sekmesi */}
-          <button
-            onClick={() => {
-              setSidebarTab('cebir');
-              setIsPanelCollapsed(false);
-            }}
-            title="Cebir Görünümü (Cebirsel İfadeler & Fonksiyonlar)"
-            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-              sidebarTab === 'cebir'
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <Calculator className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] font-bold leading-none">Cebir</span>
-          </button>
-
-          {/* Araçlar Sekmesi */}
+          {/* 1. Araçlar Sekmesi (Varsayılan) */}
           <button
             onClick={() => {
               setSidebarTab('araclar');
               setIsPanelCollapsed(false);
             }}
-            title="Araçlar Görünümü (Geometrik Çizim Araçları)"
-            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+            title="Araçlar (Geometrik Çizim ve İnşa Araçları)"
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
               sidebarTab === 'araclar'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -744,21 +976,69 @@ export function Toolbar({ onSelectTool,
             <span className="text-[10px] font-bold leading-none">Araçlar</span>
           </button>
 
-          {/* Tablo Sekmesi */}
+          {/* 2. Nesneler Sekmesi */}
           <button
             onClick={() => {
-              setSidebarTab('tablo');
+              setSidebarTab('nesneler');
               setIsPanelCollapsed(false);
             }}
-            title="Hesap Tablosu Görünümü (Spreadsheet)"
-            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-              sidebarTab === 'tablo'
+            title="Nesneler (Sahnedeki Tüm Şekiller ve Konum Bilgileri)"
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
+              sidebarTab === 'nesneler'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            <Table className="w-5 h-5 shrink-0" />
-            <span className="text-[9.5px] font-bold leading-tight text-center">Hesap Tablosu</span>
+            <Layers className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] font-bold leading-none">Nesneler</span>
+            {objects.length > 0 && (
+              <span
+                className={`absolute -top-1 -right-1 text-[9px] font-bold px-1.5 py-0.2 rounded-full border shadow-xs ${
+                  sidebarTab === 'nesneler'
+                    ? 'bg-white text-primary border-primary/30 dark:bg-slate-950 dark:text-primary'
+                    : 'bg-primary text-primary-foreground border-border'
+                }`}
+              >
+                {objects.length}
+              </span>
+            )}
+          </button>
+
+          {/* 3. Bağlamlar Sekmesi */}
+          <button
+            onClick={() => {
+              setSidebarTab('baglamlar');
+              setIsPanelCollapsed(false);
+            }}
+            title="Bağlamlar (Seçili Nesneye Özel İşlemler & Ayarlar)"
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
+              sidebarTab === 'baglamlar'
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <Sparkles className="w-5 h-5 shrink-0" />
+            <span className="text-[9.5px] font-bold leading-none">Bağlamlar</span>
+            {selectedObject && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+            )}
+          </button>
+
+          {/* 4. Görünümler Sekmesi */}
+          <button
+            onClick={() => {
+              setSidebarTab('gorunumler');
+              setIsPanelCollapsed(false);
+            }}
+            title="Görünümler (2D, 3D, Cebir ve Çoklu Bölmeler)"
+            className={`w-14 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
+              sidebarTab === 'gorunumler'
+                ? 'bg-primary text-primary-foreground shadow-md'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <LayoutGrid className="w-5 h-5 shrink-0" />
+            <span className="text-[9.5px] font-bold leading-none">Görünümler</span>
           </button>
         </div>
       </div>
@@ -770,11 +1050,17 @@ export function Toolbar({ onSelectTool,
         }`}
       >
 
-          {/* A. CEBİR GÖRÜNÜMÜ */}
-          {sidebarTab === 'cebir' && (
+          {/* A. NESNELER GÖRÜNÜMÜ */}
+          {sidebarTab === 'nesneler' && (
             <div className="flex-1 flex flex-col min-h-0 bg-card">
-              <div className="p-3.5 border-b border-border/80 flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-black text-foreground">Cebir Girişleri</h3>
+              {/* Başlık */}
+              <div className="p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-foreground tracking-tight">Sahne Nesneleri</h3>
+                  <span className="text-[10px] font-bold text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
+                    {objects.length}
+                  </span>
+                </div>
                 {objects.length > 0 && (
                   <button
                     onClick={() => requestClearAll('2D')}
@@ -787,235 +1073,556 @@ export function Toolbar({ onSelectTool,
                 )}
               </div>
 
-              {/* Obje Listesi */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-thin">
+              {/* Arama Kutusu */}
+              <div className="p-3 border-b border-border/60 shrink-0">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={objectSearch}
+                    onChange={(e) => setObjectSearch(e.target.value)}
+                    placeholder="Nesne ara (örn: A, doğru, çember)..."
+                    aria-label="Nesne ara"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border/80 text-foreground text-xs placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Nesne Listesi (Tek Tek Konum ve Ad Bilgisi) */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
                 {objects.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground text-xs font-medium">
-                    Masada henüz nesne yok.<br/>Nesne çizin veya aşağıdan fonksiyon girin.
+                  <div className="text-center py-12 px-4 text-muted-foreground text-xs space-y-3">
+                    <Box className="w-10 h-10 mx-auto text-muted-foreground/40" />
+                    <p className="font-medium">
+                      Sahnede henüz nesne yok.<br />Çizim araçlarını kullanarak şekiller ekleyin.
+                    </p>
+                    <button
+                      onClick={() => setSidebarTab('araclar')}
+                      className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Shapes className="w-3.5 h-3.5" />
+                      <span>Araçlara Git</span>
+                    </button>
+                  </div>
+                ) : filteredObjects.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground text-xs font-medium">
+                    Arama kriterine uygun nesne bulunamadı.
                   </div>
                 ) : (
-                  objects.map((obj) => {
+                  filteredObjects.map((obj) => {
+                    const isSelected = selectedObjectId === obj.id;
                     const bicim = satirBicimi(obj);
-                    const duzenlenebilir = bicim !== null;
                     const duzenleniyor = editingRowId === obj.id;
-                    return (
-                    <div key={obj.id} className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 border border-border/50 hover:bg-muted/70 transition-colors">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        {/* Görünürlük Düğmesi */}
-                        <button
-                          onClick={() => updateObject(obj.id, { visible: obj.visible !== false ? false : true })}
-                          className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
-                          title={obj.visible !== false ? 'Gizle' : 'Göster'}
-                        >
-                          {obj.visible !== false ? <Eye className="w-3.5 h-3.5 text-primary" /> : <EyeOff className="w-3.5 h-3.5" />}
-                        </button>
 
-                        {duzenleniyor ? (
-                          // DÜZENLEME KİPİ: fonksiyonda ifade, noktada x ve y girilebilir
-                          <form
-                            className="flex items-center gap-1 min-w-0 flex-1"
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              commitRowEdit(obj);
-                            }}
-                          >
-                            <span className="text-primary text-xs font-black shrink-0">{obj.label}:</span>
-                            {obj.type === 'function' ? (
-                              <input
-                                autoFocus
-                                type="text"
-                                value={rowDraft.a}
-                                onChange={(e) => {
-                                  setRowDraft({ ...rowDraft, a: e.target.value });
-                                  if (rowError) setRowError(null);
+                    return (
+                      <div
+                        key={obj.id}
+                        onClick={() => setSelectedObjectId(obj.id)}
+                        className={`p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
+                          isSelected
+                            ? 'bg-primary/10 border-primary/40 shadow-xs ring-1 ring-primary/20'
+                            : 'bg-muted/30 border-border/60 hover:bg-muted/60'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {/* Görünürlük Düğmesi */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateObject(obj.id, { visible: obj.visible !== false ? false : true });
+                              }}
+                              className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer p-0.5"
+                              title={obj.visible !== false ? 'Gizle' : 'Göster'}
+                            >
+                              {obj.visible !== false ? (
+                                <Eye className="w-3.5 h-3.5 text-primary" />
+                              ) : (
+                                <EyeOff className="w-3.5 h-3.5 text-muted-foreground/60" />
+                              )}
+                            </button>
+
+                            {/* Renk Noktası */}
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0 border border-black/10 shadow-xs"
+                              style={{ backgroundColor: obj.color || '#3b82f6' }}
+                            />
+
+                            {/* Nesne Adı */}
+                            <span className="font-bold text-xs text-foreground shrink-0">
+                              {obj.label || obj.type}:
+                            </span>
+
+                            {/* Konum / Boyut / İfade Bilgisi */}
+                            {duzenleniyor ? (
+                              <form
+                                className="flex items-center gap-1 min-w-0 flex-1"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  commitRowEdit(obj);
                                 }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Escape') {
-                                    e.stopPropagation();
-                                    cancelRowEdit();
-                                  }
-                                }}
-                                aria-invalid={rowError !== null}
-                                aria-label="Fonksiyon ifadesi"
-                                className={`flex-1 min-w-0 px-2 py-1 rounded-lg bg-background border text-[11px] font-mono outline-none focus:border-primary ${
-                                  rowError ? 'border-destructive' : 'border-border'
-                                }`}
-                              />
-                            ) : (
-                              <>
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <input
                                   autoFocus
                                   type="text"
-                                  inputMode="decimal"
                                   value={rowDraft.a}
-                                  onChange={(e) => {
-                                    setRowDraft({ ...rowDraft, a: e.target.value });
-                                    if (rowError) setRowError(null);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Escape') {
-                                      e.stopPropagation();
-                                      cancelRowEdit();
-                                    }
-                                  }}
-                                  aria-label={bicim?.mod === 'ifade' ? 'İfade' : bicim?.aEtiket}
-                                  className={`w-16 min-w-0 px-1.5 py-1 rounded-lg bg-background border text-[11px] font-mono text-center outline-none focus:border-primary ${
-                                    rowError ? 'border-destructive' : 'border-border'
-                                  }`}
+                                  onChange={(e) => setRowDraft({ ...rowDraft, a: e.target.value })}
+                                  className="w-full px-1.5 py-0.5 rounded bg-background border text-[11px] font-mono outline-none focus:border-primary"
                                 />
-                                {bicim?.mod === 'tekli' && (
-                                  <span className="text-[10px] text-muted-foreground">{bicim.birim}</span>
-                                )}
-                                {bicim?.mod === 'ikili' && (
-                                  <>
-                                <span className="text-[10px] text-muted-foreground">{bicim.ayirac}</span>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={rowDraft.b}
-                                  onChange={(e) => {
-                                    setRowDraft({ ...rowDraft, b: e.target.value });
-                                    if (rowError) setRowError(null);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Escape') {
-                                      e.stopPropagation();
-                                      cancelRowEdit();
-                                    }
-                                  }}
-                                  aria-label={bicim.bEtiket}
-                                  className={`w-16 min-w-0 px-1.5 py-1 rounded-lg bg-background border text-[11px] font-mono text-center outline-none focus:border-primary ${
-                                    rowError ? 'border-destructive' : 'border-border'
-                                  }`}
-                                />
-                                  </>
-                                )}
-                              </>
+                                <button type="submit" className="p-1 rounded bg-primary text-primary-foreground text-[10px]">
+                                  <Check className="w-3 h-3" />
+                                </button>
+                                <button type="button" onClick={cancelRowEdit} className="p-1 rounded bg-muted text-[10px]">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </form>
+                            ) : (
+                              <span
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  startRowEdit(obj);
+                                }}
+                                title="Değeri düzenlemek için çift tıklayın"
+                                className="text-[11px] font-mono text-muted-foreground truncate hover:text-foreground"
+                              >
+                                {getObjectDetails(obj)}
+                              </span>
                             )}
-                            <button
-                              type="submit"
-                              title="Uygula (Enter)"
-                              className="p-1 rounded hover:bg-emerald-500/10 text-emerald-600 shrink-0 cursor-pointer"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={cancelRowEdit}
-                              title="Vazgeç (Esc)"
-                              className="p-1 rounded hover:bg-muted text-muted-foreground shrink-0 cursor-pointer"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </form>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => duzenlenebilir && startRowEdit(obj)}
-                            disabled={!duzenlenebilir}
-                            title={duzenlenebilir ? 'Değeri düzenlemek için tıklayın' : undefined}
-                            className={`text-xs font-black text-foreground truncate leading-tight text-left min-w-0 ${
-                              duzenlenebilir ? 'cursor-text hover:underline decoration-dotted underline-offset-2' : 'cursor-default'
-                            }`}
-                          >
-                            <span className="text-primary mr-1">{obj.label}:</span>
-                            <span className="font-mono text-muted-foreground text-[10px]">
-                              {getObjectDetails(obj)}
-                            </span>
-                          </button>
-                        )}
-                      </div>
+                          </div>
 
-                      {!duzenleniyor && (
-                        <button
-                          onClick={() => deleteObject(obj.id)}
-                          className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors shrink-0 cursor-pointer"
-                          title="Sil"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
+                          {/* Aksiyon Butonları */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {/* Bağlam sekmesine git */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedObjectId(obj.id);
+                                setSidebarTab('baglamlar');
+                              }}
+                              className="p-1 rounded-lg hover:bg-background text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                              title="Bu nesnenin bağlamsal işlemlerini aç"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Silme Butonu */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteObject(obj.id);
+                              }}
+                              className="p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                              title="Nesneyi Sil"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })
                 )}
               </div>
-
-              {rowError && (
-                <div role="alert" className="px-3 pb-2 -mt-1 flex items-start gap-1 text-[11px] text-destructive font-semibold">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <span>{rowError}</span>
-                </div>
-              )}
-
-              {/* Cebir Fonksiyon / Formül Girişi */}
-              <form
-                onSubmit={handleAlgebraSubmit}
-                className="p-3 border-t border-border shrink-0 space-y-2 bg-muted/15"
-              >
-                <label
-                  htmlFor="algebra-expression-input"
-                  className="block text-[10px] font-black text-muted-foreground uppercase tracking-wider"
-                >
-                  Matematiksel İfade Ekle (f(x))
-                </label>
-                <div className="flex gap-1.5">
-                  <input
-                    id="algebra-expression-input"
-                    ref={algebraInputRef}
-                    type="text"
-                    value={algebraInput}
-                    onChange={(e) => {
-                      setAlgebraInput(e.target.value);
-                      if (algebraError) setAlgebraError(null);
-                    }}
-                    placeholder="Örn: x^2 - 2,  a = 2,  y = sin(x)"
-                    aria-invalid={algebraError !== null}
-                    className={`flex-1 px-3 py-2 rounded-xl bg-background border text-xs outline-none focus:border-primary placeholder:text-muted-foreground font-mono ${
-                      algebraError ? 'border-destructive' : 'border-border'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setKlavyeAcik((a) => !a)}
-                    aria-expanded={klavyeAcik}
-                    className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-                      klavyeAcik
-                        ? 'bg-primary/15 border-primary/40 text-primary'
-                        : 'bg-muted/60 border-border text-muted-foreground hover:text-foreground'
-                    }`}
-                    title={klavyeAcik ? 'Hesap makinesi klavyesini kapat' : 'Hesap makinesi klavyesini aç'}
-                    aria-label="Hesap makinesi klavyesi"
-                  >
-                    <Keyboard className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="submit"
-                    className="p-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors cursor-pointer"
-                    title="Ekle (Enter)"
-                    aria-label="İfadeyi ekle"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {klavyeAcik && (
-                  <MathKeypad onInsert={klavyeEkle} onDelete={klavyeSil} onSubmit={algebraGonder} />
-                )}
-                {algebraError && (
-                  <div className="flex items-start gap-1 text-[11px] text-destructive" role="alert">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                    <span>{algebraError}</span>
-                  </div>
-                )}
-              </form>
             </div>
           )}
 
-          {/* B. ARAÇLAR GÖRÜNÜMÜ (Ağaç Menü — Tek Tek Alt Alta) */}
+          {/* B. BAĞLAMLAR GÖRÜNÜMÜ */}
+          {sidebarTab === 'baglamlar' && (
+            <div className="flex-1 flex flex-col min-h-0 bg-card">
+              <div className="p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-bold text-foreground tracking-tight">Nesne Bağlamı</h3>
+                </div>
+                {selectedObject && (
+                  <button
+                    onClick={() => setSelectedObjectId(null)}
+                    className="text-[10px] font-bold text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    Seçimi Kaldır
+                  </button>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-thin">
+                {!selectedObject ? (
+                  <div className="text-center py-14 px-4 text-muted-foreground text-xs space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-xs">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-foreground text-sm">Seçili Nesne Yok</h4>
+                      <p className="mt-1 text-muted-foreground/80 leading-relaxed">
+                        Tuvalden veya <strong>Nesneler</strong> sekmesinden bir nesne seçin.
+                        Seçilen nesneye özel hesaplamalar, simetri ve stil işlemleri burada belirecektir.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSidebarTab('nesneler')}
+                      className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-all cursor-pointer inline-flex items-center gap-2"
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Nesneler Listesini Gör</span>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Seçili Nesne Başlık Kartı */}
+                    <div className="p-3 rounded-2xl bg-muted/40 border border-border/80 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-3 h-3 rounded-full shrink-0 border border-black/10 shadow-xs"
+                            style={{ backgroundColor: selectedObject.color || '#3b82f6' }}
+                          />
+                          <span className="font-bold text-sm text-foreground">
+                            {selectedObject.label || selectedObject.type}
+                          </span>
+                          <span className="text-[10px] font-semibold text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
+                            {selectedObject.type}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          {/* Kilitleme / Sabitleme */}
+                          <button
+                            onClick={() =>
+                              updateObject(selectedObject.id, {
+                                locked: !(selectedObject as PointObject).locked,
+                              })
+                            }
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              (selectedObject as PointObject).locked
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                            title={(selectedObject as PointObject).locked ? 'Kilidi Aç' : 'Konumu Kilitle / Sabitle'}
+                          >
+                            {(selectedObject as PointObject).locked ? (
+                              <Lock className="w-3.5 h-3.5" />
+                            ) : (
+                              <Unlock className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
+                          {/* Görünürlük */}
+                          <button
+                            onClick={() =>
+                              updateObject(selectedObject.id, {
+                                visible: selectedObject.visible !== false ? false : true,
+                              })
+                            }
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            title={selectedObject.visible !== false ? 'Gizle' : 'Göster'}
+                          >
+                            {selectedObject.visible !== false ? (
+                              <Eye className="w-3.5 h-3.5 text-primary" />
+                            ) : (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Ölçü & Konum Detayı */}
+                      <div className="text-xs font-mono text-muted-foreground bg-background/80 p-2 rounded-xl border border-border/50">
+                        {getObjectDetails(selectedObject)}
+                      </div>
+                    </div>
+
+                    {/* Renk Paleti */}
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+                        Nesne Rengi
+                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {PRESET_COLORS.map((c) => (
+                          <button
+                            key={c.hex}
+                            onClick={() => updateObject(selectedObject.id, { color: c.hex })}
+                            className={`w-6 h-6 rounded-full transition-transform cursor-pointer shadow-xs ${
+                              (selectedObject.color || '#3b82f6') === c.hex
+                                ? 'scale-125 ring-2 ring-primary ring-offset-2'
+                                : 'hover:scale-110'
+                            }`}
+                            style={{ backgroundColor: c.hex }}
+                            title={c.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Türe Özel Bağlam İşlemleri */}
+                    <div className="space-y-2 pt-1">
+                      <span className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+                        Bağlamsal İşlemler
+                      </span>
+
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {/* Noktaya Özel İşlemler */}
+                        {selectedObject.type === 'point' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => addPointReflectOrigin(selectedObject as PointObject)}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-primary" />
+                              <span>Orijine Göre Simetriğini Ekle</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => addPointReflectX(selectedObject as PointObject)}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Columns2 className="w-3.5 h-3.5 text-primary" />
+                              <span>X Eksenine Göre Yansıt</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => addPointReflectY(selectedObject as PointObject)}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Columns2 className="w-3.5 h-3.5 text-primary rotate-90" />
+                              <span>Y Eksenine Göre Yansıt</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Doğru Parçasına Özel İşlemler */}
+                        {selectedObject.type === 'segment' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => addSegmentMidpoint(selectedObject as SegmentObject)}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Orta Noktayı Bul & Ekle</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveTool('perp_bisector')}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Shapes className="w-3.5 h-3.5 text-indigo-500" />
+                              <span>Orta Dikme Çizimini Başlat</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveTool('measure_distance')}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Calculator className="w-3.5 h-3.5 text-blue-500" />
+                              <span>Uzunluk Ölçümü Aracı</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Çokgene Özel İşlemler */}
+                        {selectedObject.type === 'polygon' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => addPolygonCentroid(selectedObject as PolygonObject)}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5 text-purple-500" />
+                              <span>Ağırlık Merkezini (G) Ekle</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveTool('measure_area')}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Calculator className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Alanı Hesapla</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveTool('measure_perimeter')}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Shapes className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Çevre Uzunluğunu Hesapla</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Çembere Özel İşlemler */}
+                        {selectedObject.type === 'circle' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTool('measure_area')}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Calculator className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Dairenin Alanını Ölç</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveTool('measure_perimeter')}
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                            >
+                              <Circle className="w-3.5 h-3.5 text-violet-500" />
+                              <span>Çevre Uzunluğunu Ölç</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Açıya Özel İşlemler */}
+                        {selectedObject.type === 'angle' && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTool('angle_bisector')}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                          >
+                            <Shapes className="w-3.5 h-3.5 text-primary" />
+                            <span>Açıortay Çizim Aracını Seç</span>
+                          </button>
+                        )}
+
+                        {/* Fonksiyona Özel İşlemler */}
+                        {selectedObject.type === 'function' && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenFunctionDialog?.()}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-sky-500" />
+                            <span>Fonksiyon Formülünü Düzenle</span>
+                          </button>
+                        )}
+
+                        {/* Sürgüye Özel İşlemler */}
+                        {selectedObject.type === 'slider' && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenSliderDialog?.()}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                          >
+                            <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-500" />
+                            <span>Sürgü Parametrelerini Ayarla</span>
+                          </button>
+                        )}
+
+                        {/* Genel Çoğaltma */}
+                        <button
+                          type="button"
+                          onClick={() => duplicateObject(selectedObject)}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-semibold text-foreground text-left transition-colors cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-blue-500" />
+                          <span>Nesneyi Çoğalt (Klonla)</span>
+                        </button>
+
+                        {/* Silme */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            deleteObject(selectedObject.id);
+                            setSelectedObjectId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-xs font-semibold text-rose-600 dark:text-rose-400 text-left transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Nesneyi Sil</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* C. GÖRÜNÜMLER SEKMESİ (2D, 3D, 2D+3D, Cebir, 2D+Cebir, 3D+Cebir, 2D+3D+Cebir) */}
+          {sidebarTab === 'gorunumler' && (
+            <div className="flex-1 flex flex-col min-h-0 bg-card">
+              <div className="p-3.5 border-b border-border/80 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-bold text-foreground tracking-tight">Görünümler</h3>
+                </div>
+              </div>
+
+              <div className="p-3 border-b border-border/50 bg-muted/20 text-[11px] text-muted-foreground leading-normal">
+                Çalışma alanınızı tek ekranda veya çoklu pencerelerle görüntülemek için bir düzen seçin:
+              </div>
+
+              {/* 7 Görünüm Kartı Listesi */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-thin">
+                {LAYOUT_OPTIONS.map((opt) => {
+                  const isCurrent = layoutMode === opt.mode;
+
+                  return (
+                    <button
+                      key={opt.mode}
+                      type="button"
+                      onClick={() => onLayoutModeChange?.(opt.mode)}
+                      className={`w-full p-3 rounded-2xl border text-left transition-all cursor-pointer select-none relative group ${
+                        isCurrent
+                          ? 'bg-primary/10 border-primary/50 shadow-sm ring-1 ring-primary/30'
+                          : 'bg-muted/30 border-border/70 hover:bg-muted/60 hover:border-primary/40'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`p-2 rounded-xl shrink-0 transition-transform ${
+                            isCurrent
+                              ? 'bg-primary text-primary-foreground shadow-xs'
+                              : 'bg-background border border-border group-hover:scale-105'
+                          }`}
+                        >
+                          {opt.icon}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-bold text-xs text-foreground">
+                              {opt.name}
+                            </span>
+                            <span
+                              className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                                isCurrent
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {opt.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                            {opt.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isCurrent && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-bold text-primary">
+                          <Check className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* D. ARAÇLAR GÖRÜNÜMÜ (Ağaç Menü — Tek Tek Alt Alta) */}
           {sidebarTab === 'araclar' && (
             <div className="flex-1 flex flex-col min-h-0 bg-card">
-              {/* Başlık — Görseldeki "Çalışma Alanım" */}
+              {/* Başlık — "Çalışma Alanım" */}
               <div className="p-3.5 border-b border-border/80 flex items-center justify-between gap-2 shrink-0">
                 <h3 className="text-sm font-bold text-foreground tracking-tight">Çalışma Alanım</h3>
                 <div className="flex items-center gap-1 ml-auto">
@@ -1106,7 +1713,7 @@ export function Toolbar({ onSelectTool,
                         </span>
                       </button>
 
-                      {/* Araçlar: Tek tek alt alta (Görseldeki gibi) */}
+                      {/* Araçlar: Tek tek alt alta */}
                       {isExpanded && (
                         <div className="flex flex-col space-y-0.5 pl-3">
                           {matchingTools.map((tool) => {
@@ -1133,7 +1740,7 @@ export function Toolbar({ onSelectTool,
                                     : 'text-foreground/80 hover:bg-muted/70 hover:text-foreground font-medium'
                                 }`}
                               >
-                                {/* Orijinal Logolar/İkonlar (Değiştirilmeden Korundu) */}
+                                {/* Orijinal Logolar/İkonlar */}
                                 <div
                                   className={`w-5 h-5 flex items-center justify-center shrink-0 [&>svg]:w-4 [&>svg]:h-4 ${
                                     isActive
@@ -1161,59 +1768,6 @@ export function Toolbar({ onSelectTool,
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* C. TABLO SPREADSHEET GÖRÜNÜMÜ */}
-          {sidebarTab === 'tablo' && (
-            <div className="flex-1 flex flex-col min-h-0 bg-card">
-              <div className="p-3.5 border-b border-border/80 flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-black text-foreground">Hesap Tablosu</h3>
-              </div>
-
-              {/* Hücre Giriş Açıklaması */}
-              <div className="p-3 bg-muted/30 border-b border-border text-[10px] text-muted-foreground leading-normal font-medium">
-                Bir hücreye <strong className="text-primary">(x; y)</strong> yazarak ya da A ve B sütunlarına ayrı ayrı sayı girerek otomatik nokta oluşturabilirsiniz. Örn: <code className="bg-background px-1 py-0.5 rounded font-mono">(2; 3)</code> veya <code className="bg-background px-1 py-0.5 rounded font-mono">(1,5; -2)</code>
-              </div>
-
-              {/* Spreadsheet Grid */}
-              <div className="flex-1 overflow-auto">
-                <table className="w-full border-collapse text-left text-xs font-mono">
-                  <thead className="sticky top-0 bg-muted/70 z-10">
-                    <tr className="border-b border-border">
-                      <th scope="col" className="w-10 px-2 py-1.5 text-center text-muted-foreground font-black border-r border-border bg-muted/80">#</th>
-                      {COLUMN_LETTERS.map((letter, idx) => (
-                        <th
-                          key={letter}
-                          scope="col"
-                          className={`px-2 py-1.5 text-center text-muted-foreground font-black ${idx < TABLE_COLS - 1 ? 'border-r border-border' : ''}`}
-                        >
-                          {letter}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.map((row, rIdx) => (
-                      <tr key={rIdx} className="border-b border-border/60 hover:bg-muted/10 transition-colors">
-                        <td className="w-10 px-2 py-1.5 text-center text-muted-foreground font-black border-r border-border bg-muted/30">{rIdx + 1}</td>
-                        {row.map((cell, cIdx) => (
-                          <td key={cIdx} className={`p-0 ${cIdx < TABLE_COLS - 1 ? 'border-r border-border/60' : ''}`}>
-                            <input
-                              type="text"
-                              value={cell}
-                              onChange={(e) => handleTableCellChange(rIdx, cIdx, e.target.value)}
-                              onBlur={commitTableEdit}
-                              aria-label={`Hücre ${COLUMN_LETTERS[cIdx]}${rIdx + 1}`}
-                              className="w-full h-8 px-2 bg-transparent outline-none focus:bg-primary/5 focus:ring-1 focus:ring-primary/20 text-center font-mono text-xs text-foreground font-semibold"
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           )}
