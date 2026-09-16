@@ -789,6 +789,15 @@ export function WorkspaceView() {
                 onSetCameraPreset={handleSetCameraPreset}
                 onClearAll={() => requestClearAll('3D')}
                 onSwitchTo2D={handleSwitchTo2D}
+                solids={solids}
+                selectedSolidId={selectedSolidId}
+                selectedSolidIds={selectedSolidIds}
+                onSelectSolid={setSelectedSolidId}
+                onSelectSolids={setSelectedSolidIds}
+                onUpdateSolid={handleUpdateSolid}
+                onDeleteSolidById={handleDeleteSolidById}
+                layoutMode={layoutMode}
+                onLayoutModeChange={setLayoutMode}
               />
             ) : (
               <Toolbar
