@@ -55,6 +55,9 @@ import {
   ExternalLink,
   Contrast,
   Sliders,
+  Maximize2,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 interface WorkspaceMenuBarProps {
@@ -1130,6 +1133,64 @@ export function WorkspaceMenuBar({
                 </button>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* SAĞ: HIZLI İŞLEM VE TEMA BUTONLARI (SAĞA DAYALI) */}
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          {/* Geri Al / Yinele / Sığdır / Temizle Kapsülü */}
+          <div className="flex items-center gap-0.5 bg-white/90 dark:bg-slate-800/90 p-0.5 rounded-2xl border border-slate-200/90 dark:border-slate-700/90 shadow-2xs">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              title="Geri Al (Ctrl+Z)"
+              aria-label="Geri Al"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              title="Yinele (Ctrl+Y)"
+              aria-label="Yinele"
+            >
+              <Redo2 className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-[1px] h-3.5 bg-slate-300 dark:bg-slate-700 mx-0.5" />
+            <button
+              onClick={resetViewport}
+              className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
+              title="Görünümü Sıfırla (Merkeze Odaklan)"
+              aria-label="Görünümü Sıfırla"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onClearAll}
+              className="p-1.5 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer"
+              title="Tümünü Sil / Temizle"
+              aria-label="Tümünü Sil"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Tema Değiştirici Kapsülü */}
+          <div className="flex items-center bg-white/90 dark:bg-slate-800/90 p-0.5 rounded-2xl border border-slate-200/90 dark:border-slate-700/90 shadow-2xs">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+              title={theme === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
+              aria-label={theme === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+              ) : (
+                <Moon className="w-3.5 h-3.5 text-indigo-600" />
+              )}
+            </button>
           </div>
         </div>
       </div>

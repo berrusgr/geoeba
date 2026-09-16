@@ -378,61 +378,19 @@ export function Header() {
 
         {/* ================= SAĞ: SERBEST ÇALIŞMA + TEMA ================= */}
         <div className="flex items-center gap-2">
-          {/* Çalışma Alanı Kısayolları (Sadece Workspace Ekranında Görünür) */}
-          {currentScreen === 'workspace' && (
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 mr-2">
+          {/* Tema Değiştirici (Workspace dışındaki ekranlarda ana başlıkta gösterilir) */}
+          {currentScreen !== 'workspace' && (
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
-                onClick={undo}
-                disabled={is3D || !canUndo}
-                className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title={is3D ? '3D modda kullanılamaz (3D geçmişi için Ctrl+Z)' : 'Geri Al (Ctrl+Z)'}
-                aria-label="Geri Al"
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all"
+                title={isDark ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
+                aria-label={isDark ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
               >
-                <Undo2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={redo}
-                disabled={is3D || !canRedo}
-                className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title={is3D ? '3D modda kullanılamaz (3D geçmişi için Ctrl+Y)' : 'Yinele (Ctrl+Y)'}
-                aria-label="Yinele"
-              >
-                <Redo2 className="w-3.5 h-3.5" />
-              </button>
-              <div className="w-[1px] h-3.5 bg-slate-300 dark:bg-slate-700 mx-0.5" />
-              <button
-                onClick={resetViewport}
-                disabled={is3D}
-                className="p-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title={is3D ? '3D modda kullanılamaz (sağdaki izometrik görünüm düğmesini kullanın)' : 'Görünümü Sıfırla'}
-                aria-label="Görünümü Sıfırla"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => requestClearAll()}
-                className="p-1.5 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer"
-                title="Tümünü Sil / Temizle"
-                aria-label="Tümünü Sil"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
+                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
               </button>
             </div>
           )}
-
-
-
-          {/* Tema Değiştirici */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all"
-              title={isDark ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
-              aria-label={isDark ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
-            </button>
-          </div>
         </div>
       </header>
 
